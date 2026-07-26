@@ -1,0 +1,109 @@
+/* ZOLANZO design tokens — light + dark semantic layers */
+
+:root {
+  /* Brand primitives */
+  --z-navy: #071b34;
+  --z-primary: #16c6c6;
+  --z-primary-hover: #0fa5a5;
+  --z-gold: #f6b81a;
+  --z-success: #22c55e;
+  --z-warning: #f59e0b;
+  --z-danger: #ef4444;
+
+  --z-dark-bg: #081320;
+  --z-dark-surface: #0f1e33;
+  --z-dark-card: #152540;
+  --z-light-bg: #f8fafc;
+  --z-light-surface: #ffffff;
+  --z-light-card: #ffffff;
+
+  --z-border-dark: rgba(255, 255, 255, 0.08);
+  --z-border-light: rgba(0, 0, 0, 0.08);
+
+  /* Semantic (light) */
+  --background: var(--z-light-bg);
+  --foreground: var(--z-navy);
+  --surface: var(--z-light-surface);
+  --card: var(--z-light-card);
+  --muted: #64748b;
+  --muted-foreground: #64748b;
+  --border: var(--z-border-light);
+  --ring: var(--z-primary);
+  --primary: var(--z-primary);
+  --primary-foreground: var(--z-navy);
+  --primary-hover: var(--z-primary-hover);
+  --accent: var(--z-gold);
+  --accent-foreground: var(--z-navy);
+  --success: var(--z-success);
+  --warning: var(--z-warning);
+  --danger: var(--z-danger);
+  --overlay: rgba(8, 19, 32, 0.55);
+  --sidebar: #071b34;
+  --sidebar-foreground: #f1f5f9;
+  --topbar: rgba(248, 250, 252, 0.85);
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-pill: 9999px;
+
+  /* Shadows (light) */
+  --shadow-soft: 0 1px 2px rgba(8, 19, 32, 0.06),
+    0 1px 3px rgba(8, 19, 32, 0.04);
+  --shadow-medium: 0 4px 12px rgba(8, 19, 32, 0.08),
+    0 2px 4px rgba(8, 19, 32, 0.04);
+  --shadow-floating: 0 12px 32px rgba(8, 19, 32, 0.14),
+    0 4px 8px rgba(8, 19, 32, 0.06);
+  --shadow-dialog: 0 24px 48px rgba(8, 19, 32, 0.22),
+    0 8px 16px rgba(8, 19, 32, 0.1);
+  --shadow-hero: 0 32px 64px rgba(8, 19, 32, 0.28),
+    0 12px 24px rgba(22, 198, 198, 0.08);
+
+  /* Spacing (8-pt) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Type */
+  --text-display: 3.5rem;
+  --text-h1: 2.5rem;
+  --text-h2: 2rem;
+  --text-h3: 1.5rem;
+  --text-body-lg: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+}
+
+.dark {
+  --background: var(--z-dark-bg);
+  --foreground: #f1f5f9;
+  --surface: var(--z-dark-surface);
+  --card: var(--z-dark-card);
+  --muted: #94a3b8;
+  --muted-foreground: #94a3b8;
+  --border: var(--z-border-dark);
+  --primary-foreground: var(--z-navy);
+  --overlay: rgba(0, 0, 0, 0.65);
+  --sidebar: #061525;
+  --sidebar-foreground: #f1f5f9;
+  --topbar: rgba(15, 30, 51, 0.85);
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-dialog: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.35);
+  --shadow-hero: 0 32px 64px rgba(0, 0, 0, 0.55),
+    0 12px 24px rgba(22, 198, 198, 0.12);
+}

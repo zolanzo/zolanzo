@@ -1,0 +1,14 @@
+/**
+ * @module features/ai-platform/constants
+ */
+export {
+  AI_DECISION_OUTCOMES,
+  AI_ENTITY_TYPES,
+  AI_EXECUTION_STATUSES,
+  AI_EXTENSION_POINTS,
+  AI_PLUGIN_CAPABILITIES,
+  AI_PLUGIN_HEALTH,
+  AI_PLUGIN_KEYS,
+  AI_POLICY_MODES,
+  AI_RECOMMENDATION_KINDS,
+} from "@/constants/ai";

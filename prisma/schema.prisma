@@ -1,0 +1,2042 @@
+// ZOLANZO Prisma schema — Sprint 1 foundation models only.
+// No campaigns, tasks, wallet, or work-engine models yet.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountType {
+  guest
+  individual
+  organization
+  developer
+  moderator
+  support
+  admin
+  super_admin
+}
+
+enum ParticipationMode {
+  worker
+  client
+  both
+}
+
+enum UserStatus {
+  active
+  suspended
+  deleted
+}
+
+enum MembershipStatus {
+  invited
+  active
+  suspended
+  removed
+}
+
+enum AuditActorType {
+  user
+  system
+  admin
+  api
+}
+
+enum OrganizationKind {
+  personal
+  business
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+  expired
+}
+
+/// Platform user (authSubject ↔ Supabase auth.users.id)
+model User {
+  id                   String             @id @default(cuid())
+  authSubject          String?            @unique @map("auth_subject")
+  email                String?            @unique
+  emailVerifiedAt      DateTime?          @map("email_verified_at")
+  phone                String?            @unique
+  phoneVerifiedAt      DateTime?          @map("phone_verified_at")
+  accountType          AccountType        @default(individual) @map("account_type")
+  participation        ParticipationMode? @map("participation")
+  locale               String             @default("en")
+  timezone             String             @default("UTC")
+  status               UserStatus         @default(active)
+  activeOrganizationId String?            @map("active_organization_id")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  suspendedAt          DateTime?          @map("suspended_at")
+
+  profile              Profile?
+  memberships          OrganizationMember[]
+  ownedOrganizations   Organization[]         @relation("OrganizationOwner")
+  activeOrganization   Organization?          @relation("ActiveOrganization", fields: [activeOrganizationId], references: [id], onDelete: SetNull)
+  roles                UserRole[]
+  sessions             Session[]
+  devices              Device[]
+  auditLogs            AuditLog[]             @relation("AuditActor")
+  invitationsSent      OrganizationInvitation[] @relation("InvitationInviter")
+  campaignsAsClient    Campaign[]             @relation("CampaignClient")
+  campaignsCreated     Campaign[]             @relation("CampaignCreatedBy")
+  campaignsUpdated     Campaign[]             @relation("CampaignUpdatedBy")
+  reservations         Reservation[]
+  assignments          Assignment[]
+  assignmentNotes      AssignmentNote[]
+  submissions          Submission[]
+  reviewAssignments    ReviewAssignment[]
+  reviewDecisions      ReviewDecision[]
+  reviewQueueAssigned  ReviewQueueItem[]      @relation("ReviewQueueAssignee")
+  wallets              Wallet[]
+  settlementsAsWorker  Settlement[]           @relation("SettlementWorker")
+  destinationAccounts  DestinationAccount[]
+  withdrawalIntents    WithdrawalIntent[]
+  withdrawalRequests   WithdrawalRequest[]    @relation("WithdrawalWorker")
+  withdrawalApprovals  WithdrawalApproval[]   @relation("WithdrawalApprover")
+  paymentIntents       PaymentIntent[]        @relation("PaymentClient")
+  notificationIntents  NotificationIntent[]   @relation("NotificationActor")
+  notificationPreferences NotificationPreference[] @relation("NotificationPreferenceUser")
+  notificationJobs     NotificationJob[]      @relation("NotificationJobRecipient")
+  operationalCommands  OperationalCommand[]   @relation("OperationalCommandActor")
+  operationalAudits    OperationalAudit[]     @relation("OperationalAuditActor")
+  aiExecutions         AiExecution[]          @relation("AiExecutionActor")
+  aiDecisions          AiDecisionRecord[]     @relation("AiDecisionActor")
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([activeOrganizationId])
+  @@map("users")
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique @map("user_id")
+  displayName    String   @map("display_name")
+  handle         String   @unique
+  avatarUrl      String?  @map("avatar_url")
+  bio            String?
+  countryCode    String?  @map("country_code")
+  /// Public worker identity (WRK-…)
+  workerPublicId String?  @unique @map("worker_public_id")
+  /// Public client identity (CLI-…)
+  clientPublicId String?  @unique @map("client_public_id")
+  /// Private profile fields
+  legalName      String?  @map("legal_name")
+  dateOfBirth    DateTime? @map("date_of_birth")
+  addressJson    Json?    @map("address_json")
+  marketingOptIn Boolean  @default(false) @map("marketing_opt_in")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Organization {
+  id                String           @id @default(cuid())
+  publicId          String           @unique @map("public_id")
+  name              String
+  slug              String           @unique
+  kind              OrganizationKind @default(business)
+  ownerUserId       String           @map("owner_user_id")
+  billingEmail      String           @map("billing_email")
+  plan              String           @default("free")
+  whiteLabelEnabled Boolean          @default(false) @map("white_label_enabled")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  owner              User                     @relation("OrganizationOwner", fields: [ownerUserId], references: [id])
+  members            OrganizationMember[]
+  invitations        OrganizationInvitation[]
+  auditLogs          AuditLog[]
+  activeForUsers     User[]                   @relation("ActiveOrganization")
+  campaigns          Campaign[]
+  paymentIntents     PaymentIntent[]
+  notificationIntents NotificationIntent[]
+  notificationPreferences NotificationPreference[]
+  deliveryPolicies   DeliveryPolicy[]
+  aiConfigurations   AiConfiguration[]
+  aiExecutions       AiExecution[]
+  aiDecisionRecords  AiDecisionRecord[]
+
+  @@index([ownerUserId])
+  @@index([kind])
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  userId         String           @map("user_id")
+  orgRole        String           @map("org_role")
+  status         MembershipStatus @default(invited)
+  invitedAt      DateTime         @default(now()) @map("invited_at")
+  joinedAt       DateTime?        @map("joined_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([orgRole])
+  @@map("organization_members")
+}
+
+model OrganizationInvitation {
+  id              String           @id @default(cuid())
+  organizationId  String           @map("organization_id")
+  email           String
+  orgRole         String           @map("org_role")
+  tokenHash       String           @unique @map("token_hash")
+  invitedByUserId String           @map("invited_by_user_id")
+  status          InvitationStatus @default(pending)
+  expiresAt       DateTime         @map("expires_at")
+  acceptedAt      DateTime?        @map("accepted_at")
+  revokedAt       DateTime?        @map("revoked_at")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitationInviter", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([status])
+  @@map("organization_invitations")
+}
+
+/// Platform RBAC role catalog
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  hierarchy   Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+/// Fine-grained permission catalog
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId     String   @map("user_id")
+  roleId     String   @map("role_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  ip        String?
+  userAgent String?   @map("user_agent")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Device {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  fingerprint String    @map("fingerprint")
+  name        String?
+  trustedAt   DateTime? @map("trusted_at")
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+  revokedAt   DateTime? @map("revoked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fingerprint])
+  @@index([userId])
+  @@map("devices")
+}
+
+model AuditLog {
+  id             String         @id @default(cuid())
+  actorUserId    String?        @map("actor_user_id")
+  actorType      AuditActorType @default(user) @map("actor_type")
+  organizationId String?        @map("organization_id")
+  action         String
+  resourceType   String         @map("resource_type")
+  resourceId     String?        @map("resource_id")
+  metadata       Json?
+  ip             String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  actor        User?         @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  enabled     Boolean  @default(false)
+  planGate    String?  @map("plan_gate")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+}
+
+/// Sequential public-ID counters (CMP year scopes, TXN date scopes, etc.)
+model PublicIdCounter {
+  key       String   @id
+  entity    String
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([entity])
+  @@map("public_id_counters")
+}
+
+enum TemplateStatus {
+  draft
+  published
+  archived
+}
+
+enum TemplateVisibility {
+  private
+  organization
+  platform
+  public
+}
+
+enum TemplateDifficulty {
+  easy
+  medium
+  hard
+  expert
+}
+
+/// Reusable work blueprint — HOW work is performed (not a Campaign).
+model TaskTemplate {
+  id                   String             @id @default(cuid())
+  publicId             String             @unique @map("public_id")
+  /// Stable key across versions (e.g. google_play_app_test)
+  templateKey          String             @map("template_key")
+  version              Int                @default(1)
+  name                 String
+  slug                 String
+  description          String
+  category             String
+  subcategory          String?
+  difficulty           TemplateDifficulty @default(medium)
+  estimatedDurationMin Int?               @map("estimated_duration_min")
+  /// Ordered capability steps JSON
+  capabilitySet        Json               @map("capability_set")
+  requiredEvidence     Json               @map("required_evidence")
+  submissionSchema     Json               @map("submission_schema")
+  validationRules      Json               @map("validation_rules")
+  reviewRules          Json               @map("review_rules")
+  rewardStrategy       Json               @map("reward_strategy")
+  /// Composable eligibility constraints
+  constraints          Json               @default("[]")
+  supportedPlatforms   Json               @default("[]") @map("supported_platforms")
+  supportedDevices     Json               @default("[]") @map("supported_devices")
+  supportedCountries   Json               @default("[]") @map("supported_countries")
+  supportedLanguages   Json               @default("[]") @map("supported_languages")
+  requiredSkills       Json               @default("[]") @map("required_skills")
+  visibility           TemplateVisibility @default(platform)
+  status               TemplateStatus     @default(draft)
+  metadata             Json?
+  createdByUserId      String?            @map("created_by_user_id")
+  updatedByUserId      String?            @map("updated_by_user_id")
+  publishedAt          DateTime?          @map("published_at")
+  archivedAt           DateTime?          @map("archived_at")
+  /// Previous version this was branched from
+  previousVersionId    String?            @map("previous_version_id")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  previousVersion TaskTemplate?  @relation("TemplateVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions    TaskTemplate[] @relation("TemplateVersions")
+  campaigns       Campaign[]
+  taskInstances   TaskInstance[]
+  assignments     Assignment[]
+
+  @@unique([templateKey, version])
+  @@index([status])
+  @@index([category])
+  @@index([visibility])
+  @@index([slug])
+  @@map("task_templates")
+}
+
+enum CampaignStatus {
+  draft
+  pending_review
+  scheduled
+  active
+  paused
+  completed
+  cancelled
+  archived
+}
+
+enum CampaignVisibility {
+  private
+  organization
+  platform
+  public
+}
+
+enum CampaignPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum BudgetModelKind {
+  fixed
+  quantity_times_reward
+}
+
+enum GenerationStrategyKind {
+  pre_generated
+  on_demand
+  batch
+  streaming
+  api_driven
+}
+
+enum GenerationPolicyKind {
+  fixed_quantity
+  rolling_window
+  demand_buffer
+  scheduled_batch
+  api_controlled
+}
+
+enum ScheduleMode {
+  immediate
+  scheduled
+  recurring_future
+}
+
+/// Business contract between Client and ZOLANZO — not executable work.
+model Campaign {
+  id                      String                 @id @default(cuid())
+  publicId                String                 @unique @map("public_id")
+  organizationId          String                 @map("organization_id")
+  clientUserId            String                 @map("client_user_id")
+  taskTemplateId          String                 @map("task_template_id")
+  name                    String
+  slug                    String
+  description             String
+  objective               String
+  status                  CampaignStatus         @default(draft)
+  visibility              CampaignVisibility     @default(organization)
+  priority                CampaignPriority       @default(normal)
+  category                String
+  tags                    Json                   @default("[]")
+  /// Human intent — separate from technical template
+  brief                   Json
+  generationStrategy      GenerationStrategyKind @map("generation_strategy")
+  /// Strategy-specific config (batch size, etc.)
+  generationConfig        Json?                  @map("generation_config")
+  /// How many instances should exist (distinct from strategy)
+  generationPolicy        GenerationPolicyKind   @default(fixed_quantity) @map("generation_policy")
+  generationPolicyConfig  Json?                  @map("generation_policy_config")
+  targetQuantity          Int                    @map("target_quantity")
+  completedQuantity       Int                    @default(0) @map("completed_quantity")
+  approvedQuantity        Int                    @default(0) @map("approved_quantity")
+  rejectedQuantity        Int                    @default(0) @map("rejected_quantity")
+  budgetKind              BudgetModelKind        @map("budget_kind")
+  currency                String                 @default("NGN")
+  budgetMinor             Int                    @map("budget_minor")
+  reservedBudgetMinor     Int                    @default(0) @map("reserved_budget_minor")
+  spentBudgetMinor        Int                    @default(0) @map("spent_budget_minor")
+  rewardPerUnitMinor      Int                    @map("reward_per_unit_minor")
+  /// Optional override of template reward strategy
+  rewardStrategyOverride  Json?                  @map("reward_strategy_override")
+  countryScope            Json                   @default("[]") @map("country_scope")
+  languageScope           Json                   @default("[]") @map("language_scope")
+  deviceScope             Json                   @default("[]") @map("device_scope")
+  /// Campaign constraint overrides (merged with template)
+  audienceConstraints     Json                   @default("[]") @map("audience_constraints")
+  /// How work may be claimed (distinct from eligibility constraints)
+  claimPolicies           Json                   @default("[]") @map("claim_policies")
+  /// Reservation hold seconds for claims (default 120)
+  reservationTimeoutSeconds Int                  @default(120) @map("reservation_timeout_seconds")
+  scheduleMode            ScheduleMode           @default(immediate) @map("schedule_mode")
+  timezone                String                 @default("UTC")
+  startAt                 DateTime?              @map("start_at")
+  endAt                   DateTime?              @map("end_at")
+  /// Future RRULE / cron
+  recurrenceRule          String?                @map("recurrence_rule")
+  createdByUserId         String?                @map("created_by_user_id")
+  updatedByUserId         String?                @map("updated_by_user_id")
+  publishedAt             DateTime?              @map("published_at")
+  archivedAt              DateTime?              @map("archived_at")
+  /// Source campaign when cloned/duplicated
+  clonedFromId            String?                @map("cloned_from_id")
+  metadata                Json?
+  createdAt               DateTime               @default(now()) @map("created_at")
+  updatedAt               DateTime               @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       User         @relation("CampaignClient", fields: [clientUserId], references: [id], onDelete: Restrict)
+  taskTemplate TaskTemplate @relation(fields: [taskTemplateId], references: [id], onDelete: Restrict)
+  createdBy    User?        @relation("CampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedBy    User?        @relation("CampaignUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  clonedFrom   Campaign?    @relation("CampaignClones", fields: [clonedFromId], references: [id], onDelete: SetNull)
+  clones       Campaign[]   @relation("CampaignClones")
+  taskInstances TaskInstance[]
+  reservations Reservation[]
+  assignments  Assignment[]
+  escrowSnapshots EscrowSnapshot[]
+  escrowAccounts  EscrowAccount[]
+  settlements     Settlement[]
+  paymentIntents  PaymentIntent[]
+
+  @@unique([organizationId, slug])
+  @@index([status])
+  @@index([organizationId])
+  @@index([clientUserId])
+  @@index([taskTemplateId])
+  @@index([category])
+  @@index([startAt])
+  @@index([generationStrategy])
+  @@map("campaigns")
+}
+
+enum TaskInstanceStatus {
+  generated
+  available
+  reserved
+  claimed
+  expired
+  cancelled
+  completed
+}
+
+enum TaskInstancePriority {
+  low
+  normal
+  high
+  urgent
+}
+
+/// Concrete marketplace inventory unit — immutable after generation.
+/// Assignments are created later on claim (not here).
+model TaskInstance {
+  id                     String               @id @default(cuid())
+  publicId               String               @unique @map("public_id")
+  campaignId             String               @map("campaign_id")
+  /// Pinned Task Template version row at generation time
+  taskTemplateId         String               @map("task_template_id")
+  /// Template version number snapshotted for audit
+  taskTemplateVersion    Int                  @map("task_template_version")
+  sequenceNumber         Int                  @map("sequence_number")
+  generationStrategy     GenerationStrategyKind @map("generation_strategy")
+  generationPolicy       GenerationPolicyKind @map("generation_policy")
+  /// Immutable snapshot of policy config at generation
+  generationPolicyConfig Json?                @map("generation_policy_config")
+  status                 TaskInstanceStatus   @default(generated)
+  priority               TaskInstancePriority @default(normal)
+  reserved               Boolean              @default(false)
+  reservedAt             DateTime?            @map("reserved_at")
+  expiresAt              DateTime?            @map("expires_at")
+  /// Immutable campaign public id snapshot for audit trails
+  campaignPublicId       String               @map("campaign_public_id")
+  templatePublicId       String               @map("template_public_id")
+  metadata               Json?
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+  archivedAt             DateTime?            @map("archived_at")
+
+  campaign     Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  taskTemplate TaskTemplate @relation(fields: [taskTemplateId], references: [id], onDelete: Restrict)
+  reservations Reservation[]
+  assignment   Assignment?
+
+  @@unique([campaignId, sequenceNumber])
+  @@index([status])
+  @@index([campaignId, status])
+  @@index([taskTemplateId])
+  @@index([expiresAt])
+  @@index([reserved])
+  @@index([generationStrategy])
+  @@index([generationPolicy])
+  @@map("task_instances")
+}
+
+enum ReservationStatus {
+  pending
+  confirmed
+  expired
+  released
+  converted
+}
+
+/// Temporary hold on a Task Instance during claim (default ~2 minutes).
+model Reservation {
+  id               String            @id @default(cuid())
+  taskInstanceId   String            @map("task_instance_id")
+  workerUserId     String            @map("worker_user_id")
+  campaignId       String            @map("campaign_id")
+  status           ReservationStatus @default(pending)
+  timeoutSeconds   Int               @map("timeout_seconds")
+  expiresAt        DateTime          @map("expires_at")
+  confirmedAt      DateTime?         @map("confirmed_at")
+  releasedAt       DateTime?         @map("released_at")
+  expiredAt        DateTime?         @map("expired_at")
+  convertedAt      DateTime?         @map("converted_at")
+  metadata         Json?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  taskInstance TaskInstance @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
+  worker       User         @relation(fields: [workerUserId], references: [id], onDelete: Cascade)
+  campaign     Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assignment   Assignment?
+
+  @@index([taskInstanceId, status])
+  @@index([workerUserId, status])
+  @@index([campaignId])
+  @@index([expiresAt])
+  @@index([status])
+  @@map("reservations")
+}
+
+enum AssignmentPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+/// One worker bound to one Task Instance — worker workspace.
+model Assignment {
+  id                  String             @id @default(cuid())
+  publicId            String             @unique @map("public_id")
+  taskInstanceId      String             @unique @map("task_instance_id")
+  campaignId          String             @map("campaign_id")
+  workerUserId        String             @map("worker_user_id")
+  taskTemplateId      String             @map("task_template_id")
+  taskTemplateVersion Int                @map("task_template_version")
+  reservationId       String             @unique @map("reservation_id")
+  status              String             @default("assigned")
+  priority            AssignmentPriority @default(normal)
+  attempts            Int                @default(0)
+  maxAttempts         Int                @default(3) @map("max_attempts")
+  /// Immutable snapshot at claim/confirm time
+  executionContext    Json?              @map("execution_context")
+  progressPercent     Int                @default(0) @map("progress_percent")
+  estimatedRemainingMin Int?             @map("estimated_remaining_min")
+  lastActivityAt      DateTime?          @map("last_activity_at")
+  pausedAt            DateTime?          @map("paused_at")
+  startedAt           DateTime?          @map("started_at")
+  submittedAt         DateTime?          @map("submitted_at")
+  completedAt         DateTime?          @map("completed_at")
+  expiresAt           DateTime?          @map("expires_at")
+  metadata            Json?
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  taskInstance   TaskInstance            @relation(fields: [taskInstanceId], references: [id], onDelete: Restrict)
+  campaign       Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  worker         User                    @relation(fields: [workerUserId], references: [id], onDelete: Restrict)
+  taskTemplate   TaskTemplate            @relation(fields: [taskTemplateId], references: [id], onDelete: Restrict)
+  reservation    Reservation             @relation(fields: [reservationId], references: [id], onDelete: Restrict)
+  executionSteps ExecutionStep[]
+  steps          AssignmentStep[]
+  timeline       AssignmentTimelineEvent[]
+  notes          AssignmentNote[]
+  submissions    Submission[]
+
+  @@index([campaignId, status])
+  @@index([workerUserId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@map("assignments")
+}
+
+enum AssignmentStepStatus {
+  pending
+  in_progress
+  completed
+  skipped
+  failed
+}
+
+/// Immutable ordered execution definition snapshotted onto an Assignment.
+model ExecutionStep {
+  id                   String   @id @default(cuid())
+  assignmentId         String   @map("assignment_id")
+  sequence             Int
+  stepKey              String   @map("step_key")
+  capability           String
+  instruction          String
+  required             Boolean  @default(true)
+  /// Future-ready conditional expression key
+  conditionalKey       String?  @map("conditional_key")
+  dependsOnStepKeys    Json     @default("[]") @map("depends_on_step_keys")
+  estimatedDurationMin Int?     @map("estimated_duration_min")
+  config               Json?
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  assignment Assignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  checklist  AssignmentStep?
+
+  @@unique([assignmentId, stepKey])
+  @@unique([assignmentId, sequence])
+  @@index([assignmentId])
+  @@map("execution_steps")
+}
+
+/// Checklist progress for one ExecutionStep within an Assignment.
+model AssignmentStep {
+  id              String              @id @default(cuid())
+  assignmentId    String              @map("assignment_id")
+  executionStepId String              @unique @map("execution_step_id")
+  status          AssignmentStepStatus @default(pending)
+  startedAt       DateTime?           @map("started_at")
+  completedAt     DateTime?           @map("completed_at")
+  failedAt        DateTime?           @map("failed_at")
+  skipReason      String?             @map("skip_reason")
+  failReason      String?             @map("fail_reason")
+  metadata        Json?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  assignment    Assignment    @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  executionStep ExecutionStep @relation(fields: [executionStepId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, status])
+  @@map("assignment_steps")
+}
+
+model AssignmentTimelineEvent {
+  id           String   @id @default(cuid())
+  assignmentId String   @map("assignment_id")
+  eventType    String   @map("event_type")
+  payload      Json?
+  actorUserId  String?  @map("actor_user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, createdAt])
+  @@index([eventType])
+  @@map("assignment_timeline_events")
+}
+
+enum AssignmentNoteVisibility {
+  worker_private
+  reviewer_placeholder
+}
+
+model AssignmentNote {
+  id           String                   @id @default(cuid())
+  assignmentId String                   @map("assignment_id")
+  authorUserId String                   @map("author_user_id")
+  visibility   AssignmentNoteVisibility @default(worker_private)
+  body         String
+  createdAt    DateTime                 @default(now()) @map("created_at")
+  updatedAt    DateTime                 @updatedAt @map("updated_at")
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, createdAt])
+  @@index([authorUserId])
+  @@map("assignment_notes")
+}
+
+enum ManifestEvidenceKind {
+  image
+  video
+  audio
+  file
+  gps
+  json
+  link
+  text
+  screen_recording
+}
+
+/// Immutable Submission Package created from an Assignment Workspace.
+model Submission {
+  id                       String    @id @default(cuid())
+  publicId                 String    @unique @map("public_id")
+  assignmentId             String    @map("assignment_id")
+  workerUserId             String    @map("worker_user_id")
+  status                   String    @default("draft")
+  /// Frozen copy of Assignment.executionContext at package create/submit
+  executionContextSnapshot Json      @map("execution_context_snapshot")
+  deviceSnapshot           Json?     @map("device_snapshot")
+  gpsSnapshot              Json?     @map("gps_snapshot")
+  timingMetrics            Json?     @map("timing_metrics")
+  readyAt                  DateTime? @map("ready_at")
+  submittedAt              DateTime? @map("submitted_at")
+  finalizedAt              DateTime? @map("finalized_at")
+  closedAt                 DateTime? @map("closed_at")
+  metadata                 Json?
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  assignment Assignment         @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  worker     User               @relation(fields: [workerUserId], references: [id], onDelete: Restrict)
+  manifest   EvidenceManifest?
+  summary    SubmissionSummary?
+  validationReports ValidationReport[]
+  reviewQueueItems  ReviewQueueItem[]
+  reviewDecisions   ReviewDecision[]
+
+  @@index([assignmentId, status])
+  @@index([workerUserId, status])
+  @@index([status])
+  @@index([submittedAt])
+  @@map("submissions")
+}
+
+/// Evidence Manifest — catalog of all evidence in a Submission Package.
+model EvidenceManifest {
+  id           String   @id @default(cuid())
+  submissionId String   @unique @map("submission_id")
+  version      Int      @default(1)
+  finalized    Boolean  @default(false)
+  finalizedAt  DateTime? @map("finalized_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  submission Submission    @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  items      EvidenceItem[]
+
+  @@map("evidence_manifests")
+}
+
+/// Single evidence entry referenced via storage adapter (never vendor-bound).
+model EvidenceItem {
+  id          String               @id @default(cuid())
+  manifestId  String               @map("manifest_id")
+  kind        ManifestEvidenceKind
+  label       String
+  stepKey     String?              @map("step_key")
+  /// EvidenceReference JSON { adapter, container, objectKey, contentType? }
+  reference   Json
+  contentHash String?              @map("content_hash")
+  sizeBytes   Int?                 @map("size_bytes")
+  /// Inline payload for text/json/gps/link when not stored as a blob
+  inlinePayload Json?              @map("inline_payload")
+  metadata    Json?
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  replacedAt  DateTime?            @map("replaced_at")
+
+  manifest EvidenceManifest @relation(fields: [manifestId], references: [id], onDelete: Cascade)
+
+  @@index([manifestId, kind])
+  @@index([stepKey])
+  @@map("evidence_items")
+}
+
+/// Auto-generated summary at submit time.
+model SubmissionSummary {
+  id                 String   @id @default(cuid())
+  submissionId       String   @unique @map("submission_id")
+  timeSpentSeconds   Int?     @map("time_spent_seconds")
+  completedSteps     Int      @map("completed_steps")
+  requiredSteps      Int      @map("required_steps")
+  requiredCompleted  Int      @map("required_completed")
+  evidenceCounts     Json     @map("evidence_counts")
+  executionMetrics   Json     @map("execution_metrics")
+  workerNotesSummary String?  @map("worker_notes_summary")
+  generatedAt        DateTime @default(now()) @map("generated_at")
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("submission_summaries")
+}
+
+/// Catalog of named validation profiles (validators enabled per work type).
+model ValidationProfile {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  name               String
+  description        String?
+  enabledValidators  Json     @map("enabled_validators")
+  ruleKeys           Json     @default("[]") @map("rule_keys")
+  config             Json?
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  reports ValidationReport[]
+
+  @@map("validation_profiles")
+}
+
+/// Immutable Validation Report produced by the Validation Pipeline.
+model ValidationReport {
+  id               String   @id @default(cuid())
+  publicId         String   @unique @map("public_id")
+  submissionId     String   @map("submission_id")
+  profileKey       String   @map("profile_key")
+  profileId        String?  @map("profile_id")
+  /// Frozen profile definition at run time
+  profileSnapshot  Json     @map("profile_snapshot")
+  overallStatus    String   @map("overall_status")
+  overallScore     Float    @map("overall_score")
+  warnings         Json     @default("[]")
+  failures         Json     @default("[]")
+  passedChecks     Int      @map("passed_checks")
+  skippedChecks    Int      @default(0) @map("skipped_checks")
+  durationMs       Int      @map("duration_ms")
+  generatedAt      DateTime @default(now()) @map("generated_at")
+  immutable        Boolean  @default(true)
+
+  submission       Submission                   @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  profile          ValidationProfile?           @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  results          ValidationResult[]
+  evidenceSnapshot ValidationEvidenceSnapshot?
+  reviewQueueItems ReviewQueueItem[]
+  reviewDecisions  ReviewDecision[]
+
+  @@index([submissionId, generatedAt])
+  @@index([overallStatus])
+  @@index([profileKey])
+  @@map("validation_reports")
+}
+
+/// Per-validator result row within a Validation Report.
+model ValidationResult {
+  id            String   @id @default(cuid())
+  reportId      String   @map("report_id")
+  validatorName String   @map("validator_name")
+  status        String
+  score         Float?
+  durationMs    Int      @map("duration_ms")
+  messages      Json     @default("[]")
+  metadata      Json?
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  report ValidationReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, sortOrder])
+  @@index([validatorName])
+  @@map("validation_results")
+}
+
+/// Frozen evidence item set captured when validation starts.
+model ValidationEvidenceSnapshot {
+  id         String   @id @default(cuid())
+  reportId   String   @unique @map("report_id")
+  itemCount  Int      @map("item_count")
+  /// EvidenceSnapshotItem[] — ids, hashes, adapter refs, metadata
+  items      Json
+  capturedAt DateTime @default(now()) @map("captured_at")
+
+  report ValidationReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("validation_evidence_snapshots")
+}
+
+/// Catalog of review policies (decision process — separate from validation profiles).
+model ReviewPolicy {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  name               String
+  description        String?
+  mode               String
+  config             Json?
+  downstreamActions  Json     @map("downstream_actions")
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  queueItems ReviewQueueItem[]
+
+  @@map("review_policies")
+}
+
+/// Review queue entry for a submission awaiting / undergoing review.
+model ReviewQueueItem {
+  id                  String    @id @default(cuid())
+  submissionId        String    @map("submission_id")
+  validationReportId  String    @map("validation_report_id")
+  policyKey           String    @map("policy_key")
+  policyId            String?   @map("policy_id")
+  /// Frozen ReviewPolicy at enqueue time
+  policySnapshot      Json      @map("policy_snapshot")
+  status              String    @default("pending")
+  lifecycleStatus     String    @default("pending") @map("lifecycle_status")
+  priority            Int       @default(0)
+  assignedReviewerId  String?   @map("assigned_reviewer_id")
+  claimedAt           DateTime? @map("claimed_at")
+  startedAt           DateTime? @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  metadata            Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  submission       Submission        @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  validationReport ValidationReport  @relation(fields: [validationReportId], references: [id], onDelete: Cascade)
+  policy           ReviewPolicy?     @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  assignedReviewer User?             @relation("ReviewQueueAssignee", fields: [assignedReviewerId], references: [id], onDelete: SetNull)
+  assignments      ReviewAssignment[]
+  decisions        ReviewDecision[]
+
+  @@index([status, priority, createdAt])
+  @@index([submissionId])
+  @@index([assignedReviewerId, status])
+  @@index([lifecycleStatus])
+  @@map("review_queue_items")
+}
+
+/// Links a reviewer to a queue item (supports multi-reviewer policies later).
+model ReviewAssignment {
+  id             String    @id @default(cuid())
+  queueItemId    String    @map("queue_item_id")
+  reviewerUserId String    @map("reviewer_user_id")
+  role           String    @default("primary")
+  assignedAt     DateTime  @default(now()) @map("assigned_at")
+  releasedAt     DateTime? @map("released_at")
+  metadata       Json?
+
+  queueItem ReviewQueueItem @relation(fields: [queueItemId], references: [id], onDelete: Cascade)
+  reviewer  User            @relation(fields: [reviewerUserId], references: [id], onDelete: Restrict)
+
+  @@index([queueItemId])
+  @@index([reviewerUserId])
+  @@unique([queueItemId, reviewerUserId, role])
+  @@map("review_assignments")
+}
+
+/// Immutable Review Decision (REV-…).
+model ReviewDecision {
+  id                   String    @id @default(cuid())
+  publicId             String    @unique @map("public_id")
+  submissionId         String    @map("submission_id")
+  validationReportId   String    @map("validation_report_id")
+  queueItemId          String    @map("queue_item_id")
+  reviewerUserId       String?   @map("reviewer_user_id")
+  reviewMode           String    @map("review_mode")
+  outcome              String
+  confidence           Float?
+  durationMs           Int?      @map("duration_ms")
+  decidedAt            DateTime  @default(now()) @map("decided_at")
+  comments             String?
+  requestedRevisions   Json?     @map("requested_revisions")
+  policySnapshot       Json      @map("policy_snapshot")
+  metadata             Json?
+  immutable            Boolean   @default(true)
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  submission       Submission       @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  validationReport ValidationReport @relation(fields: [validationReportId], references: [id], onDelete: Cascade)
+  queueItem        ReviewQueueItem  @relation(fields: [queueItemId], references: [id], onDelete: Cascade)
+  reviewer         User?            @relation(fields: [reviewerUserId], references: [id], onDelete: SetNull)
+  findings         ReviewFinding[]
+
+  @@index([submissionId, decidedAt])
+  @@index([outcome])
+  @@index([reviewerUserId])
+  @@index([queueItemId])
+  @@map("review_decisions")
+}
+
+/// Structured finding attached to a Review Decision.
+model ReviewFinding {
+  id                String   @id @default(cuid())
+  decisionId        String   @map("decision_id")
+  category          String
+  severity          String
+  assignmentStepKey String?  @map("assignment_step_key")
+  evidenceItemId    String?  @map("evidence_item_id")
+  validatorResultId String?  @map("validator_result_id")
+  message           String
+  recommendation    String?
+  metadata          Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  decision ReviewDecision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  @@index([decisionId])
+  @@index([category, severity])
+  @@map("review_findings")
+}
+
+/// Settlement policy catalog (when/how money moves — separate from review policies).
+model SettlementPolicy {
+  id                        String   @id @default(cuid())
+  key                       String   @unique
+  name                      String
+  description               String?
+  holdDays                  Int      @default(0) @map("hold_days")
+  requiresManualApproval    Boolean  @default(false) @map("requires_manual_approval")
+  batchMode                 String   @default("none") @map("batch_mode")
+  waitForCampaignCompletion Boolean  @default(false) @map("wait_for_campaign_completion")
+  active                    Boolean  @default(true)
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  settlements Settlement[]
+
+  @@map("settlement_policies")
+}
+
+/// Immutable escrow allocation snapshot at campaign funding.
+model EscrowSnapshot {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique @map("public_id")
+  campaignId           String   @map("campaign_id")
+  currency             String
+  budgetMinor          Int      @map("budget_minor")
+  rewardPerUnitMinor   Int      @map("reward_per_unit_minor")
+  targetQuantity       Int      @map("target_quantity")
+  campaignRevisionAt   String   @map("campaign_revision_at")
+  settlementPolicyKey  String   @map("settlement_policy_key")
+  policySnapshot       Json     @map("policy_snapshot")
+  rewardSnapshot       Json     @map("reward_snapshot")
+  budgetSnapshot       Json     @map("budget_snapshot")
+  metadata             Json?
+  capturedAt           DateTime @default(now()) @map("captured_at")
+  immutable            Boolean  @default(true)
+
+  campaign    Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  accounts    EscrowAccount[]
+  settlements Settlement[]
+
+  @@index([campaignId, capturedAt])
+  @@map("escrow_snapshots")
+}
+
+/// Operational escrow account (campaign pool and/or assignment hold).
+model EscrowAccount {
+  id               String    @id @default(cuid())
+  snapshotId       String    @map("snapshot_id")
+  campaignId       String    @map("campaign_id")
+  assignmentId     String?   @map("assignment_id")
+  currency         String
+  amountMinor      Int       @map("amount_minor")
+  reservedMinor    Int       @default(0) @map("reserved_minor")
+  releasedMinor    Int       @default(0) @map("released_minor")
+  cancelledMinor   Int       @default(0) @map("cancelled_minor")
+  status           String    @default("reserved")
+  reservedAt       DateTime  @default(now()) @map("reserved_at")
+  releasedAt       DateTime? @map("released_at")
+  cancelledAt      DateTime? @map("cancelled_at")
+  metadata         Json?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  snapshot    EscrowSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  campaign    Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  settlements Settlement[]
+
+  @@index([campaignId, status])
+  @@index([assignmentId])
+  @@index([snapshotId])
+  @@map("escrow_accounts")
+}
+
+/// Wallet identity — balances are projections only (never mutated as source of truth).
+model Wallet {
+  id             String   @id @default(cuid())
+  publicId       String   @unique @map("public_id")
+  kind           String
+  status         String   @default("active")
+  currency       String
+  ownerUserId    String?  @map("owner_user_id")
+  organizationId String?  @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  ownerUser    User?              @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  projection   WalletProjection?
+  ledgerEntries LedgerEntry[]
+  settlements  Settlement[]       @relation("SettlementWorkerWallet")
+  withdrawalIntents WithdrawalIntent[]
+  withdrawalRequests WithdrawalRequest[]
+  withdrawalReservations WithdrawalReservation[]
+
+  @@unique([kind, ownerUserId, currency])
+  @@index([ownerUserId])
+  @@index([organizationId])
+  @@map("wallets")
+}
+
+/// Rebuildable wallet projection cache (not source of truth).
+model WalletProjection {
+  id                    String   @id @default(cuid())
+  walletId              String   @unique @map("wallet_id")
+  availableMinor        Int      @default(0) @map("available_minor")
+  pendingMinor          Int      @default(0) @map("pending_minor")
+  heldMinor             Int      @default(0) @map("held_minor")
+  lifetimeEarnedMinor   Int      @default(0) @map("lifetime_earned_minor")
+  lifetimePaidMinor     Int      @default(0) @map("lifetime_paid_minor")
+  lifetimeAdjustmentsMinor Int   @default(0) @map("lifetime_adjustments_minor")
+  computedAt            DateTime @default(now()) @map("computed_at")
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_projections")
+}
+
+/// Business financial transaction wrapping a journal (TXN-…).
+model FinancialTransaction {
+  id                   String    @id @default(cuid())
+  publicId             String    @unique @map("public_id")
+  type                 String
+  status               String    @default("pending")
+  amountMinor          Int       @map("amount_minor")
+  feeMinor             Int       @default(0) @map("fee_minor")
+  netMinor             Int       @map("net_minor")
+  currency             String
+  idempotencyKey       String    @unique @map("idempotency_key")
+  campaignId           String?   @map("campaign_id")
+  assignmentId         String?   @map("assignment_id")
+  submissionId         String?   @map("submission_id")
+  reviewDecisionId     String?   @map("review_decision_id")
+  settlementId         String?   @map("settlement_id")
+  organizationId       String?   @map("organization_id")
+  sourceWalletId       String?   @map("source_wallet_id")
+  destinationWalletId  String?   @map("destination_wallet_id")
+  metadata             Json?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  completedAt          DateTime? @map("completed_at")
+
+  journal LedgerJournal?
+
+  @@index([type, status])
+  @@index([campaignId])
+  @@index([settlementId])
+  @@map("financial_transactions")
+}
+
+/// Immutable ledger journal header.
+model LedgerJournal {
+  id               String    @id @default(cuid())
+  transactionId    String    @unique @map("transaction_id")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  transactionType  String    @map("transaction_type")
+  status           String    @default("pending")
+  currency         String
+  memo             String?
+  correlationId    String?   @map("correlation_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  postedAt         DateTime? @map("posted_at")
+
+  transaction FinancialTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  entries     LedgerEntry[]
+
+  @@index([transactionType, status])
+  @@map("ledger_journals")
+}
+
+/// Immutable debit/credit ledger line.
+model LedgerEntry {
+  id           String   @id @default(cuid())
+  journalId    String   @map("journal_id")
+  accountCode  String   @map("account_code")
+  walletId     String?  @map("wallet_id")
+  side         String
+  amountMinor  Int      @map("amount_minor")
+  currency     String
+  status       String   @default("completed")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  journal LedgerJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  wallet  Wallet?       @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@index([journalId])
+  @@index([walletId, accountCode])
+  @@index([accountCode, side])
+  @@map("ledger_entries")
+}
+
+/// Immutable work-unit settlement (SET-…).
+model Settlement {
+  id                  String    @id @default(cuid())
+  publicId            String    @unique @map("public_id")
+  status              String    @default("pending")
+  policyKey           String    @map("policy_key")
+  policyId            String?   @map("policy_id")
+  policySnapshot      Json      @map("policy_snapshot")
+  campaignId          String    @map("campaign_id")
+  assignmentId        String    @map("assignment_id")
+  submissionId        String    @map("submission_id")
+  reviewDecisionId    String    @map("review_decision_id")
+  workerUserId        String    @map("worker_user_id")
+  workerWalletId      String    @map("worker_wallet_id")
+  escrowSnapshotId    String    @map("escrow_snapshot_id")
+  escrowAccountId     String?   @map("escrow_account_id")
+  batchId             String?   @map("batch_id")
+  amountMinor         Int       @map("amount_minor")
+  feeMinor            Int       @default(0) @map("fee_minor")
+  netMinor            Int       @map("net_minor")
+  currency            String
+  rewardSnapshot      Json      @map("reward_snapshot")
+  idempotencyKey      String    @unique @map("idempotency_key")
+  ledgerTransactionId String?   @map("ledger_transaction_id")
+  scheduledAt         DateTime? @map("scheduled_at")
+  processingAt        DateTime? @map("processing_at")
+  completedAt         DateTime? @map("completed_at")
+  failedAt            DateTime? @map("failed_at")
+  failureReason       String?   @map("failure_reason")
+  metadata            Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  policy         SettlementPolicy? @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  campaign       Campaign          @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  worker         User              @relation("SettlementWorker", fields: [workerUserId], references: [id], onDelete: Restrict)
+  workerWallet   Wallet            @relation("SettlementWorkerWallet", fields: [workerWalletId], references: [id], onDelete: Restrict)
+  escrowSnapshot EscrowSnapshot    @relation(fields: [escrowSnapshotId], references: [id], onDelete: Restrict)
+  escrowAccount  EscrowAccount?    @relation(fields: [escrowAccountId], references: [id], onDelete: SetNull)
+  batch          SettlementBatch?  @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  @@index([status, scheduledAt])
+  @@index([workerUserId, status])
+  @@index([campaignId])
+  @@index([reviewDecisionId])
+  @@index([batchId])
+  @@map("settlements")
+}
+
+/// Immutable settlement batch (BAT-…) for daily/weekly finance ops.
+model SettlementBatch {
+  id           String    @id @default(cuid())
+  publicId     String    @unique @map("public_id")
+  status       String    @default("created")
+  currency     String
+  batchMode    String    @map("batch_mode")
+  totalMinor   Int       @default(0) @map("total_minor")
+  itemCount    Int       @default(0) @map("item_count")
+  periodKey    String    @map("period_key")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  processingAt DateTime? @map("processing_at")
+  completedAt  DateTime? @map("completed_at")
+  failedAt     DateTime? @map("failed_at")
+  reconciledAt DateTime? @map("reconciled_at")
+  metadata     Json?
+
+  settlements Settlement[]
+
+  @@unique([batchMode, periodKey, currency])
+  @@index([status])
+  @@map("settlement_batches")
+}
+
+/// Withdrawal policy catalog.
+model WithdrawalPolicy {
+  id                         String   @id @default(cuid())
+  key                        String   @unique
+  name                       String
+  description                String?
+  approvalMode               String   @map("approval_mode")
+  approvalThresholdMinor     Int?     @map("approval_threshold_minor")
+  batchMode                  String   @default("none") @map("batch_mode")
+  minAmountMinor             Int      @map("min_amount_minor")
+  maxAmountMinor             Int?     @map("max_amount_minor")
+  minimumBalanceMinor        Int      @default(0) @map("minimum_balance_minor")
+  coolingPeriodHours         Int      @default(0) @map("cooling_period_hours")
+  requiresVerifiedDestination Boolean @default(true) @map("requires_verified_destination")
+  active                     Boolean  @default(true)
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  requests WithdrawalRequest[]
+
+  @@map("withdrawal_policies")
+}
+
+/// Reusable payout destination (bank active; others placeholders).
+model DestinationAccount {
+  id             String    @id @default(cuid())
+  workerUserId   String    @map("worker_user_id")
+  organizationId String?   @map("organization_id")
+  kind           String
+  label          String
+  currency       String
+  /// Provider-agnostic account payload (bank code, account number, etc.)
+  details        Json
+  verified       Boolean   @default(false)
+  active         Boolean   @default(true)
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  worker   User                @relation(fields: [workerUserId], references: [id], onDelete: Cascade)
+  intents  WithdrawalIntent[]
+  requests WithdrawalRequest[]
+
+  @@index([workerUserId, active])
+  @@index([kind])
+  @@map("destination_accounts")
+}
+
+/// Ephemeral withdrawal intent — preview/eligibility before WDR creation.
+model WithdrawalIntent {
+  id                    String    @id @default(cuid())
+  workerUserId          String    @map("worker_user_id")
+  walletId              String    @map("wallet_id")
+  destinationAccountId  String    @map("destination_account_id")
+  organizationId        String?   @map("organization_id")
+  amountMinor           Int       @map("amount_minor")
+  feeMinor              Int       @default(0) @map("fee_minor")
+  netMinor              Int       @map("net_minor")
+  currency              String
+  policyKey             String    @map("policy_key")
+  status                String    @default("open")
+  eligibilitySnapshot   Json      @map("eligibility_snapshot")
+  projectionSnapshot    Json      @map("projection_snapshot")
+  estimatedProcessAt    DateTime? @map("estimated_process_at")
+  expiresAt             DateTime  @map("expires_at")
+  convertedRequestId    String?   @unique @map("converted_request_id")
+  metadata              Json?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  worker             User               @relation(fields: [workerUserId], references: [id], onDelete: Cascade)
+  wallet             Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  destinationAccount DestinationAccount @relation(fields: [destinationAccountId], references: [id], onDelete: Restrict)
+  convertedRequest   WithdrawalRequest? @relation(fields: [convertedRequestId], references: [id], onDelete: SetNull)
+
+  @@index([workerUserId, status])
+  @@index([expiresAt])
+  @@map("withdrawal_intents")
+}
+
+/// Immutable withdrawal request (WDR-…).
+model WithdrawalRequest {
+  id                     String    @id @default(cuid())
+  publicId               String    @unique @map("public_id")
+  workerUserId           String    @map("worker_user_id")
+  organizationId         String?   @map("organization_id")
+  walletId               String    @map("wallet_id")
+  destinationAccountId   String    @map("destination_account_id")
+  policyKey              String    @map("policy_key")
+  policyId               String?   @map("policy_id")
+  policySnapshot         Json      @map("policy_snapshot")
+  projectionSnapshot     Json      @map("projection_snapshot")
+  complianceSnapshot     Json      @map("compliance_snapshot")
+  settlementReferences   Json      @default("[]") @map("settlement_references")
+  amountMinor            Int       @map("amount_minor")
+  feeMinor               Int       @default(0) @map("fee_minor")
+  netMinor               Int       @map("net_minor")
+  currency               String
+  status                 String    @default("pending")
+  batchId                String?   @map("batch_id")
+  ledgerTransactionId    String?   @map("ledger_transaction_id")
+  idempotencyKey         String    @unique @map("idempotency_key")
+  scheduledAt            DateTime? @map("scheduled_at")
+  processingAt           DateTime? @map("processing_at")
+  completedAt            DateTime? @map("completed_at")
+  failedAt               DateTime? @map("failed_at")
+  failureReason          String?   @map("failure_reason")
+  metadata               Json?
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  worker             User                 @relation("WithdrawalWorker", fields: [workerUserId], references: [id], onDelete: Restrict)
+  wallet             Wallet               @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  destinationAccount DestinationAccount   @relation(fields: [destinationAccountId], references: [id], onDelete: Restrict)
+  policy             WithdrawalPolicy?    @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  batch              WithdrawalBatch?     @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  approvals          WithdrawalApproval[]
+  reservation        WithdrawalReservation?
+  intent             WithdrawalIntent?
+
+  @@index([workerUserId, status])
+  @@index([status, scheduledAt])
+  @@index([batchId])
+  @@index([walletId])
+  @@map("withdrawal_requests")
+}
+
+/// Soft fund hold — never mutates wallet; projection subtracts active reservations.
+model WithdrawalReservation {
+  id           String    @id @default(cuid())
+  requestId    String    @unique @map("request_id")
+  walletId     String    @map("wallet_id")
+  amountMinor  Int       @map("amount_minor")
+  currency     String
+  status       String    @default("active")
+  reservedAt   DateTime  @default(now()) @map("reserved_at")
+  releasedAt   DateTime? @map("released_at")
+  metadata     Json?
+
+  request WithdrawalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  wallet  Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, status])
+  @@map("withdrawal_reservations")
+}
+
+/// Immutable approval history for a withdrawal request.
+model WithdrawalApproval {
+  id           String   @id @default(cuid())
+  requestId    String   @map("request_id")
+  approverUserId String @map("approver_user_id")
+  decision     String
+  step         Int      @default(1)
+  comments     String?
+  metadata     Json?
+  decidedAt    DateTime @default(now()) @map("decided_at")
+
+  request  WithdrawalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approver User              @relation("WithdrawalApprover", fields: [approverUserId], references: [id], onDelete: Restrict)
+
+  @@index([requestId, step])
+  @@map("withdrawal_approvals")
+}
+
+/// Withdrawal payout batch (BATW-…).
+model WithdrawalBatch {
+  id           String    @id @default(cuid())
+  publicId     String    @unique @map("public_id")
+  status       String    @default("created")
+  currency     String
+  batchMode    String    @map("batch_mode")
+  periodKey    String    @map("period_key")
+  totalMinor   Int       @default(0) @map("total_minor")
+  itemCount    Int       @default(0) @map("item_count")
+  scheduledAt  DateTime? @map("scheduled_at")
+  processingAt DateTime? @map("processing_at")
+  completedAt  DateTime? @map("completed_at")
+  failedAt     DateTime? @map("failed_at")
+  reconciledAt DateTime? @map("reconciled_at")
+  metadata     Json?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  requests WithdrawalRequest[]
+
+  @@unique([batchMode, periodKey, currency])
+  @@index([status])
+  @@map("withdrawal_batches")
+}
+
+/// Provider configuration catalog (capabilities + stub config — no live secrets).
+model ProviderConfiguration {
+  id           String   @id @default(cuid())
+  providerKey  String   @unique @map("provider_key")
+  displayName  String   @map("display_name")
+  capabilities Json
+  active       Boolean  @default(true)
+  /// Non-secret config only (region, currency defaults, etc.)
+  config       Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("provider_configurations")
+}
+
+/// Domain payment intent (PAY-…) — purpose before any provider session.
+model PaymentIntent {
+  id               String    @id @default(cuid())
+  publicId         String    @unique @map("public_id")
+  organizationId   String    @map("organization_id")
+  clientUserId     String    @map("client_user_id")
+  purpose          String
+  amountMinor      Int       @map("amount_minor")
+  currency         String
+  status           String    @default("draft")
+  reference        String    @unique
+  campaignId       String?   @map("campaign_id")
+  providerKey      String?   @map("provider_key")
+  providerRef      String?   @map("provider_ref")
+  checkoutUrl      String?   @map("checkout_url")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  metadata         Json?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  completedAt      DateTime? @map("completed_at")
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       User           @relation("PaymentClient", fields: [clientUserId], references: [id], onDelete: Restrict)
+  campaign     Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  records      PaymentRecord[]
+  events       PaymentEvent[]
+
+  @@index([organizationId, status])
+  @@index([clientUserId])
+  @@index([campaignId])
+  @@index([status])
+  @@map("payment_intents")
+}
+
+/// Immutable payment record after provider interaction / verification.
+model PaymentRecord {
+  id                   String    @id @default(cuid())
+  paymentIntentId      String    @map("payment_intent_id")
+  providerKey          String    @map("provider_key")
+  providerTransactionId String   @map("provider_transaction_id")
+  status               String    @default("pending")
+  amountMinor          Int       @map("amount_minor")
+  currency             String
+  verificationSnapshot Json?     @map("verification_snapshot")
+  ledgerTransactionId  String?   @map("ledger_transaction_id")
+  metadata             Json?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  verifiedAt           DateTime? @map("verified_at")
+
+  paymentIntent PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+
+  @@unique([providerKey, providerTransactionId])
+  @@index([paymentIntentId])
+  @@index([status])
+  @@map("payment_records")
+}
+
+/// Normalized payment events (from webhooks or verification).
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  paymentIntentId String?  @map("payment_intent_id")
+  type            String
+  providerKey     String   @map("provider_key")
+  providerRef     String   @map("provider_ref")
+  idempotencyKey  String   @unique @map("idempotency_key")
+  amountMinor     Int      @map("amount_minor")
+  currency        String
+  payload         Json
+  processed       Boolean  @default(false)
+  occurredAt      DateTime @map("occurred_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  paymentIntent PaymentIntent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+
+  @@index([type, processed])
+  @@index([providerKey, providerRef])
+  @@map("payment_events")
+}
+
+/// Named delivery policy catalog (immediate / delayed / quiet hours / etc.).
+model DeliveryPolicy {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  displayName    String   @map("display_name")
+  mode           String
+  /// Mode-specific config (delaySeconds, quietHours, retry, digest, etc.)
+  config         Json
+  organizationId String?  @map("organization_id")
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, active])
+  @@index([mode])
+  @@map("delivery_policies")
+}
+
+/// Strongly typed notification templates — no inline message generation.
+model NotificationTemplate {
+  id                 String   @id @default(cuid())
+  key                String
+  event              String
+  channel            String
+  locale             String   @default("en")
+  subject            String?
+  bodyText           String   @map("body_text")
+  bodyHtml           String?  @map("body_html")
+  requiredVariables  Json     @map("required_variables")
+  version            Int      @default(1)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([key, channel, locale, version])
+  @@index([event, channel, active])
+  @@map("notification_templates")
+}
+
+/// First-class notification preferences (user or organization scope).
+model NotificationPreference {
+  id                 String   @id @default(cuid())
+  scope              String
+  /// Unique subject key: user:{userId} | org:{organizationId}
+  subjectKey         String   @unique @map("subject_key")
+  userId             String?  @map("user_id")
+  organizationId     String?  @map("organization_id")
+  enabledChannels    Json     @map("enabled_channels")
+  quietHoursStart    String?  @map("quiet_hours_start")
+  quietHoursEnd      String?  @map("quiet_hours_end")
+  timezone           String   @default("UTC")
+  locale             String   @default("en")
+  /// Event keys subscribed; empty/null = all hub events
+  eventSubscriptions Json?    @map("event_subscriptions")
+  digestFrequency    String   @default("none") @map("digest_frequency")
+  /// Array of { start, end } HH:mm windows in preference timezone
+  dndWindows         Json?    @map("dnd_windows")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user         User?         @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("notification_preferences")
+}
+
+/// Notification Intent (NTF-…) — what should be communicated, not how.
+model NotificationIntent {
+  id               String    @id @default(cuid())
+  publicId         String    @unique @map("public_id")
+  event            String
+  organizationId   String?   @map("organization_id")
+  actorUserId      String?   @map("actor_user_id")
+  templateKey      String    @map("template_key")
+  variables        Json
+  /// Resolved recipient snapshot [{ userId, role, channels, address }]
+  recipientSnapshot Json     @map("recipient_snapshot")
+  policySnapshot   Json      @map("policy_snapshot")
+  status           String    @default("draft")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  metadata         Json?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor        User?             @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  jobs         NotificationJob[]
+
+  @@index([organizationId, status])
+  @@index([event, createdAt])
+  @@index([status])
+  @@map("notification_intents")
+}
+
+/// Immutable delivery job created from an intent after preference/policy resolution.
+model NotificationJob {
+  id                String    @id @default(cuid())
+  intentId          String    @map("intent_id")
+  channel           String
+  providerKey       String?   @map("provider_key")
+  recipientUserId   String?   @map("recipient_user_id")
+  recipientAddress  String    @map("recipient_address")
+  recipientRole     String?   @map("recipient_role")
+  priority          String    @default("normal")
+  status            String    @default("scheduled")
+  attempts          Int       @default(0)
+  maxAttempts       Int       @default(3) @map("max_attempts")
+  scheduledAt       DateTime  @map("scheduled_at")
+  deliveredAt       DateTime? @map("delivered_at")
+  failureDetails    Json?     @map("failure_details")
+  providerRef       String?   @map("provider_ref")
+  renderedSubject   String?   @map("rendered_subject")
+  renderedBodyText  String    @map("rendered_body_text")
+  renderedBodyHtml  String?   @map("rendered_body_html")
+  idempotencyKey    String    @unique @map("idempotency_key")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  intent    NotificationIntent @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  recipient User?              @relation("NotificationJobRecipient", fields: [recipientUserId], references: [id], onDelete: SetNull)
+
+  @@index([intentId])
+  @@index([status, scheduledAt])
+  @@index([channel, status])
+  @@index([recipientUserId])
+  @@map("notification_jobs")
+}
+
+/// Auditable operation command issued from the Operations Console (OPC-…).
+model OperationalCommand {
+  id               String    @id @default(cuid())
+  publicId         String    @unique @map("public_id")
+  commandType      String    @map("command_type")
+  targetType       String    @map("target_type")
+  targetId         String    @map("target_id")
+  targetPublicId   String?   @map("target_public_id")
+  queueKey         String?   @map("queue_key")
+  status           String    @default("accepted")
+  actorUserId      String    @map("actor_user_id")
+  reason           String?
+  payload          Json?
+  result           Json?
+  playbookKey      String?   @map("playbook_key")
+  reversible       Boolean   @default(false)
+  reversedAt       DateTime? @map("reversed_at")
+  reversedByUserId String?   @map("reversed_by_user_id")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  appliedAt        DateTime? @map("applied_at")
+
+  actor  User                @relation("OperationalCommandActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  audits OperationalAudit[]
+
+  @@index([commandType, createdAt])
+  @@index([targetType, targetId])
+  @@index([queueKey, status])
+  @@index([actorUserId, createdAt])
+  @@index([status])
+  @@map("operational_commands")
+}
+
+/// Operations-specific audit trail (complements platform AuditLog).
+model OperationalAudit {
+  id             String   @id @default(cuid())
+  commandId      String?  @map("command_id")
+  actorUserId    String?  @map("actor_user_id")
+  action         String
+  resourceType   String   @map("resource_type")
+  resourceId     String?  @map("resource_id")
+  resourcePublicId String? @map("resource_public_id")
+  organizationId String?  @map("organization_id")
+  queueKey       String?  @map("queue_key")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  command OperationalCommand? @relation(fields: [commandId], references: [id], onDelete: SetNull)
+  actor   User?               @relation("OperationalAuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([resourceType, resourceId])
+  @@index([resourcePublicId])
+  @@index([organizationId, createdAt])
+  @@index([queueKey, createdAt])
+  @@index([actorUserId])
+  @@map("operational_audits")
+}
+
+/// Cached Command Center / operational view snapshot.
+model DashboardSnapshot {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  payload     Json
+  generatedAt DateTime @map("generated_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([generatedAt])
+  @@map("dashboard_snapshots")
+}
+
+/// Reusable operational playbooks attached to queues / failure modes.
+model OperationalPlaybook {
+  id          String   @id @default(cuid())
+  publicId    String   @unique @map("public_id")
+  key         String   @unique
+  title       String
+  queueKey    String?  @map("queue_key")
+  summary     String
+  /// Ordered guidance steps [{ order, title, actionHint }]
+  steps       Json
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([queueKey, active])
+  @@map("operational_playbooks")
+}
+
+/// Registered AI plugin catalog (capabilities + health — no live model secrets).
+model AiPlugin {
+  id                      String   @id @default(cuid())
+  key                     String   @unique
+  displayName             String   @map("display_name")
+  version                 String
+  capabilities            Json
+  supportedEntityTypes    Json     @map("supported_entity_types")
+  supportedExtensionPoints Json    @map("supported_extension_points")
+  priority                Int      @default(100)
+  health                  String   @default("stub")
+  active                  Boolean  @default(true)
+  configurationSchema     Json     @map("configuration_schema")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  executions AiExecution[]
+  configs    AiConfiguration[]
+
+  @@index([active, priority])
+  @@index([health])
+  @@map("ai_plugins")
+}
+
+/// Per org / extension-point AI policy configuration.
+model AiConfiguration {
+  id                   String   @id @default(cuid())
+  /// Unique subject: global:{extension}[:plugin] | org:{orgId}:{extension}[:plugin]
+  subjectKey           String   @unique @map("subject_key")
+  organizationId       String?  @map("organization_id")
+  extensionPoint       String   @map("extension_point")
+  policyMode           String   @default("recommendation_only") @map("policy_mode")
+  pluginKey            String?  @map("plugin_key")
+  requiredCapabilities Json?    @map("required_capabilities")
+  config               Json?
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plugin       AiPlugin?     @relation(fields: [pluginKey], references: [key], onDelete: SetNull)
+
+  @@index([extensionPoint, active])
+  @@index([organizationId])
+  @@map("ai_configurations")
+}
+
+/// Immutable AI plugin execution (AIX-…).
+model AiExecution {
+  id               String    @id @default(cuid())
+  publicId         String    @unique @map("public_id")
+  pluginKey        String    @map("plugin_key")
+  extensionPoint   String    @map("extension_point")
+  entityType       String    @map("entity_type")
+  entityId         String    @map("entity_id")
+  entityPublicId   String?   @map("entity_public_id")
+  organizationId   String?   @map("organization_id")
+  actorUserId      String?   @map("actor_user_id")
+  status           String    @default("queued")
+  policyMode       String    @map("policy_mode")
+  contextSnapshot  Json      @map("context_snapshot")
+  result           Json?
+  model            String?
+  modelVersion     String?   @map("model_version")
+  confidence       Float?
+  score            Float?
+  recommendation   String?
+  durationMs       Int?      @map("duration_ms")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  errorMessage     String?   @map("error_message")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  completedAt      DateTime? @map("completed_at")
+
+  plugin         AiPlugin              @relation(fields: [pluginKey], references: [key], onDelete: Restrict)
+  organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor          User?                 @relation("AiExecutionActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  recommendations AiRecommendation[]
+  decisionLinks  AiDecisionRecommendation[]
+
+  @@index([pluginKey, createdAt])
+  @@index([extensionPoint, status])
+  @@index([entityType, entityId])
+  @@index([organizationId, createdAt])
+  @@index([status])
+  @@map("ai_executions")
+}
+
+/// Structured recommendation produced by an execution.
+model AiRecommendation {
+  id                 String   @id @default(cuid())
+  executionId        String   @map("execution_id")
+  kind               String
+  confidence         Float
+  score              Float?
+  summary            String
+  findings           Json
+  evidenceReferences Json     @map("evidence_references")
+  metadata           Json?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  execution     AiExecution                 @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  decisionLinks AiDecisionRecommendation[]
+
+  @@index([executionId])
+  @@index([kind])
+  @@map("ai_recommendations")
+}
+
+/// Immutable record of how AI recommendations influenced a human decision (DEC-…).
+model AiDecisionRecord {
+  id               String   @id @default(cuid())
+  publicId         String   @unique @map("public_id")
+  actorUserId      String?  @map("actor_user_id")
+  organizationId   String?  @map("organization_id")
+  entityType       String   @map("entity_type")
+  entityId         String   @map("entity_id")
+  entityPublicId   String?  @map("entity_public_id")
+  extensionPoint   String   @map("extension_point")
+  finalDecision    String   @map("final_decision")
+  outcome          String
+  evidenceReferences Json   @map("evidence_references")
+  rationale        String?
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  actor           User?                       @relation("AiDecisionActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  organization    Organization?               @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  recommendations AiDecisionRecommendation[]
+
+  @@index([entityType, entityId])
+  @@index([actorUserId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([extensionPoint, createdAt])
+  @@map("ai_decision_records")
+}
+
+model AiDecisionRecommendation {
+  decisionId       String @map("decision_id")
+  recommendationId String @map("recommendation_id")
+  executionId      String @map("execution_id")
+
+  decision       AiDecisionRecord @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  recommendation AiRecommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  execution      AiExecution      @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@id([decisionId, recommendationId])
+  @@map("ai_decision_recommendations")
+}
+
