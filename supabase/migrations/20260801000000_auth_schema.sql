@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 -- 2. EMAIL VERIFICATIONS & OTP REQUESTS TABLE
 CREATE TABLE IF NOT EXISTS public.email_verifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   code_hash TEXT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.email_verifications (
 
 -- 3. PHONE VERIFICATIONS & OTP REQUESTS TABLE
 CREATE TABLE IF NOT EXISTS public.phone_verifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   phone TEXT NOT NULL,
   code_hash TEXT NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.phone_verifications (
 
 -- 4. AUTH AUDIT LOGS TABLE
 CREATE TABLE IF NOT EXISTS public.auth_audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   event_type TEXT NOT NULL CHECK (event_type IN ('login', 'logout', 'failed_login', 'pin_reset', 'email_verification', 'phone_verification', 'session_revoked', 'password_changed')),
   ip_address TEXT,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.auth_audit_logs (
 
 -- 5. REFERRALS TABLE
 CREATE TABLE IF NOT EXISTS public.referrals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   referrer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   referred_id UUID UNIQUE NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   referral_code TEXT NOT NULL,
