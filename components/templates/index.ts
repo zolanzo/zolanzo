@@ -11,10 +11,6 @@ export {
   type DetailTemplateProps,
 } from "@/components/templates/detail-template";
 export {
-  LandingTemplate,
-  type LandingTemplateProps,
-} from "@/components/templates/landing-template";
-export {
   ListTemplate,
   type ListTemplateProps,
 } from "@/components/templates/list-template";

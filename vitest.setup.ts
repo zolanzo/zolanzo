@@ -3,4 +3,6 @@
  */
 import { vi } from "vitest";
 
+process.env.STORAGE_PROVIDER ??= "memory";
+
 vi.mock("server-only", () => ({}));

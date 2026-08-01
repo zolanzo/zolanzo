@@ -97,8 +97,9 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     id: "resend",
     label: "Resend",
     category: "email",
-    status: "planned",
-    envKeys: ["RESEND_API_KEY"],
+    status: "default",
+    isDefault: true,
+    envKeys: ["RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_WEBHOOK_SECRET"],
   },
   {
     id: "sendgrid",
@@ -124,6 +125,8 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     envKeys: [
       "SENDCHAMP_API_KEY",
       "SENDCHAMP_SENDER_ID",
+      "SENDCHAMP_WHATSAPP_SENDER",
+      "SENDCHAMP_WEBHOOK_SECRET",
     ],
   },
   {
@@ -167,7 +170,8 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     id: "paystack",
     label: "Paystack",
     category: "payments",
-    status: "planned",
+    status: "default",
+    isDefault: true,
     envKeys: ["PAYSTACK_SECRET_KEY", "PAYSTACK_PUBLIC_KEY"],
   },
   {
@@ -213,12 +217,31 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     status: "optional",
     envKeys: ["GOOGLE_AI_API_KEY"],
   },
+  {
+    id: "supabase_storage",
+    label: "Supabase Storage",
+    category: "storage",
+    status: "default",
+    isDefault: true,
+    envKeys: [
+      "STORAGE_PROVIDER",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "SUPABASE_SERVICE_ROLE_KEY",
+    ],
+  },
+  {
+    id: "s3_storage",
+    label: "Amazon S3",
+    category: "storage",
+    status: "planned",
+    envKeys: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_S3_BUCKET"],
+  },
   // Observability / analytics
   {
     id: "sentry",
     label: "Sentry",
     category: "observability",
-    status: "planned",
+    status: "optional",
     envKeys: ["SENTRY_DSN"],
   },
   {

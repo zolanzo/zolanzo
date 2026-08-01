@@ -12,10 +12,12 @@ import { memoryEvidenceStorageAdapter } from "@/lib/integrations/evidence/memory
 import { memoryPaymentAdapter } from "@/lib/integrations/payments/memory-adapter";
 import { memoryNotificationAdapter } from "@/lib/integrations/notifications/memory-adapter";
 import { memoryAiPlugin } from "@/lib/integrations/ai/memory-plugin";
+import { memoryMonitoringAdapter } from "@/lib/integrations/monitoring/memory-adapter";
 
 export const integrationRegistry: IntegrationRegistry = {
   evidenceStorage: memoryEvidenceStorageAdapter,
   payments: [memoryPaymentAdapter],
   notifications: [memoryNotificationAdapter],
   aiPlugins: [memoryAiPlugin],
+  monitoring: [memoryMonitoringAdapter],
 };

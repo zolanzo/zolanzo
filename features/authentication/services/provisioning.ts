@@ -16,6 +16,7 @@ import {
   allocateOrganizationPublicId,
   allocateWorkerPublicId,
 } from "@/lib/public-id/generator";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 
 export type ProvisionInput = {
   authSubject: string;
@@ -151,6 +152,28 @@ export async function provisionAuthenticatedUser(
     organizationId: result.organizationId,
     ip: input.ip,
     metadata: { authSubject: input.authSubject },
+  });
+
+  await safeEmitDomainNotification({
+    event: "auth.welcome",
+    organizationId: result.organizationId,
+    actorUserId: result.userId,
+    recipients: [
+      {
+        role: "client",
+        userId: result.userId,
+        email: input.email.toLowerCase(),
+        displayName: input.displayName.trim(),
+      },
+    ],
+    variables: {
+      recipientName: input.displayName.trim() || "there",
+      organizationName: "Zolanzo",
+      publicRef: result.userId,
+    },
+    idempotencyKey: `auth.welcome:${result.userId}`,
+    channels: ["email", "sms", "in_app"],
+    span: "auth.provision",
   });
 
   if (isServiceRoleConfigured()) {

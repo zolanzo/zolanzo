@@ -32,6 +32,7 @@ import {
   ensureWorkerWallet,
   projectWallet,
 } from "@/features/wallet/services/projection";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 import { z } from "zod";
 
 export type SettlementRecord = {
@@ -211,7 +212,89 @@ async function processSettlementRelease(
     });
 
     await projectWallet(row.workerWalletId);
-    return mapSettlement(updated);
+    const mapped = mapSettlement(updated);
+    const [worker, campaign] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: row.workerUserId },
+        select: {
+          email: true,
+          phone: true,
+          profile: { select: { displayName: true } },
+        },
+      }),
+      prisma.campaign.findUnique({
+        where: { id: row.campaignId },
+        select: { organizationId: true, name: true },
+      }),
+    ]);
+    await safeEmitDomainNotification({
+      event: "settlement.completed",
+      organizationId: campaign?.organizationId ?? null,
+      actorUserId: row.workerUserId,
+      recipients: [
+        {
+          role: "worker",
+          userId: row.workerUserId,
+          email: worker?.email ?? null,
+          phone: worker?.phone ?? null,
+          displayName: worker?.profile?.displayName ?? null,
+        },
+      ],
+      variables: {
+        recipientName: worker?.profile?.displayName ?? "there",
+        organizationName: campaign?.name ?? "Zolanzo",
+        publicRef: mapped.publicId,
+        amountLabel: `${(row.amountMinor / 100).toFixed(2)} ${row.currency}`,
+      },
+      idempotencyKey: `settlement.completed:${mapped.publicId}`,
+      channels: ["email", "sms", "in_app"],
+      span: "settlement.release",
+    });
+    const { safeRecordTrustEvent } = await import("@/lib/trust/safe-emit");
+    await safeRecordTrustEvent({
+      subjectType: "worker",
+      subjectId: row.workerUserId,
+      eventType: "payment_settled",
+      idempotencyKey: `trust:payment_settled:${mapped.publicId}`,
+      payload: { settlementPublicId: mapped.publicId },
+      span: "settlement.release.trust",
+    });
+    const { safeRecordAnalyticsEvent } = await import(
+      "@/lib/analytics/safe-emit"
+    );
+    await safeRecordAnalyticsEvent({
+      source: "payments",
+      eventType: "payment.completed",
+      idempotencyKey: `analytics:payment.completed:${mapped.publicId}`,
+      entityType: "settlement",
+      entityId: mapped.publicId,
+      userId: row.workerUserId,
+      organizationId: campaign?.organizationId ?? null,
+      metricValue: row.amountMinor,
+      payload: {
+        settlementPublicId: mapped.publicId,
+        amountMinor: row.amountMinor,
+        currency: row.currency,
+      },
+      span: "settlement.release.analytics",
+    });
+    const { safeRecordAutomationEvent } = await import(
+      "@/lib/automation/safe-emit"
+    );
+    await safeRecordAutomationEvent({
+      trigger: "payment.settled",
+      idempotencyKey: `automation:payment.settled:${mapped.publicId}`,
+      userId: row.workerUserId,
+      organizationId: campaign?.organizationId ?? null,
+      payload: {
+        paymentId: mapped.publicId,
+        userId: row.workerUserId,
+        amountMinor: row.amountMinor,
+        paymentStatus: "completed",
+      },
+      span: "settlement.release.automation",
+    });
+    return mapped;
   } catch (error) {
     await prisma.settlement.update({
       where: { id: row.id },

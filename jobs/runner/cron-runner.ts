@@ -184,6 +184,9 @@ export class CronRunner {
       await executeRegisteredJob({
         jobName: schedule.job,
         schedule: schedule.cron,
+        // Unit tests must not depend on Postgres advisory locks.
+        skipLock:
+          process.env.VITEST === "true" || process.env.NODE_ENV === "test",
       });
     } finally {
       this.inFlight = Math.max(0, this.inFlight - 1);

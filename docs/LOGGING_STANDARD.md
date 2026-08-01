@@ -20,14 +20,23 @@ Every line is a single JSON object written to stdout (`info`/`warn`/`debug`) or 
   workerId?: string,
   clientId?: string,
   operation?: string,
+  operationId?: string,
   module?: string,
   jobName?: string,
+  jobId?: string,
+  provider?: string,
   isRetry?: boolean,
   attempt?: number,
+  // Common caller fields:
+  durationMs?: number,
+  outcome?: string,
+  errorCode?: string,
   // Caller fields:
   ...extra
 }
 ```
+
+Sensitive keys (`password`, `secret`, `token`, `authorization`, `apiKey`, …) are **redacted** to `[REDACTED]` before write (`lib/observability/redact.ts`).
 
 ## Levels
 

@@ -29,6 +29,7 @@ function meetsAccess(
     case "public":
       return true;
     case "authenticated":
+    case "onboarding":
     case "organization":
       return opts.authenticated;
     case "admin":
@@ -97,7 +98,7 @@ export async function middleware(request: NextRequest) {
 
   if (!meetsAccess(access, { authenticated, roles })) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/sign-in";
+    url.pathname = "/login";
     url.searchParams.set("next", pathname);
     const redirect = NextResponse.redirect(url);
     applySecurityHeaders(redirect, nonce);
@@ -108,7 +109,7 @@ export async function middleware(request: NextRequest) {
 
   if (authenticated && isAuthEntryPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.pathname = "/onboarding";
     url.search = "";
     const redirect = NextResponse.redirect(url);
     applySecurityHeaders(redirect, nonce);

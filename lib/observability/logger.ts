@@ -3,10 +3,12 @@
  * Production code must use this — never raw console.log.
  *
  * Automatically merges active RequestContext (correlationId, identities, operation).
+ * Sensitive fields are redacted before write.
  */
 
 import type { LogLevel } from "@/constants/observability";
 import { getRequestContext } from "@/lib/observability/request-context";
+import { redactFields } from "@/lib/observability/redact";
 
 export type LogFields = Record<string, unknown>;
 
@@ -41,18 +43,16 @@ function contextFields(): LogFields {
     correlationId: ctx.correlationId,
   };
 
-  if (ctx.requestId && ctx.requestId !== ctx.correlationId) {
-    fields.requestId = ctx.requestId;
-  } else if (ctx.requestId) {
-    fields.requestId = ctx.requestId;
-  }
-
+  if (ctx.requestId) fields.requestId = ctx.requestId;
   if (ctx.organizationId) fields.organizationId = ctx.organizationId;
   if (ctx.userId) fields.userId = ctx.userId;
   if (ctx.workerId) fields.workerId = ctx.workerId;
   if (ctx.clientId) fields.clientId = ctx.clientId;
   if (ctx.operation) fields.operation = ctx.operation;
+  if (ctx.operationId) fields.operationId = ctx.operationId;
   if (ctx.jobName) fields.jobName = ctx.jobName;
+  if (ctx.jobId) fields.jobId = ctx.jobId;
+  if (ctx.provider) fields.provider = ctx.provider;
   if (ctx.module) fields.module = ctx.module;
   if (ctx.isRetry) fields.isRetry = true;
   if (ctx.attempt != null) fields.attempt = ctx.attempt;
@@ -69,14 +69,18 @@ function write(
   const min = resolveMinLevel();
   if (LEVEL_RANK[level] < LEVEL_RANK[min]) return;
 
+  const merged = {
+    ...contextFields(),
+    ...bindings,
+    ...fields,
+  };
+
   const payload = {
     level,
     message,
     ts: new Date().toISOString(),
     service: "zolanzo",
-    ...contextFields(),
-    ...bindings,
-    ...fields,
+    ...redactFields(merged),
   };
 
   const line = `${JSON.stringify(payload)}\n`;
@@ -122,6 +126,10 @@ export function logUnhandledError(
   logger.error("Unhandled error", {
     ...extras,
     err,
-    timestamp: new Date().toISOString(),
+    outcome: "error",
+    errorCode:
+      error && typeof error === "object" && "code" in error
+        ? String((error as { code: unknown }).code)
+        : "UNHANDLED",
   });
 }

@@ -1,88 +1,68 @@
-import type {
-  HTMLAttributes,
-  TableHTMLAttributes,
-  TdHTMLAttributes,
-  ThHTMLAttributes,
-} from "react";
-import { cn } from "@/utils";
+"use client";
 
-export type TableProps = TableHTMLAttributes<HTMLTableElement>;
+import React from "react";
 
-export function Table({ className, children, ...props }: TableProps) {
+export function Table({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-soft">
-      <table
-        className={cn("w-full caption-bottom text-body", className)}
-        {...props}
-      >
-        {children}
-      </table>
+    <div className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0F12]">
+      <table className={`w-full text-left text-xs text-zinc-300 ${className}`}>{children}</table>
     </div>
   );
 }
 
-export type THeadProps = HTMLAttributes<HTMLTableSectionElement>;
-
-export function THead({ className, children, ...props }: THeadProps) {
-  return (
-    <thead
-      className={cn(
-        "border-b border-border bg-surface text-left text-small font-semibold text-muted-foreground",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </thead>
-  );
+export function TableHeader({ children }: { children: React.ReactNode }) {
+  return <thead className="bg-zinc-900/90 text-[11px] uppercase tracking-wider text-zinc-400 border-b border-white/5 font-semibold">{children}</thead>;
 }
 
-export type TBodyProps = HTMLAttributes<HTMLTableSectionElement>;
-
-export function TBody({ className, children, ...props }: TBodyProps) {
-  return (
-    <tbody className={cn("[&_tr:last-child]:border-0", className)} {...props}>
-      {children}
-    </tbody>
-  );
+export function TableBody({ children }: { children: React.ReactNode }) {
+  return <tbody className="divide-y divide-white/5">{children}</tbody>;
 }
 
-export type TRProps = HTMLAttributes<HTMLTableRowElement>;
-
-export function TR({ className, children, ...props }: TRProps) {
-  return (
-    <tr
-      className={cn(
-        "border-b border-border transition-colors hover:bg-foreground/[0.02]",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </tr>
-  );
+export function TableRow({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <tr className={`hover:bg-zinc-900/40 transition-colors ${className}`}>{children}</tr>;
 }
 
-export type THProps = ThHTMLAttributes<HTMLTableCellElement>;
-
-export function TH({ className, children, scope = "col", ...props }: THProps) {
-  return (
-    <th
-      scope={scope}
-      className={cn("h-11 px-4 align-middle font-semibold", className)}
-      {...props}
-    >
-      {children}
-    </th>
-  );
+export function TableHead({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <th className={`px-4 py-3.5 font-bold ${className}`}>{children}</th>;
 }
 
-export type TDProps = TdHTMLAttributes<HTMLTableCellElement>;
-
-export function TD({ className, children, ...props }: TDProps) {
+export function TableCell({
+  children,
+  colSpan,
+  className = "",
+}: {
+  children: React.ReactNode;
+  colSpan?: number;
+  className?: string;
+}) {
   return (
-    <td className={cn("px-4 py-3 align-middle text-foreground", className)} {...props}>
+    <td colSpan={colSpan} className={`px-4 py-3.5 font-medium ${className}`}>
       {children}
     </td>
   );
 }
+
+// Legacy Aliases for data-table compatibility
+export const THead = TableHeader;
+export const TBody = TableBody;
+export const TR = TableRow;
+export const TH = TableHead;
+export const TD = TableCell;

@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/utils";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type SortDirection = "asc" | "desc";
 
@@ -103,11 +104,12 @@ export function DataTable<T>({
         <TBody>
           {isEmpty ? (
             <TR className="hover:bg-transparent">
-              <TD colSpan={columns.length} className="py-16 text-center">
-                <div className="mx-auto flex max-w-sm flex-col items-center gap-2">
-                  <p className="text-h3 text-foreground">{emptyMessage}</p>
-                  <p className="text-small text-muted-foreground">{emptyDescription}</p>
-                </div>
+              <TD colSpan={columns.length} className="p-0">
+                <EmptyState
+                  title={emptyMessage}
+                  description={emptyDescription}
+                  className="py-12"
+                />
               </TD>
             </TR>
           ) : (

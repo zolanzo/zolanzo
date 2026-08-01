@@ -28,6 +28,7 @@ import type {
   EvidenceItemRecord,
   SubmissionPackage,
 } from "@/features/submissions/types";
+import { assertSubmissionAccess } from "@/lib/auth/resource-guards";
 
 const INLINE_KINDS = new Set<ManifestEvidenceKind>([
   "text",
@@ -40,11 +41,18 @@ function decodeBase64(bodyBase64: string): Uint8Array {
   return Uint8Array.from(Buffer.from(bodyBase64, "base64"));
 }
 
-async function loadMutablePackage(publicId: string): Promise<SubmissionPackage> {
-  const submission = await submissionRepository.findByPublicId(publicId);
+async function loadMutablePackage(params: {
+  publicId: string;
+  workerUserId: string;
+}): Promise<SubmissionPackage> {
+  const submission = await submissionRepository.findByPublicId(params.publicId);
   if (!submission) {
     throw new AppError("NOT_FOUND", "Submission not found", 404);
   }
+  assertSubmissionAccess({
+    workerUserId: submission.workerUserId,
+    actorUserId: params.workerUserId,
+  });
   if (!isEvidenceMutable(submission.status)) {
     throw new AppError(
       "IMMUTABLE",
@@ -112,10 +120,19 @@ async function buildReference(params: {
 
   const bytes = decodeBase64(params.bodyBase64);
   const contentHash = await hashBytes(bytes);
+  const { validateUpload } = await import("@/lib/integrations/storage/validation");
+  const sizeCheck = validateUpload({
+    assetType: "submission_evidence",
+    contentType: params.contentType ?? "application/octet-stream",
+    sizeBytes: bytes.byteLength,
+  });
+  if (!sizeCheck.ok) {
+    throw new AppError(sizeCheck.code, sizeCheck.message, 400);
+  }
   const adapter = getEvidenceStorageAdapter();
   const objectKey = `submissions/${params.submissionPublicId}/${params.kind}/${contentHash}`;
   const reference = await adapter.store({
-    container: "evidence",
+    container: "submission-evidence",
     objectKey,
     body: bytes,
     contentType: params.contentType ?? "application/octet-stream",
@@ -195,10 +212,14 @@ export async function createDraftSubmission(params: {
 
 export async function attachEvidence(params: {
   input: unknown;
+  workerUserId: string;
 }): Promise<ApiResponse<EvidenceItemRecord>> {
   try {
     const parsed = attachEvidenceSchema.parse(params.input);
-    const pkg = await loadMutablePackage(parsed.submissionPublicId);
+    const pkg = await loadMutablePackage({
+      publicId: parsed.submissionPublicId,
+      workerUserId: params.workerUserId,
+    });
     const built = await buildReference({
       submissionPublicId: parsed.submissionPublicId,
       kind: parsed.kind as ManifestEvidenceKind,
@@ -207,6 +228,17 @@ export async function attachEvidence(params: {
       contentType: parsed.contentType,
       inlinePayload: parsed.inlinePayload,
     });
+
+    // Deduplicate by checksum within the same package
+    if (built.contentHash) {
+      const existing = pkg.items.find(
+        (item) =>
+          item.contentHash === built.contentHash && item.replacedAt == null,
+      );
+      if (existing) {
+        return apiSuccess(existing);
+      }
+    }
 
     const item = await submissionRepository.createEvidenceItem({
       manifestId: pkg.manifest.id,
@@ -231,10 +263,14 @@ export async function attachEvidence(params: {
 
 export async function replaceEvidence(params: {
   input: unknown;
+  workerUserId: string;
 }): Promise<ApiResponse<EvidenceItemRecord>> {
   try {
     const parsed = replaceEvidenceSchema.parse(params.input);
-    const pkg = await loadMutablePackage(parsed.submissionPublicId);
+    const pkg = await loadMutablePackage({
+      publicId: parsed.submissionPublicId,
+      workerUserId: params.workerUserId,
+    });
     const existing = await submissionRepository.findEvidenceItem(
       parsed.evidenceItemId,
     );
@@ -284,10 +320,14 @@ export async function replaceEvidence(params: {
 
 export async function removeEvidence(params: {
   input: unknown;
+  workerUserId: string;
 }): Promise<ApiResponse<{ removed: true }>> {
   try {
     const parsed = removeEvidenceSchema.parse(params.input);
-    const pkg = await loadMutablePackage(parsed.submissionPublicId);
+    const pkg = await loadMutablePackage({
+      publicId: parsed.submissionPublicId,
+      workerUserId: params.workerUserId,
+    });
     const existing = await submissionRepository.findEvidenceItem(
       parsed.evidenceItemId,
     );
@@ -317,6 +357,7 @@ export async function removeEvidence(params: {
 
 export async function markSubmissionReady(params: {
   input: unknown;
+  workerUserId: string;
 }): Promise<ApiResponse<SubmissionPackage>> {
   try {
     const parsed = markSubmissionReadySchema.parse(params.input);
@@ -326,6 +367,10 @@ export async function markSubmissionReady(params: {
     if (!submission) {
       throw new AppError("NOT_FOUND", "Submission not found", 404);
     }
+    assertSubmissionAccess({
+      workerUserId: submission.workerUserId,
+      actorUserId: params.workerUserId,
+    });
     assertSubmissionTransition(submission.status, "ready");
     const pkg = await submissionRepository.getPackage(submission.id);
     if (!pkg) {
@@ -491,12 +536,20 @@ export async function submitPackage(params: {
 
 export async function getSubmissionPackage(params: {
   publicId: string;
+  actorUserId: string;
+  platformRoles?: readonly string[];
 }): Promise<ApiResponse<SubmissionPackage>> {
   try {
     const submission = await submissionRepository.findByPublicId(params.publicId);
     if (!submission) {
       throw new AppError("NOT_FOUND", "Submission not found", 404);
     }
+    assertSubmissionAccess({
+      workerUserId: submission.workerUserId,
+      actorUserId: params.actorUserId,
+      allowReviewer: true,
+      platformRoles: params.platformRoles,
+    });
     const pkg = await submissionRepository.getPackage(submission.id);
     if (!pkg) {
       throw new AppError("PACKAGE_INCOMPLETE", "Package incomplete", 500);

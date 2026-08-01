@@ -27,6 +27,7 @@ export type ResolvedRecipient = {
 export type RecipientAddressByChannel = {
   email: string | null;
   sms: string | null;
+  whatsapp: string | null;
   push: string | null;
   in_app: string | null;
   webhook: string | null;
@@ -38,6 +39,7 @@ export function addressForChannel(
   return {
     email: recipient.email,
     sms: recipient.phone,
+    whatsapp: recipient.phone,
     push: recipient.pushToken,
     in_app: recipient.userId,
     webhook: recipient.webhookUrl,

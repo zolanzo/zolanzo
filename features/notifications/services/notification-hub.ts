@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma/client";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { ApiResponse } from "@/lib/api/response";
 import { apiError, apiSuccess, AppError } from "@/lib/api/response";
+import { metrics } from "@/lib/observability/metrics";
 import { generatePublicId } from "@/lib/public-id/generator";
 import {
   NOTIFICATION_CHANNELS,
@@ -50,6 +51,10 @@ import {
   renderNotificationTemplate,
   templateKeyForEvent,
 } from "@/features/notifications/services/templates";
+import {
+  resolveFallbackChannels,
+  shouldAttemptSmsEmailFallback,
+} from "@/features/notifications/services/fallback";
 import { z } from "zod";
 
 export type NotificationIntentRecord = {
@@ -549,8 +554,11 @@ export async function dispatchNotificationJob(params: {
 
     const channel = job.channel as NotificationChannel;
     const preferLive = parsed.preferLive ?? true;
+    // When preferLive: pick Resend (if keyed) / memory. Else honor job.providerKey.
     const adapter = selectNotificationAdapter({
-      providerKey: preferLive ? "memory" : job.providerKey ?? undefined,
+      providerKey: preferLive
+        ? undefined
+        : job.providerKey ?? undefined,
       channel,
       preferLive,
     });
@@ -593,6 +601,10 @@ export async function dispatchNotificationJob(params: {
         include: { intent: true },
       });
       await refreshIntentStatus(job.intentId);
+      metrics.notification({
+        channel,
+        outcome: result.status === "delivered" ? "delivered" : "queued",
+      });
       return apiSuccess({
         id: updated.id,
         intentPublicId: updated.intent.publicId,
@@ -618,17 +630,27 @@ export async function dispatchNotificationJob(params: {
     const updated = await prisma.notificationJob.update({
       where: { id: job.id },
       data: {
-        status: retry.exhausted ? "failed" : "scheduled",
+        status: retry.exhausted ? "dead_lettered" : "scheduled",
         scheduledAt: retry.exhausted ? job.scheduledAt : retry.nextAt,
         failureDetails: {
           reason: result.failureReason ?? "delivery_failed",
           raw: result.raw ?? null,
+          deadLetter: retry.exhausted,
+          attempts,
         } as Prisma.InputJsonValue,
         providerRef: result.providerRef,
       },
       include: { intent: true },
     });
     await refreshIntentStatus(job.intentId);
+    metrics.notification({ channel, outcome: "failed" });
+
+    if (retry.exhausted) {
+      await maybeEnqueueChannelFallback({
+        failedJob: updated,
+        event: job.intent.event as NotificationHubEvent,
+      });
+    }
 
     return apiSuccess({
       id: updated.id,
@@ -665,7 +687,9 @@ async function refreshIntentStatus(intentId: string): Promise<void> {
   const statuses = jobs.map((j) => j.status);
   const allDelivered = statuses.every((s) => s === "delivered" || s === "skipped");
   const anyDelivered = statuses.some((s) => s === "delivered");
-  const allFailed = statuses.every((s) => s === "failed" || s === "cancelled");
+  const allFailed = statuses.every(
+    (s) => s === "failed" || s === "dead_lettered" || s === "cancelled",
+  );
 
   let status: NotificationIntentStatus = "jobs_created";
   if (allDelivered) status = "delivered";
@@ -676,6 +700,107 @@ async function refreshIntentStatus(intentId: string): Promise<void> {
     where: { id: intentId },
     data: { status },
   });
+}
+
+/**
+ * Optional fallback: SMS/WhatsApp dead-letter → email (or SMS) job on same intent.
+ */
+async function maybeEnqueueChannelFallback(params: {
+  failedJob: {
+    id: string;
+    intentId: string;
+    channel: string;
+    recipientUserId: string | null;
+    recipientAddress: string;
+    recipientRole: string | null;
+    priority: string;
+    maxAttempts: number;
+    renderedSubject: string | null;
+    renderedBodyText: string;
+    renderedBodyHtml: string | null;
+    idempotencyKey: string;
+    intent: {
+      event: string;
+      templateKey: string;
+      variables: unknown;
+      publicId: string;
+    };
+  };
+  event: NotificationHubEvent;
+}): Promise<void> {
+  const failedChannel = params.failedJob.channel as NotificationChannel;
+  const enable =
+    process.env.ZOLANZO_SMS_EMAIL_FALLBACK !== "0" &&
+    (failedChannel === "sms" || failedChannel === "whatsapp") &&
+    shouldAttemptSmsEmailFallback(params.event);
+
+  const targets = resolveFallbackChannels({
+    failedChannel,
+    enabled: enable,
+  });
+  if (targets.length === 0) return;
+
+  const variables =
+    params.failedJob.intent.variables &&
+    typeof params.failedJob.intent.variables === "object"
+      ? (params.failedJob.intent.variables as Record<string, string>)
+      : {};
+
+  for (const target of targets) {
+    const template = findBuiltinTemplate({
+      event: params.event,
+      channel: target,
+    });
+    if (!template) continue;
+
+    // Need an address for the fallback channel — email from variables if present.
+    const to =
+      target === "email"
+        ? variables.recipientEmail || variables.email || null
+        : target === "sms" || target === "whatsapp"
+          ? params.failedJob.recipientAddress
+          : null;
+    if (!to) continue;
+
+    const rendered = renderNotificationTemplate({
+      template,
+      variables: {
+        recipientName: variables.recipientName ?? "there",
+        organizationName: variables.organizationName ?? "ZOLANZO",
+        publicRef: variables.publicRef ?? params.failedJob.intent.publicId,
+        ...variables,
+      },
+    });
+
+    const fallbackKey = `${params.failedJob.idempotencyKey}:fallback:${target}`;
+    try {
+      await prisma.notificationJob.create({
+        data: {
+          intentId: params.failedJob.intentId,
+          channel: target,
+          providerKey: DEFAULT_ADAPTER_BY_CHANNEL[target],
+          recipientUserId: params.failedJob.recipientUserId,
+          recipientAddress: to,
+          recipientRole: params.failedJob.recipientRole,
+          priority: params.failedJob.priority,
+          status: "scheduled",
+          attempts: 0,
+          maxAttempts: params.failedJob.maxAttempts,
+          scheduledAt: new Date(),
+          renderedSubject: rendered.subject,
+          renderedBodyText: rendered.bodyText,
+          renderedBodyHtml: rendered.bodyHtml,
+          idempotencyKey: fallbackKey,
+          metadata: {
+            fallbackFrom: failedChannel,
+            fallbackOfJobId: params.failedJob.id,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    } catch {
+      // Unique idempotency — already enqueued
+    }
+  }
 }
 
 export async function upsertNotificationPreference(params: {

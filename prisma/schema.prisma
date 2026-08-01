@@ -110,6 +110,8 @@ model User {
   operationalAudits    OperationalAudit[]     @relation("OperationalAuditActor")
   aiExecutions         AiExecution[]          @relation("AiExecutionActor")
   aiDecisions          AiDecisionRecord[]     @relation("AiDecisionActor")
+  trustProfiles        TrustProfile[]         @relation("TrustProfileSubject")
+  trustEvents          TrustEvent[]           @relation("TrustEventSubject")
 
   @@index([status])
   @@index([createdAt])
@@ -555,6 +557,7 @@ model Campaign {
   @@unique([organizationId, slug])
   @@index([status])
   @@index([organizationId])
+  @@index([organizationId, status])
   @@index([clientUserId])
   @@index([taskTemplateId])
   @@index([category])
@@ -711,6 +714,7 @@ model Assignment {
   @@index([campaignId, status])
   @@index([workerUserId, status])
   @@index([status])
+  @@index([status, expiresAt])
   @@index([createdAt])
   @@map("assignments")
 }
@@ -1267,6 +1271,7 @@ model FinancialTransaction {
   @@index([type, status])
   @@index([campaignId])
   @@index([settlementId])
+  @@index([organizationId, status])
   @@map("financial_transactions")
 }
 
@@ -2038,5 +2043,205 @@ model AiDecisionRecommendation {
 
   @@id([decisionId, recommendationId])
   @@map("ai_decision_recommendations")
+}
+
+/// Persistent trust profile — single source of reputation truth (Phase 4.2B).
+model TrustProfile {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique @map("public_id")
+  subjectType        String   @map("subject_type")
+  subjectId          String   @map("subject_id")
+  /// Optional FK when subject is a user (worker/reviewer)
+  userId             String?  @map("user_id")
+  overallScore       Int      @map("overall_score")
+  identityScore      Int      @map("identity_score")
+  reliabilityScore   Int      @map("reliability_score")
+  qualityScore       Int      @map("quality_score")
+  behaviorScore      Int      @map("behavior_score")
+  experienceScore    Int      @map("experience_score")
+  reputationScore    Int      @map("reputation_score")
+  trend              String   @default("unknown")
+  trendDelta         Float    @default(0) @map("trend_delta")
+  reasons            Json     @default("[]")
+  warnings           Json     @default("[]")
+  dimensionDetails   Json?    @map("dimension_details")
+  lastInfluencingEvents Json? @map("last_influencing_events")
+  lastEventAt        DateTime? @map("last_event_at")
+  lastCalculatedAt   DateTime @map("last_calculated_at")
+  modelVersion       String   @map("model_version")
+  version            Int      @default(1)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user     User?                 @relation("TrustProfileSubject", fields: [userId], references: [id], onDelete: Cascade)
+  events   TrustEvent[]
+  history  TrustScoreHistory[]
+
+  @@unique([subjectType, subjectId])
+  @@index([overallScore])
+  @@index([trend])
+  @@index([lastCalculatedAt])
+  @@index([userId])
+  @@map("trust_profiles")
+}
+
+/// Append-only trust event ledger with idempotency + DLQ support.
+model TrustEvent {
+  id                String    @id @default(cuid())
+  publicId          String    @unique @map("public_id")
+  subjectType       String    @map("subject_type")
+  subjectId         String    @map("subject_id")
+  userId            String?   @map("user_id")
+  profileId         String?   @map("profile_id")
+  eventType         String    @map("event_type")
+  payload           Json      @default("{}")
+  occurredAt        DateTime  @map("occurred_at")
+  processedAt       DateTime? @map("processed_at")
+  processorVersion  String?   @map("processor_version")
+  idempotencyKey    String    @unique @map("idempotency_key")
+  correlationId     String?   @map("correlation_id")
+  causationId       String?   @map("causation_id")
+  sequence          BigInt    @default(0)
+  status            String    @default("pending")
+  attemptCount      Int       @default(0) @map("attempt_count")
+  maxAttempts       Int       @default(5) @map("max_attempts")
+  nextRetryAt       DateTime? @map("next_retry_at")
+  errorMessage      String?   @map("error_message")
+  rawWeight         Float     @default(0) @map("raw_weight")
+  decayedWeight     Float?    @map("decayed_weight")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  profile TrustProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  user    User?         @relation("TrustEventSubject", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([subjectType, subjectId, occurredAt])
+  @@index([status, nextRetryAt])
+  @@index([status, createdAt])
+  @@index([eventType, occurredAt])
+  @@index([correlationId])
+  @@index([userId, occurredAt])
+  @@index([profileId])
+  @@map("trust_events")
+}
+
+/// Point-in-time trust score / dimension history for trends & explainability.
+model TrustScoreHistory {
+  id               String   @id @default(cuid())
+  profileId        String   @map("profile_id")
+  overallScore     Int      @map("overall_score")
+  identityScore    Int      @map("identity_score")
+  reliabilityScore Int      @map("reliability_score")
+  qualityScore     Int      @map("quality_score")
+  behaviorScore    Int      @map("behavior_score")
+  experienceScore  Int      @map("experience_score")
+  reputationScore  Int      @map("reputation_score")
+  trend            String
+  reasons          Json     @default("[]")
+  triggerEventId   String?  @map("trigger_event_id")
+  calculatedAt     DateTime @map("calculated_at")
+  modelVersion     String   @map("model_version")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  profile TrustProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, calculatedAt])
+  @@map("trust_score_history")
+}
+
+/// Append-only analytics event ledger (Phase 4.3A). Never mutates domain.
+model AnalyticsEvent {
+  id                String    @id @default(cuid())
+  publicId          String    @unique @map("public_id")
+  source            String
+  eventType         String    @map("event_type")
+  entityType        String?   @map("entity_type")
+  entityId          String?   @map("entity_id")
+  organizationId    String?   @map("organization_id")
+  userId            String?   @map("user_id")
+  payload           Json      @default("{}")
+  occurredAt        DateTime  @map("occurred_at")
+  processedAt       DateTime? @map("processed_at")
+  processorVersion  String?   @map("processor_version")
+  idempotencyKey    String    @unique @map("idempotency_key")
+  correlationId     String?   @map("correlation_id")
+  causationId       String?   @map("causation_id")
+  status            String    @default("pending")
+  attemptCount      Int       @default(0) @map("attempt_count")
+  maxAttempts       Int       @default(5) @map("max_attempts")
+  nextRetryAt       DateTime? @map("next_retry_at")
+  errorMessage      String?   @map("error_message")
+  metricValue       Float     @default(1) @map("metric_value")
+  modelVersion      String    @map("model_version")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([source, occurredAt])
+  @@index([eventType, occurredAt])
+  @@index([organizationId, occurredAt])
+  @@index([userId, occurredAt])
+  @@index([status, nextRetryAt])
+  @@index([status, createdAt])
+  @@index([entityType, entityId])
+  @@map("analytics_events")
+}
+
+/// Daily metric rollups derived from analytics_events.
+model AnalyticsDailyMetric {
+  id            String   @id @default(cuid())
+  metricDate    DateTime @map("metric_date") @db.Date
+  dimension     String
+  dimensionKey  String   @map("dimension_key")
+  metricKey     String   @map("metric_key")
+  value         Float    @default(0)
+  eventCount    Int      @default(0) @map("event_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([metricDate, dimension, dimensionKey, metricKey])
+  @@index([metricKey, metricDate])
+  @@index([dimension, dimensionKey, metricDate])
+  @@map("analytics_daily_metrics")
+}
+
+/// Period snapshots for dashboards / reports (4.3B+).
+model AnalyticsSnapshot {
+  id            String   @id @default(cuid())
+  publicId      String   @unique @map("public_id")
+  period        String
+  periodStart   DateTime @map("period_start")
+  periodEnd     DateTime @map("period_end")
+  scope         String
+  scopeId       String   @map("scope_id")
+  payload       Json     @default("{}")
+  durationMs    Int      @map("duration_ms")
+  modelVersion  String   @map("model_version")
+  generatedAt   DateTime @map("generated_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([period, generatedAt])
+  @@index([scope, scopeId, generatedAt])
+  @@map("analytics_snapshots")
+}
+
+/// Structured analytics reports (campaign / finance / trust / …).
+model AnalyticsReport {
+  id            String   @id @default(cuid())
+  publicId      String   @unique @map("public_id")
+  reportType    String   @map("report_type")
+  title         String
+  scope         String
+  scopeId       String   @map("scope_id")
+  periodStart   DateTime @map("period_start")
+  periodEnd     DateTime @map("period_end")
+  status        String   @default("draft")
+  payload       Json     @default("{}")
+  modelVersion  String   @map("model_version")
+  generatedAt   DateTime @map("generated_at")
+  errorMessage  String?  @map("error_message")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([reportType, generatedAt])
+  @@index([scope, scopeId, generatedAt])
+  @@index([status])
+  @@map("analytics_reports")
 }
 

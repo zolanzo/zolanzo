@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   listPaymentAdapters,
   selectPaymentAdapter,
@@ -12,6 +12,10 @@ import {
   assertBalancedJournal,
   expandTemplateLines,
 } from "@/features/ledger/services/integrity";
+import {
+  buildSignedWebhookHeaders,
+  clearWebhookReplayCache,
+} from "@/lib/security/webhook-auth";
 
 describe("payment adapter contracts", () => {
   it("lists builtin adapters including stubs", () => {
@@ -52,28 +56,38 @@ describe("payment adapter contracts", () => {
 });
 
 describe("webhook normalization", () => {
-  it("parses stub webhook payloads", async () => {
+  const secret = "test-webhook-secret-payment-platform";
+
+  afterEach(() => {
+    clearWebhookReplayCache();
+    delete process.env.WEBHOOK_SIGNING_SECRET;
+  });
+
+  it("parses signed stub webhook payloads", async () => {
+    process.env.WEBHOOK_SIGNING_SECRET = secret;
     const body = JSON.stringify({
-      stub: true,
       type: "payment.succeeded",
       providerRef: "mem_ref_1",
       amountMinor: 5000,
       currency: "NGN",
       paymentPublicId: "PAY-6N2K8M",
     });
-    const parsed = await memoryPaymentAdapter.parseWebhook(
-      { "x-payment-signature": "stub" },
+    const headers = buildSignedWebhookHeaders({
       body,
-    );
+      secret,
+      eventId: "evt_platform_1",
+    });
+    const parsed = await memoryPaymentAdapter.parseWebhook(headers, body);
     expect(parsed.validSignature).toBe(true);
     expect(parsed.events[0]?.type).toBe("payment.succeeded");
     expect(parsed.events[0]?.idempotencyKey).toContain("payment.succeeded");
   });
 
-  it("rejects missing signature when body is not stub", async () => {
+  it("rejects missing signature", async () => {
+    process.env.WEBHOOK_SIGNING_SECRET = secret;
     const parsed = await memoryPaymentAdapter.parseWebhook(
       {},
-      JSON.stringify({ type: "payment.succeeded", providerRef: "x" }),
+      JSON.stringify({ type: "payment.succeeded", providerRef: "x", stub: true }),
     );
     expect(parsed.validSignature).toBe(false);
   });

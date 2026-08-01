@@ -14,6 +14,10 @@ export const METRIC_CATEGORIES = [
   "work_engine",
   "finance",
   "auth",
+  "webhooks",
+  "notifications",
+  "jobs",
+  "monitoring",
 ] as const;
 
 export const HEALTH_CHECKS = [
@@ -25,6 +29,7 @@ export const HEALTH_CHECKS = [
   "supabase_auth",
   "scheduler",
   "environment",
+  "background_workers",
 ] as const;
 
 export type HealthCheckId = (typeof HEALTH_CHECKS)[number];
@@ -39,7 +44,7 @@ export type HealthCheckResult = {
 };
 
 /**
- * Suggested OpenTelemetry span names (implementation later).
+ * Suggested OpenTelemetry / internal span names.
  */
 export const TRACE_SPANS = [
   "http.request",
@@ -51,5 +56,13 @@ export const TRACE_SPANS = [
   "validation.run",
   "email.send",
   "sms.send",
+  "webhook.verify",
   "webhook.deliver",
+  "payment.intent",
+  "payment.webhook",
+  "withdrawal.process",
+  "notification.dispatch",
+  "ai.execute",
+  "ops.command",
+  "job.execute",
 ] as const;

@@ -1,114 +1,69 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import type { KeyboardEvent, ReactNode } from "react";
-import { cn } from "@/utils";
-import { MOTION } from "@/constants/design-tokens";
+import React from "react";
 
-export type ButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "outline"
-  | "danger"
-  | "gold";
-export type ButtonSize = "sm" | "md" | "lg";
-
-export type ButtonProps = {
-  children: ReactNode;
-  type?: "button" | "submit" | "reset";
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  className?: string;
-  disabled?: boolean;
-  loading?: boolean;
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "success" | "gold";
+  size?: "sm" | "md" | "lg";
+  iconLeft?: React.ReactNode;
+  iconRight?: React.ReactNode;
   fullWidth?: boolean;
-  onClick?: () => void;
-  onKeyDown?: (event: KeyboardEvent<HTMLButtonElement>) => void;
-  "aria-label"?: string;
-  "aria-haspopup"?: boolean | "menu" | "listbox" | "tree" | "grid" | "dialog";
-  "aria-expanded"?: boolean;
-  "aria-controls"?: string;
-  form?: string;
-  name?: string;
-  value?: string;
-};
+  loading?: boolean;
+}
 
-const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    "bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft",
-  secondary:
-    "bg-surface text-foreground border border-border hover:bg-card shadow-soft",
-  ghost: "bg-transparent text-foreground hover:bg-foreground/5",
-  outline:
-    "bg-transparent text-foreground border border-border hover:border-primary/40 hover:bg-primary/5",
-  danger: "bg-danger text-white hover:bg-danger/90 shadow-soft",
-  gold: "bg-accent text-accent-foreground hover:brightness-95 shadow-soft",
-};
-
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-button gap-1.5 rounded-md",
-  md: "h-10 px-4 text-button gap-2 rounded-lg",
-  lg: "h-12 px-6 text-button gap-2 rounded-lg text-[0.9375rem]",
-};
-
-/**
- * Primary interactive control — extend variants here; do not duplicate.
- */
 export function Button({
   children,
-  type = "button",
   variant = "primary",
   size = "md",
-  className,
-  disabled = false,
-  loading = false,
+  iconLeft,
+  iconRight,
   fullWidth = false,
-  onClick,
-  onKeyDown,
-  "aria-label": ariaLabel,
-  "aria-haspopup": ariaHaspopup,
-  "aria-expanded": ariaExpanded,
-  "aria-controls": ariaControls,
-  form,
-  name,
-  value,
+  loading = false,
+  disabled,
+  className = "",
+  ...props
 }: ButtonProps) {
-  const reduceMotion = useReducedMotion();
-  const isDisabled = disabled || loading;
+  const baseStyles =
+    "inline-flex items-center justify-center font-bold transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none select-none rounded-xl";
+
+  const variantStyles = {
+    primary:
+      "bg-[#008744] hover:bg-[#00753b] text-white shadow-md shadow-emerald-950/20 hover:-translate-y-[1px]",
+    secondary:
+      "bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 hover:border-zinc-700",
+    outline:
+      "bg-transparent border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-900/50",
+    ghost:
+      "bg-transparent hover:bg-zinc-900 text-zinc-400 hover:text-white",
+    danger:
+      "bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30",
+    success:
+      "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30",
+    gold:
+      "bg-amber-500 hover:bg-amber-400 text-black font-extrabold shadow-md",
+  };
+
+  const sizeStyles = {
+    sm: "h-[36px] px-3 text-xs gap-1.5",
+    md: "h-[44px] px-4 text-xs sm:text-sm gap-2",
+    lg: "h-[52px] px-6 text-sm gap-2.5",
+  };
+
+  const widthStyle = fullWidth ? "w-full" : "";
 
   return (
-    <motion.button
-      type={type}
-      disabled={isDisabled}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-      aria-label={ariaLabel}
-      aria-haspopup={ariaHaspopup}
-      aria-expanded={ariaExpanded}
-      aria-controls={ariaControls}
-      form={form}
-      name={name}
-      value={value}
-      whileTap={reduceMotion || isDisabled ? undefined : { scale: 0.98 }}
-      transition={{ duration: MOTION.fast }}
-      className={cn(
-        "focus-ring inline-flex items-center justify-center font-semibold transition-colors",
-        "disabled:pointer-events-none disabled:opacity-50",
-        variantClasses[variant],
-        sizeClasses[size],
-        fullWidth && "w-full",
-        className,
-      )}
-      aria-busy={loading || undefined}
+    <button
+      disabled={disabled || loading}
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${className}`}
+      {...props}
     >
       {loading ? (
-        <span
-          className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
-          aria-hidden
-        />
-      ) : null}
+        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />
+      ) : (
+        iconLeft
+      )}
       {children}
-    </motion.button>
+      {!loading && iconRight}
+    </button>
   );
 }

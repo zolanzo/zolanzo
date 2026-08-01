@@ -1,117 +1,73 @@
 /**
- * Rate limiting readiness layer.
- *
- * In-memory store for local/dev. Swap `store` for Redis
- * (RATE_LIMIT_REDIS_URL) in production for multi-instance safety.
+ * Rate Limiter for Authentication, Public API, & OTP Endpoints
+ * Protects against brute-force, account enumeration, and SMS flooding.
  */
 
-export type RateLimitResult = {
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+
+const memoryStore = new Map<string, RateLimitRecord>();
+
+export const RATE_LIMIT_PRESETS = {
+  auth: { limit: 10, windowSeconds: 60, windowMs: 60_000 },
+  otp: { limit: 5, windowSeconds: 300, windowMs: 300_000 },
+  strict: { limit: 3, windowSeconds: 600, windowMs: 600_000 },
+};
+
+export function checkRateLimit(
+  key: string,
+  limit: number = 5,
+  windowSeconds: number = 60
+): { allowed: boolean; remaining: number; resetSeconds: number; resetTime: number } {
+  const now = Date.now();
+  const record = memoryStore.get(key);
+
+  if (!record || now > record.resetTime) {
+    const resetTime = now + windowSeconds * 1000;
+    memoryStore.set(key, { count: 1, resetTime });
+    return { allowed: true, remaining: limit - 1, resetSeconds: windowSeconds, resetTime };
+  }
+
+  if (record.count >= limit) {
+    const resetSeconds = Math.ceil((record.resetTime - now) / 1000);
+    return { allowed: false, remaining: 0, resetSeconds, resetTime: record.resetTime };
+  }
+
+  record.count += 1;
+  const resetSeconds = Math.ceil((record.resetTime - now) / 1000);
+  return { allowed: true, remaining: limit - record.count, resetSeconds, resetTime: record.resetTime };
+}
+
+export interface RateLimitOptions {
+  prefix?: string;
+  limit: number;
+  windowSeconds?: number;
+  windowMs?: number;
+}
+
+export async function rateLimit(
+  key: string,
+  options: RateLimitOptions = RATE_LIMIT_PRESETS.auth
+): Promise<{
   success: boolean;
   limit: number;
   remaining: number;
   reset: number;
-};
+  resetSeconds: number;
+}> {
+  const prefix = options.prefix || "rate_limit";
+  const windowSeconds = options.windowSeconds || (options.windowMs ? Math.ceil(options.windowMs / 1000) : 60);
+  const compositeKey = `${prefix}:${key}`;
 
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
-
-type RateLimitStore = {
-  get(key: string): Promise<RateLimitEntry | undefined>;
-  set(key: string, entry: RateLimitEntry, ttlMs: number): Promise<void>;
-};
-
-class MemoryRateLimitStore implements RateLimitStore {
-  private readonly map = new Map<string, RateLimitEntry>();
-
-  async get(key: string): Promise<RateLimitEntry | undefined> {
-    const entry = this.map.get(key);
-    if (!entry) return undefined;
-    if (Date.now() > entry.resetAt) {
-      this.map.delete(key);
-      return undefined;
-    }
-    return entry;
-  }
-
-  async set(key: string, entry: RateLimitEntry, ttlMs: number): Promise<void> {
-    this.map.set(key, entry);
-    // Best-effort cleanup; Redis TTL replaces this in production.
-    setTimeout(() => {
-      const current = this.map.get(key);
-      if (current && current.resetAt <= Date.now()) {
-        this.map.delete(key);
-      }
-    }, ttlMs);
-  }
-}
-
-const store: RateLimitStore = new MemoryRateLimitStore();
-
-export type RateLimitOptions = {
-  /** Unique key prefix, e.g. "api:auth" */
-  prefix: string;
-  /** Max requests in the window */
-  limit: number;
-  /** Window size in milliseconds */
-  windowMs: number;
-};
-
-/**
- * Fixed-window rate limiter. Returns whether the request is allowed.
- */
-export async function rateLimit(
-  identifier: string,
-  options: RateLimitOptions,
-): Promise<RateLimitResult> {
-  const key = `${options.prefix}:${identifier}`;
-  const now = Date.now();
-  const existing = await store.get(key);
-
-  if (!existing) {
-    const resetAt = now + options.windowMs;
-    await store.set(
-      key,
-      { count: 1, resetAt },
-      options.windowMs,
-    );
-
-    return {
-      success: true,
-      limit: options.limit,
-      remaining: options.limit - 1,
-      reset: resetAt,
-    };
-  }
-
-  if (existing.count >= options.limit) {
-    return {
-      success: false,
-      limit: options.limit,
-      remaining: 0,
-      reset: existing.resetAt,
-    };
-  }
-
-  const nextCount = existing.count + 1;
-  await store.set(
-    key,
-    { count: nextCount, resetAt: existing.resetAt },
-    existing.resetAt - now,
-  );
+  const result = checkRateLimit(compositeKey, options.limit, windowSeconds);
 
   return {
-    success: true,
+    success: result.allowed,
     limit: options.limit,
-    remaining: Math.max(0, options.limit - nextCount),
-    reset: existing.resetAt,
+    remaining: result.remaining,
+    reset: result.resetTime,
+    resetSeconds: result.resetSeconds,
   };
 }
-
-/** Sensible defaults for common surfaces */
-export const RATE_LIMIT_PRESETS = {
-  api: { prefix: "api", limit: 60, windowMs: 60_000 },
-  auth: { prefix: "auth", limit: 10, windowMs: 60_000 },
-  upload: { prefix: "upload", limit: 20, windowMs: 60_000 },
-} as const satisfies Record<string, RateLimitOptions>;

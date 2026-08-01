@@ -55,7 +55,8 @@ describe("channel adapter contracts", () => {
     expect(adapterSupportsChannel(adapter, "sms")).toBe(true);
   });
 
-  it("selects memory when preferLive", () => {
+  it("selects memory when preferLive and Resend not configured", () => {
+    delete process.env.RESEND_API_KEY;
     const adapter = selectNotificationAdapter({
       channel: "email",
       preferLive: true,
@@ -63,7 +64,18 @@ describe("channel adapter contracts", () => {
     expect(adapter.providerKey).toBe("memory");
   });
 
-  it("memory delivers; stubs queue only", async () => {
+  it("selects resend when preferLive and Resend keys present", () => {
+    process.env.RESEND_API_KEY = "re_test_key";
+    const adapter = selectNotificationAdapter({
+      channel: "email",
+      preferLive: true,
+    });
+    expect(adapter.providerKey).toBe("resend");
+    delete process.env.RESEND_API_KEY;
+  });
+
+  it("memory delivers; stubs queue only when Resend offline", async () => {
+    delete process.env.RESEND_API_KEY;
     const live = await memoryNotificationAdapter.deliver({
       channel: "email",
       to: "a@example.com",
@@ -88,6 +100,9 @@ describe("channel adapter contracts", () => {
     expect(adapterHasCapabilities(sendchampNotificationAdapter, ["sms"])).toBe(
       true,
     );
+    expect(
+      adapterHasCapabilities(sendchampNotificationAdapter, ["whatsapp"]),
+    ).toBe(true);
     expect(
       adapterHasCapabilities(firebaseNotificationAdapter, ["push", "priority"]),
     ).toBe(true);

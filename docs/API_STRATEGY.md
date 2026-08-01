@@ -45,7 +45,9 @@ Catalog: `constants/api.ts`
 
 ## Roadmap
 
-1. Internal App Router actions + thin REST for mobile later  
-2. Partner API keys for enterprise  
-3. Developer portal + OpenAPI  
-4. Optional GraphQL BFF  
+1. ✅ Public REST `/api/v1` contract (Phase 4.5A)  
+2. Partner API keys + OAuth foundation (shipped in 4.5A; persist next)  
+3. ✅ Webhooks & event subscriptions (Phase 4.5B)  
+4. ✅ Integration Marketplace (Phase 4.5C)  
+5. ✅ Developer portal + SDKs (Phase 4.5D)  
+6. Optional GraphQL BFF  

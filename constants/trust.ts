@@ -43,7 +43,8 @@ export const TRUST_SCORE_BANDS = [
 ] as const;
 
 /**
- * Inputs that influence trust score (design — weights tuned later).
+ * Inputs that influence trust score.
+ * Weights live in `lib/trust/calculator` (Phase 4.2A).
  */
 export const TRUST_SIGNAL_KEYS = [
   "email_verified",
@@ -61,3 +62,30 @@ export const TRUST_SIGNAL_KEYS = [
 ] as const;
 
 export type TrustSignalKey = (typeof TRUST_SIGNAL_KEYS)[number];
+
+/** Trust profile dimensions (Phase 4.2A). */
+export const TRUST_DIMENSIONS = [
+  "identity",
+  "reliability",
+  "quality",
+  "behavior",
+  "experience",
+  "reputation",
+] as const;
+
+export type TrustDimensionKey = (typeof TRUST_DIMENSIONS)[number];
+
+/** Passport badge catalog (Phase 4.2C) — presentation, not scoring. */
+export const PASSPORT_BADGE_CODES = [
+  "verified_identity",
+  "trusted_worker",
+  "reliable_contributor",
+  "high_approval",
+  "long_term_member",
+  "zero_fraud",
+  "organization_trusted",
+  "verified_email",
+  "verified_phone",
+] as const;
+
+export type PassportBadgeCode = (typeof PASSPORT_BADGE_CODES)[number];

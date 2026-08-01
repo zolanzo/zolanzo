@@ -3,10 +3,11 @@ import { createStubChannelAdapter } from "@/lib/integrations/notifications/stub-
 /** In-process delivery for tests and local dispatch. */
 export const memoryNotificationAdapter = createStubChannelAdapter({
   providerKey: "memory",
-  channels: ["email", "sms", "push", "in_app", "webhook"],
+  channels: ["email", "sms", "whatsapp", "push", "in_app", "webhook"],
   capabilities: [
     "email",
     "sms",
+    "whatsapp",
     "push",
     "in_app",
     "webhook",

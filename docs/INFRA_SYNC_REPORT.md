@@ -1,200 +1,144 @@
-# ZOLANZO — Infrastructure Synchronization Report (SAFE MODE)
+# ZOLANZO — Infrastructure Sync Report (SAFE MODE Takeover)
 
 **Date:** 2026-07-26  
-**Mode:** Safe Mode — infrastructure only  
-**Operator account:** `bamsignalhq` (GitHub) · Supabase MCP → Bam Signal org  
+**Mode:** Verification only — no migrations, no schema push, no Supabase CLI init  
+**Authorized project:** `ffvwviabpyhjeoxjxunb` · **zolanzo's Project** · org `zolanzo`  
+**Forbidden:** BamSignal / BamSignal-Engine / all other projects  
 
 ---
 
-## Executive summary
+## 1. Supabase access
 
-| Stage | Result |
-| --- | --- |
-| GitHub authentication | ✅ Healthy (`bamsignalhq`) |
-| Local git + first commit | ✅ Done |
-| Remote `bamsignalhq/zolanzo` | ✅ Created (private) · `main` tracking `origin/main` |
-| `.gitignore` hardened | ✅ Done |
-| `.env.example` placeholders | ✅ Updated (no secrets) |
-| BamSignal / BamSignal-Engine | ✅ **Untouched** |
-| ZOLANZO Supabase project | ❌ **Does not exist** — **STOPPED** |
-| Migrations | ❌ **Not executed** (blocked until approval) |
-| Deployment (Coolify/Docker/CI) | ❌ Not configured (by design) |
-
-**Success criteria (partial):** Git + GitHub healthy. Ready to link a **new** ZOLANZO Supabase project after your approval. **Not** ready for migrations yet.
-
----
-
-## 1. Git Status
-
-| Item | Value |
-| --- | --- |
-| Working tree | `/Users/stanlex/Documents/zolanzo` |
-| Branch | `main` |
-| HEAD | `0511b9201d164d1380bb8eca00c7a736905cef5f` |
-| Message | Initial commit: Zolanzo platform foundation and Phase 3A reliability. |
-| Tracking | `main` → `origin/main` |
-| Dirty tree | Clean after push |
-| Remotes | `origin` → `https://github.com/bamsignalhq/zolanzo.git` |
-| Upstream | None other |
-
----
-
-## 2. GitHub Status
-
-| Item | Value |
-| --- | --- |
-| Owner | `bamsignalhq` |
-| Repository | `zolanzo` |
-| URL | https://github.com/bamsignalhq/zolanzo |
-| Visibility | **Private** |
-| Default branch | `main` |
-| GitHub Actions | Not configured (deferred) |
-| Other repos touched | **None** |
-
----
-
-## 3. Authentication Status
-
-| Surface | Status |
-| --- | --- |
-| GitHub CLI | ✅ Logged in as **`bamsignalhq`** (active) |
-| Token scopes | `gist`, `read:org`, `repo`, `workflow` |
-| Secondary account | `marykberry555` present but inactive |
-| Supabase MCP | ✅ Can list Bam Signal org projects |
-| Coolify / SSH / deploy | Not verified (out of scope this stage) |
-
----
-
-## 4. Supabase Status
-
-| Item | Value |
-| --- | --- |
-| Org visible | Bam Signal |
-| Projects visible | **Only** `BamSignal-Engine` (`nswiwxmavuqpuzlsascs`, `eu-west-1`) |
-| ZOLANZO project | **None** |
-| Linked locally (`supabase/`) | No |
-| Actions taken against BamSignal-Engine | **None** (no link, migrate, storage, auth, RLS, or schema changes) |
-
-### Hard stop (Supabase)
-
-Per SAFE MODE: if the only visible project is BamSignal-Engine → **do nothing** to it.
-
-ZOLANZO requires a **dedicated** project. Creation was **not** performed silently.
-
----
-
-## 5. Environment Status
-
-| File | Status |
-| --- | --- |
-| `.env.example` | Updated with placeholders only (Supabase, DB, Paystack, Resend, Sendchamp, Firebase, storage, Sentry, OTEL, etc.) |
-| `.env` | Present locally · **gitignored** · not committed |
-| `.env.local` / `.env.production` | Not required yet · patterns ignored via `.env.*` |
-
-No secrets were written into the repository.
-
----
-
-## 6. Deployment Status
-
-| Item | Status |
-| --- | --- |
-| Coolify | Not configured (deferred) |
-| Docker | Not added (deferred) |
-| GitHub Actions | Not added (deferred) |
-| Vercel | Not configured (deferred) |
-| Health routes in app | Exist in code (`/health`, `/readiness`) — not wired to a host |
-
-Inspection only; no deployment changes.
-
----
-
-## 7. Migration Readiness
-
-| Gate | Met? |
-| --- | --- |
-| GitHub healthy | ✅ |
-| New ZOLANZO Supabase project exists | ❌ |
-| Explicit approval to migrate | ❌ |
-
-**Prisma migrations remain on disk only** (`prisma/migrations/*`).  
-**Not run:** `prisma migrate deploy`, `db push`, Supabase CLI migrate, or any remote DDL.
-
----
-
-## 8. Outstanding Manual Steps
-
-1. **Create a dedicated ZOLANZO Supabase project** (or authorize Cursor to create it after cost confirm).  
-2. Provide (or store locally in `.env` only):
-   - Project Reference  
-   - Project URL  
-   - Region  
-   - Database password (for `DIRECT_URL`)  
-   - Anon + service role keys  
-3. Fill local `.env` / `.env.local` from those values (**never commit**).  
-4. Explicitly approve **first migration execution** against the new project only.  
-5. Later: Auth Site URL / redirect URLs, storage buckets, Coolify/CI.
-
----
-
-## 9. Risk Assessment
-
-| Risk | Level | Mitigation applied |
+| Channel | Status | Notes |
 | --- | --- | --- |
-| Contaminating BamSignal-Engine | **Critical if mishandled** | No link/migrate/touch; documented stop |
-| Committing secrets | Medium | `.env*` ignored; placeholders only in example |
-| Accidental repo overwrite | Low | New empty repo created under `bamsignalhq/zolanzo` |
-| Premature migrations | High | Explicitly blocked until approval |
-| Shared infra with BamSignal | High if shared | Architecture requires full separation |
+| Cursor **browser** (dashboard) | ✅ | Open on org `zolanzo` / project `ffvwviabpyhjeoxjxunb` as logged-in session |
+| Local **Supabase CLI** | ✅ | Lists `zolanzo's Project` (`ACTIVE_HEALTHY`, `eu-west-1`) |
+| Cursor **Supabase MCP** | ❌ | Still only lists `BamSignal-Engine`; `get_project` / `list_tables` on Zolanzo → permission denied |
 
-**BamSignal / BamSignal-Engine / other products:** no modifications observed or performed in this session.
+**Conclusion:** Browser login succeeded for the Zolanzo account. **MCP OAuth is still a different (or stale) identity** and must not be used for Zolanzo operations until fixed. Verification below used browser + CLI + public HTTP + local Prisma only.
 
----
-
-## 10. Recommended Next Action
-
-**STOP here on cloud database work.**
-
-Please reply with one of:
-
-### Option A — You create the project
-Provide:
-- Project name (e.g. `zolanzo-dev`)
-- Project Reference ID  
-- Project URL  
-- Region  
-- Confirm env: Development / Staging / Production  
-
-Then authorize filling local env + (separately) migration execution.
-
-### Option B — Cursor creates via Supabase MCP
-Confirm all of:
-1. Create new project under **Bam Signal** org  
-2. Proposed name: `zolanzo-dev` (or your name)  
-3. Region: `eu-west-1` (same as BamSignal-Engine) **or** specify another  
-4. You accept Supabase project cost for that org  
-5. **Never** use `BamSignal-Engine`
-
-Until then: **no migrations, no linking, no storage, no auth changes.**
+**BamSignal-Engine:** not modified.
 
 ---
 
-## Changes made this session (local / GitHub only)
+## 2. Environment status
 
-| Change | Safe? |
+Updated local `.env` from Zolanzo dashboard (API keys + hosts). Secrets not printed. `.env` remains gitignored.
+
+| Variable | Status | Observation (redacted) |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✓ Present | `https://ffvwviabpyhjeoxjxunb.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✓ Present | Legacy anon JWT from dashboard |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✓ Present | Legacy service_role JWT from dashboard |
+| `DATABASE_URL` | ⚠ Incomplete | Pooler host/user set for Zolanzo; **DB password still placeholder** |
+| `DIRECT_URL` | ⚠ Incomplete | Direct host set for Zolanzo; **DB password still placeholder** |
+
+Dashboard connection strings only show `[YOUR-PASSWORD]` — Supabase never reveals the existing DB password. Reset required if unknown.
+
+`supabase/` directory: **absent** (correct — Prisma-first).
+
+---
+
+## 3. Prisma status
+
+| Command | Result |
 | --- | --- |
-| Hardened `.gitignore` (`.cursor/`, `.env.*`, `/dist`) | Yes |
-| Updated `.env.example` placeholders | Yes |
-| Initial git commit | Yes |
-| Created private `bamsignalhq/zolanzo` | Yes |
-| Pushed `main` → `origin/main` | Yes |
-| BamSignal-Engine | **No changes** |
-| Migrations / deploy / CI | **No changes** |
+| `prisma validate` | ✅ Schema valid |
+| `prisma migrate status` | ❌ Datasource resolved to **localhost `mydb`** → P1010 access denied |
+
+Local migration history: **18** Prisma migrations + `migration_lock.toml` (`postgresql`).  
+No Supabase migration files. Schema not modified this session.
 
 ---
 
-## Related
+## 4. Migration readiness
 
-- Prior audit: [INFRA_SYNC_REPORT.md](./INFRA_SYNC_REPORT.md) history superseded by this SAFE MODE report (same path updated).  
-- App roadmap: [ROADMAP.md](./ROADMAP.md)  
-- Reliability: [RELIABILITY.md](./RELIABILITY.md)  
+| Question | Answer |
+| --- | --- |
+| Can we reliably run `migrate status` against Zolanzo? | **No** — credentials not wired |
+| Remote DB emptiness (dashboard Table Editor) | **Likely empty** — UI shows “Create a table”, no recent tables |
+| Prisma `_prisma_migrations` on remote | **Unknown** until `DIRECT_URL`/`DATABASE_URL` point at Zolanzo |
+| Ready for `prisma migrate deploy`? | **No** — blocked on env + explicit approval |
+
+**Classification (best available evidence):** remote app schema appears **empty**; Prisma migration state vs remote is **unverified**.
+
+---
+
+## 5. Auth status
+
+| Probe | Result |
+| --- | --- |
+| `GET https://ffvwviabpyhjeoxjxunb.supabase.co/auth/v1/health` | **Reachable** (HTTP 401 without anon key — expected) |
+| Dashboard Auth traffic | No data in last 24h (new project) |
+
+Auth service is up; local app cannot use it until public URL + anon key are set.
+
+---
+
+## 6. Storage status
+
+| Probe | Result |
+| --- | --- |
+| Dashboard Storage | Reachable; UI shows **“Create a file bucket”** (no buckets yet) |
+| `GET .../storage/v1/bucket` (no key) | HTTP 400 (endpoint exists; auth required) |
+| Bucket creation this session | **Not performed** (forbidden) |
+
+---
+
+## 7. Database status
+
+| Probe | Result |
+| --- | --- |
+| Project status (CLI) | `ACTIVE_HEALTHY` |
+| API host | `https://ffvwviabpyhjeoxjxunb.supabase.co` (root 404; REST 401 without key) |
+| Table Editor | No user tables visible → treat as **empty** pending Prisma confirmation |
+| Local Prisma connection to Zolanzo | **Not configured** |
+
+---
+
+## 8. Project isolation
+
+| Check | Result |
+| --- | --- |
+| Repo env targets Zolanzo ref | ❌ Currently targets localhost |
+| Code references to `nswiwxmavuqpuzlsascs` | **None** in app code |
+| Mentions of BamSignal-Engine | Only cautionary comment in `.env.example` line 13 |
+| Dashboard session | On **zolanzo's Project** only |
+
+---
+
+## 9. Remaining manual actions
+
+1. In Supabase dashboard → **Project Settings → API / Database**, copy into local `.env` (do not commit):
+   - `NEXT_PUBLIC_SUPABASE_URL=https://ffvwviabpyhjeoxjxunb.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY=...`
+   - `SUPABASE_SERVICE_ROLE_KEY=...`
+   - `DATABASE_URL=...` (pooler, port **6543**, `pgbouncer=true`)
+   - `DIRECT_URL=...` (direct host `db.ffvwviabpyhjeoxjxunb.supabase.co`, port **5432**)
+2. Replace/remove the localhost `DATABASE_URL` currently in `.env`.
+3. Reply: **`env ready — re-check migrate status`**.
+4. Optional: reconnect **Supabase MCP** as `bamsignalhq@gmail.com` so MCP matches browser/CLI.
+5. Only after a clean `migrate status` showing pending migrations on Zolanzo: reply **`approve migrate`** for the first `prisma migrate deploy`.
+
+---
+
+## 10. Production readiness (infra sync slice)
+
+| Gate | Status |
+| --- | --- |
+| Dedicated Zolanzo project | ✅ |
+| Isolation from BamSignal | ✅ (no touches; no code coupling) |
+| Prisma-first preserved | ✅ |
+| Local env synchronized | ❌ |
+| Remote migration status known via Prisma | ❌ |
+| Safe to migrate | ❌ awaiting env + approval |
+
+---
+
+## STOP
+
+Verification complete. **No migrations applied. No schema push. No Supabase CLI init. BamSignal untouched.**
+
+Environment is **not** fully synchronized yet (credentials missing/incorrect).
+
+After you fix `.env` and I re-confirm `prisma migrate status` against Zolanzo showing an empty/pending remote, I will state the approval line for the initial migrate. Until then, that sentence is withheld on purpose.

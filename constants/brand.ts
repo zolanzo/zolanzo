@@ -1,6 +1,6 @@
 /**
  * ZOLANZO brand identity constants.
- * Single source of truth for colors, typography, and asset paths.
+ * Single source of truth for logo and icon assets.
  */
 
 export const BRAND = {
@@ -27,29 +27,12 @@ export const BRAND_COLORS = {
 
 export const BRAND_ASSETS = {
   logo: {
-    webp: "/brand/logo.webp",
-    png: "/brand/logo.png",
+    webp: "/brand/dark-theme-logo.webp",
     alt: "ZOLANZO logo",
   },
   icon: {
     webp: "/brand/icon.webp",
-    png: "/brand/icon.png",
     alt: "ZOLANZO icon",
-  },
-  appIcon: {
-    webp: "/brand/app-icon.webp",
-    png: "/brand/app-icon.png",
-    alt: "ZOLANZO app icon",
-  },
-  favicon: {
-    webp: "/brand/favicon.webp",
-    png: "/brand/favicon.png",
-    alt: "ZOLANZO favicon",
-  },
-  monochrome: {
-    webp: "/brand/monochrome.webp",
-    png: "/brand/monochrome.png",
-    alt: "ZOLANZO monochrome mark",
   },
 } as const;
 

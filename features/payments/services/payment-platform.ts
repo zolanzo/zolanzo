@@ -22,9 +22,15 @@ import type {
 } from "@/lib/integrations/types";
 import { selectPaymentAdapter } from "@/lib/integrations/payments";
 import { applySuccessfulFunding } from "@/features/payments/services/funding";
+import { applyPaymentRefundLedger } from "@/features/payments/services/refunds";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 import { readCorrelationHeader } from "@/lib/observability/correlation";
 import { logger } from "@/lib/observability/logger";
-import { runWebhookWithContext } from "@/lib/observability/request-context";
+import {
+  getCorrelationId,
+  runWebhookWithContext,
+} from "@/lib/observability/request-context";
+import { metrics } from "@/lib/observability/metrics";
 import { z } from "zod";
 
 export type PaymentIntentRecord = {
@@ -172,12 +178,15 @@ export async function createDomainPaymentIntent(params: {
       customerRef: params.clientUserId,
       idempotencyKey: parsed.idempotencyKey,
       paymentPublicId: publicId,
-      returnUrl: parsed.returnUrl,
+      returnUrl:
+        parsed.returnUrl ??
+        `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? ""}/api/payments/callback`,
       purpose: parsed.purpose,
       metadata: {
         paymentPublicId: publicId,
         organizationId: parsed.organizationId,
         campaignId: parsed.campaignId ?? "",
+        correlationId: getCorrelationId() ?? "",
       },
     });
 
@@ -205,11 +214,16 @@ export async function createDomainPaymentIntent(params: {
       },
     });
 
+    metrics.payment({
+      outcome: "initiated",
+      provider: adapter.providerKey,
+    });
     return apiSuccess({
       ...mapIntent(updated),
       adapterProvider: adapter.providerKey,
     });
   } catch (error) {
+    metrics.payment({ outcome: "failed" });
     if (error instanceof AppError) return error.toApiError();
     return apiError(
       "PAYMENT_INTENT_FAILED",
@@ -237,6 +251,40 @@ async function processSucceededEvent(
     amountMinor: intent.amountMinor,
     currency: intent.currency,
   });
+
+  if (
+    event.amountMinor > 0 &&
+    event.amountMinor !== intent.amountMinor
+  ) {
+    logger.warn("Payment amount mismatch — rejecting ledger write", {
+      span: "payment.webhook",
+      paymentPublicId: intent.publicId,
+      intentAmount: intent.amountMinor,
+      eventAmount: event.amountMinor,
+    });
+    await prisma.paymentIntent.update({
+      where: { id: intent.id },
+      data: { status: "failed" },
+    });
+    return;
+  }
+
+  if (
+    event.currency &&
+    event.currency.toUpperCase() !== intent.currency.toUpperCase()
+  ) {
+    logger.warn("Payment currency mismatch — rejecting ledger write", {
+      span: "payment.webhook",
+      paymentPublicId: intent.publicId,
+      intentCurrency: intent.currency,
+      eventCurrency: event.currency,
+    });
+    await prisma.paymentIntent.update({
+      where: { id: intent.id },
+      data: { status: "failed" },
+    });
+    return;
+  }
 
   const record = await prisma.paymentRecord.upsert({
     where: {
@@ -291,6 +339,60 @@ async function processSucceededEvent(
     where: { id: intent.id },
     data: { status: "succeeded", completedAt: new Date() },
   });
+
+  const amountLabel = `${(intent.amountMinor / 100).toFixed(2)} ${intent.currency}`;
+  const client = await prisma.user.findUnique({
+    where: { id: intent.clientUserId },
+    select: {
+      email: true,
+      phone: true,
+      profile: { select: { displayName: true } },
+    },
+  });
+
+  await safeEmitDomainNotification({
+    event: "payment.receipt",
+    organizationId: intent.organizationId,
+    actorUserId: intent.clientUserId,
+    recipients: [
+      {
+        role: "client",
+        userId: intent.clientUserId,
+        email: client?.email ?? null,
+        phone: client?.phone ?? null,
+        displayName: client?.profile?.displayName ?? null,
+      },
+    ],
+    variables: {
+      recipientName: client?.profile?.displayName ?? "there",
+      organizationName: "Zolanzo",
+      publicRef: intent.publicId,
+      amountLabel,
+    },
+    idempotencyKey: `payment.receipt:${intent.publicId}`,
+    channels: ["email", "sms", "in_app"],
+    span: "payment.webhook",
+  });
+
+  if (intent.campaignId && intent.purpose === "campaign_funding") {
+    await safeEmitDomainNotification({
+      event: "campaign.funded",
+      organizationId: intent.organizationId,
+      actorUserId: intent.clientUserId,
+      recipients: [
+        { role: "client", userId: intent.clientUserId },
+      ],
+      variables: {
+        amountLabel,
+        publicRef: intent.publicId,
+        recipientName: client?.profile?.displayName ?? "there",
+        organizationName: "Zolanzo",
+      },
+      idempotencyKey: `campaign.funded:${intent.publicId}`,
+      channels: ["in_app"],
+      span: "payment.webhook",
+    });
+  }
 }
 
 async function ingestNormalizedEvent(
@@ -340,18 +442,29 @@ async function ingestNormalizedEvent(
 
   if (event.type === "payment.succeeded") {
     await processSucceededEvent(event, intent.id);
+    metrics.payment({ outcome: "completed", provider: event.provider });
   } else if (event.type === "payment.failed") {
     await prisma.paymentIntent.update({
       where: { id: intent.id },
       data: { status: "failed" },
     });
+    metrics.payment({ outcome: "failed", provider: event.provider });
   } else if (event.type === "payment.refunded") {
-    await prisma.paymentRecord.updateMany({
-      where: {
-        providerKey: event.provider,
-        providerTransactionId: event.providerRef,
-      },
-      data: { status: "refunded" },
+    await processRefundedEvent(event, intent.id);
+  } else if (
+    event.type === "transfer.succeeded" ||
+    event.type === "transfer.failed" ||
+    event.type === "subscription.created" ||
+    event.type === "subscription.disabled" ||
+    event.type === "invoice.created" ||
+    event.type === "invoice.payment_failed"
+  ) {
+    logger.info("Payment provider lifecycle event recorded", {
+      span: "payment.webhook",
+      type: event.type,
+      provider: event.provider,
+      providerRef: event.providerRef,
+      correlationId: getCorrelationId(),
     });
   }
   // chargeback: placeholder — store event only
@@ -362,6 +475,41 @@ async function ingestNormalizedEvent(
   });
 
   return { processed: true, duplicate: false };
+}
+
+async function processRefundedEvent(
+  event: NormalizedPaymentEvent,
+  paymentIntentId: string,
+): Promise<void> {
+  const intent = await prisma.paymentIntent.findUnique({
+    where: { id: paymentIntentId },
+  });
+  if (!intent) return;
+
+  const amountMinor =
+    event.amountMinor > 0 ? event.amountMinor : intent.amountMinor;
+
+  await prisma.paymentRecord.updateMany({
+    where: {
+      providerKey: event.provider,
+      providerTransactionId: event.providerRef,
+    },
+    data: { status: "refunded" },
+  });
+
+  await applyPaymentRefundLedger({
+    paymentIntentId: intent.id,
+    paymentPublicId: intent.publicId,
+    amountMinor,
+    currency: intent.currency,
+    organizationId: intent.organizationId,
+    campaignId: intent.campaignId,
+    providerKey: event.provider,
+    providerRef: event.providerRef,
+    idempotencyKey: `${intent.idempotencyKey}:refund:${amountMinor}`,
+  });
+
+  metrics.payment({ outcome: "refunded", provider: event.provider });
 }
 
 export const handleWebhookSchema = z.object({
@@ -428,6 +576,7 @@ export async function handlePaymentWebhook(params: {
           eventsProcessed,
           duplicates,
           providerKey: parsed.providerKey,
+          outcome: "ok",
         });
 
         return apiSuccess({
@@ -436,6 +585,12 @@ export async function handlePaymentWebhook(params: {
           duplicates,
         });
       } catch (error) {
+        logger.warn("Payment webhook failed", {
+          span: "payment.webhook",
+          outcome: "error",
+          errorCode:
+            error instanceof AppError ? error.code : "WEBHOOK_FAILED",
+        });
         if (error instanceof AppError) return error.toApiError();
         return apiError(
           "WEBHOOK_FAILED",

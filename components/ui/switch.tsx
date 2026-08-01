@@ -78,7 +78,7 @@ export function Switch({
     >
       <span
         className={cn(
-          "pointer-events-none absolute top-0.5 block size-[1.125rem] rounded-full bg-white shadow-soft transition-transform",
+          "pointer-events-none absolute top-0.5 block size-[1.125rem] rounded-full bg-card shadow-soft transition-transform",
           isOn ? "translate-x-[1.375rem]" : "translate-x-0.5",
         )}
         aria-hidden

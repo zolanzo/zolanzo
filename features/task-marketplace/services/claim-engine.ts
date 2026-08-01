@@ -28,6 +28,7 @@ import {
   reserveOpportunitySchema,
 } from "@/features/task-marketplace/validators";
 import type { WorkerEligibilityContext } from "@/features/task-marketplace/types/worker-context";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 
 async function loadOpportunityContext(instancePublicId: string) {
   const instance = await prisma.taskInstance.findUnique({
@@ -330,6 +331,81 @@ export async function confirmClaim(params: {
     if (!record) {
       throw new AppError("ASSIGNMENT_MISSING", "Assignment create failed", 500);
     }
+
+    const worker = await prisma.user.findUnique({
+      where: { id: parsed.workerUserId },
+      select: {
+        email: true,
+        phone: true,
+        profile: { select: { displayName: true } },
+      },
+    });
+    await safeEmitDomainNotification({
+      event: "assignment.received",
+      organizationId: instance.campaign.organizationId,
+      actorUserId: parsed.workerUserId,
+      recipients: [
+        {
+          role: "worker",
+          userId: parsed.workerUserId,
+          email: worker?.email ?? null,
+          phone: worker?.phone ?? null,
+          displayName: worker?.profile?.displayName ?? null,
+        },
+      ],
+      variables: {
+        recipientName: worker?.profile?.displayName ?? "there",
+        organizationName: instance.campaign.name,
+        publicRef: record.publicId,
+      },
+      idempotencyKey: `assignment.received:${record.publicId}`,
+      channels: ["email", "sms", "in_app"],
+      span: "marketplace.claim",
+    });
+
+    const { safeRecordTrustEvent } = await import("@/lib/trust/safe-emit");
+    await safeRecordTrustEvent({
+      subjectType: "worker",
+      subjectId: parsed.workerUserId,
+      eventType: "assignment_accepted",
+      idempotencyKey: `trust:assignment_accepted:${record.publicId}`,
+      payload: { assignmentPublicId: record.publicId },
+      span: "marketplace.claim.trust",
+    });
+
+    const { safeRecordAnalyticsEvent } = await import(
+      "@/lib/analytics/safe-emit"
+    );
+    await safeRecordAnalyticsEvent({
+      source: "marketplace",
+      eventType: "assignment.created",
+      idempotencyKey: `analytics:assignment.created:${record.publicId}`,
+      entityType: "assignment",
+      entityId: record.publicId,
+      userId: parsed.workerUserId,
+      organizationId: instance.campaign.organizationId,
+      payload: { assignmentPublicId: record.publicId },
+      span: "marketplace.claim.analytics",
+    });
+
+    const { safeRecordAutomationEvent } = await import(
+      "@/lib/automation/safe-emit"
+    );
+    await safeRecordAutomationEvent({
+      trigger: "assignment.accepted",
+      idempotencyKey: `automation:assignment.accepted:${record.publicId}`,
+      userId: parsed.workerUserId,
+      organizationId: instance.campaign.organizationId,
+      campaignId: instance.campaign.publicId,
+      payload: {
+        assignmentId: record.publicId,
+        userId: parsed.workerUserId,
+        campaignId: instance.campaign.publicId,
+        organizationId: instance.campaign.organizationId,
+      },
+      span: "marketplace.claim.automation",
+    });
+
     return apiSuccess(record);
   } catch (error) {
     if (error instanceof AppError) return error.toApiError();

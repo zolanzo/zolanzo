@@ -30,6 +30,8 @@ export const PAYMENT_INTENT_PURPOSES = [
   "campaign_funding",
   "wallet_topup",
   "organization_funding",
+  "marketplace_payment",
+  "subscription",
 ] as const;
 
 export type PaymentIntentPurpose = (typeof PAYMENT_INTENT_PURPOSES)[number];
@@ -61,6 +63,12 @@ export const NORMALIZED_PAYMENT_EVENT_TYPES = [
   "payment.failed",
   "payment.refunded",
   "payment.chargeback",
+  "transfer.succeeded",
+  "transfer.failed",
+  "subscription.created",
+  "subscription.disabled",
+  "invoice.created",
+  "invoice.payment_failed",
 ] as const;
 
 export type NormalizedPaymentEventType =

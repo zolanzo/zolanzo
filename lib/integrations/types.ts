@@ -3,6 +3,8 @@
  * No third-party SDKs wired here.
  */
 
+import type { MonitoringProviderAdapter } from "@/lib/integrations/monitoring/types";
+
 export type EmailMessage = {
   to: string;
   subject: string;
@@ -66,7 +68,13 @@ export type NormalizedPaymentEvent = {
     | "payment.succeeded"
     | "payment.failed"
     | "payment.refunded"
-    | "payment.chargeback";
+    | "payment.chargeback"
+    | "transfer.succeeded"
+    | "transfer.failed"
+    | "subscription.created"
+    | "subscription.disabled"
+    | "invoice.created"
+    | "invoice.payment_failed";
   provider: string;
   providerRef: string;
   paymentPublicId?: string | null;
@@ -109,18 +117,33 @@ export type PaymentProviderAdapter = {
     body: string,
   ): Promise<PaymentWebhookParseResult>;
   normalizeEvent(raw: Record<string, unknown>): NormalizedPaymentEvent | null;
-  /** Placeholder — not executed in Sprint 12 */
   refundPayment?(input: {
     providerRef: string;
     amountMinor: number;
-  }): Promise<{ accepted: false; reason: string }>;
-  /** Placeholder — not executed in Sprint 12 */
+    reason?: string;
+  }): Promise<
+    | {
+        accepted: true;
+        providerRefundRef: string;
+        raw?: Record<string, unknown>;
+      }
+    | { accepted: false; reason: string }
+  >;
   createTransfer?(input: {
     amountMinor: number;
     currency: string;
     destinationRef: string;
-  }): Promise<{ accepted: false; reason: string }>;
+  }): Promise<
+    | { accepted: true; providerTransferRef: string; raw?: Record<string, unknown> }
+    | { accepted: false; reason: string }
+  >;
   getTransaction?(providerRef: string): Promise<Record<string, unknown> | null>;
+  /** Optional: list provider transactions for reconciliation windows */
+  listTransactions?(input: {
+    fromIso: string;
+    toIso: string;
+    page?: number;
+  }): Promise<Array<Record<string, unknown>>>;
 };
 
 /** @deprecated Prefer PaymentProviderAdapter */
@@ -196,6 +219,7 @@ export type PushProvider = {
 export type NotificationChannel =
   | "email"
   | "sms"
+  | "whatsapp"
   | "push"
   | "in_app"
   | "webhook";
@@ -203,6 +227,7 @@ export type NotificationChannel =
 export type ChannelCapability =
   | "email"
   | "sms"
+  | "whatsapp"
   | "push"
   | "in_app"
   | "webhook"
@@ -371,6 +396,44 @@ export type ObjectStorageProvider = {
   }): Promise<string>;
 };
 
+/**
+ * Enterprise storage port — signed URLs, soft delete, listing.
+ * Domain never imports Supabase Storage SDK.
+ */
+export type StorageProvider = ObjectStorageProvider & {
+  readonly providerKey: string;
+  createSignedUploadUrl(params: {
+    bucket: string;
+    key: string;
+    expiresInSec?: number;
+    upsert?: boolean;
+  }): Promise<{
+    signedUrl: string;
+    token: string;
+    path: string;
+    expiresAt: string;
+  }>;
+  createSignedDownloadUrl(params: {
+    bucket: string;
+    key: string;
+    expiresInSec?: number;
+    download?: boolean | string;
+  }): Promise<{ signedUrl: string; expiresAt: string }>;
+  removeObject(params: { bucket: string; key: string }): Promise<void>;
+  softDeleteObject(params: {
+    bucket: string;
+    key: string;
+  }): Promise<{ trashKey: string }>;
+  listObjects(params: {
+    bucket: string;
+    prefix?: string;
+    limit?: number;
+  }): Promise<
+    Array<{ key: string; sizeBytes: number | null; updatedAt: string | null }>
+  >;
+  getPublicUrl?(params: { bucket: string; key: string }): string | null;
+};
+
 /** Storage providers for evidence — Submission Package never binds to a vendor. */
 export const EVIDENCE_STORAGE_ADAPTERS = [
   "memory",
@@ -441,4 +504,6 @@ export type IntegrationRegistry = {
   /** Preferred evidence port — Submission Package uses this exclusively */
   evidenceStorage?: EvidenceStorageAdapter;
   search?: SearchProvider;
+  /** Error tracking / APM — Sentry primary, memory for local */
+  monitoring?: MonitoringProviderAdapter[];
 };

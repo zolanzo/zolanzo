@@ -19,6 +19,8 @@ import { firebaseNotificationAdapter } from "@/lib/integrations/notifications/fi
 import { webhookNotificationAdapter } from "@/lib/integrations/notifications/webhook-adapter";
 import { inAppNotificationAdapter } from "@/lib/integrations/notifications/in-app-adapter";
 import { integrationRegistry } from "@/lib/integrations/registry";
+import { isResendLiveMode } from "@/lib/integrations/notifications/resend/client";
+import { isSendchampLiveMode } from "@/lib/integrations/notifications/sendchamp/client";
 
 const BUILTIN: NotificationChannelAdapter[] = [
   memoryNotificationAdapter,
@@ -29,6 +31,19 @@ const BUILTIN: NotificationChannelAdapter[] = [
   webhookNotificationAdapter,
   inAppNotificationAdapter,
 ];
+
+/** Default adapter key per channel. */
+export const DEFAULT_ADAPTER_BY_CHANNEL: Record<
+  NotificationChannel,
+  string
+> = {
+  email: "resend",
+  sms: "sendchamp",
+  whatsapp: "sendchamp",
+  push: "firebase",
+  in_app: "in_app",
+  webhook: "webhook",
+};
 
 export function listNotificationAdapters(): NotificationChannelAdapter[] {
   const fromRegistry = integrationRegistry.notifications ?? [];
@@ -52,7 +67,11 @@ export function selectNotificationAdapter(params: {
   providerKey?: string;
   channel: NotificationChannel;
   requiredCapabilities?: readonly ChannelCapability[];
-  /** Prefer memory for local/test delivery */
+  /**
+   * Prefer real delivery when possible:
+   * - email + Resend keys → resend
+   * - otherwise memory (local/test)
+   */
   preferLive?: boolean;
 }): NotificationChannelAdapter {
   if (params.providerKey) {
@@ -81,8 +100,31 @@ export function selectNotificationAdapter(params: {
   );
 
   if (params.preferLive) {
+    if (params.channel === "email" && isResendLiveMode()) {
+      const resend = adapters.find((a) => a.providerKey === "resend");
+      if (resend) return resend;
+    }
+    if (
+      (params.channel === "sms" || params.channel === "whatsapp") &&
+      isSendchampLiveMode()
+    ) {
+      const sendchamp = adapters.find((a) => a.providerKey === "sendchamp");
+      if (sendchamp) return sendchamp;
+    }
     const live = adapters.find((a) => a.providerKey === "memory");
     if (live) return live;
+  }
+
+  // Prefer configured default channel adapter (e.g. resend for email).
+  const preferredKey = DEFAULT_ADAPTER_BY_CHANNEL[params.channel];
+  const preferred = adapters.find((a) => a.providerKey === preferredKey);
+  if (preferred) {
+    if (
+      !params.requiredCapabilities ||
+      adapterHasCapabilities(preferred, params.requiredCapabilities)
+    ) {
+      return preferred;
+    }
   }
 
   const required = params.requiredCapabilities ?? [];
@@ -97,18 +139,6 @@ export function selectNotificationAdapter(params: {
   }
   return match;
 }
-
-/** Default adapter key per channel (stubs — memory for live local). */
-export const DEFAULT_ADAPTER_BY_CHANNEL: Record<
-  NotificationChannel,
-  string
-> = {
-  email: "resend",
-  sms: "sendchamp",
-  push: "firebase",
-  in_app: "in_app",
-  webhook: "webhook",
-};
 
 export {
   memoryNotificationAdapter,

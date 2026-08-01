@@ -13,6 +13,7 @@ import { flutterwavePaymentAdapter } from "@/lib/integrations/payments/flutterwa
 import { stripePaymentAdapter } from "@/lib/integrations/payments/stripe-adapter";
 import { monnifyPaymentAdapter } from "@/lib/integrations/payments/monnify-adapter";
 import { integrationRegistry } from "@/lib/integrations/registry";
+import { isPaystackLiveMode } from "@/lib/integrations/payments/paystack/client";
 
 const BUILTIN: PaymentProviderAdapter[] = [
   memoryPaymentAdapter,
@@ -58,6 +59,15 @@ export function selectPaymentAdapter(params: {
   }
 
   const required = params.requiredCapabilities ?? ["accepts_payments", "webhooks"];
+
+  // Prefer live Paystack when credentials are present (Phase 3B.1).
+  if (isPaystackLiveMode()) {
+    const paystack = getPaymentAdapter("paystack");
+    if (paystack && adapterHasCapabilities(paystack, required)) {
+      return paystack;
+    }
+  }
+
   const match = listPaymentAdapters().find((a) =>
     adapterHasCapabilities(a, required),
   );

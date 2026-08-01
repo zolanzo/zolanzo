@@ -14,6 +14,7 @@ import {
 } from "@/lib/validation/env";
 import { logger } from "@/lib/observability/logger";
 import { getProcessMeta } from "@/lib/observability/process-meta";
+import { metrics, getMetricsSnapshot } from "@/lib/observability/metrics";
 import {
   dependencyRegistry,
   probeStatusToDependency,
@@ -48,6 +49,13 @@ export type HealthPayload = {
   dependencies?: DependencyRecord[];
   scheduler?: SchedulerHealth;
   queue?: QueueHealth;
+  /** Observability snapshot for ops (derived metrics) */
+  observability?: {
+    processingLatencyMs: number | null;
+    httpErrorRate: number | null;
+    webhookRejected: number;
+    jobFailures: number;
+  };
 };
 
 function withProcessMeta(
@@ -91,7 +99,8 @@ export async function getLiveHealth(meta: {
   version: string;
 }): Promise<HealthPayload> {
   const env = getEnv();
-  return withProcessMeta({
+  const started = Date.now();
+  const payload = withProcessMeta({
     status: "ok",
     application: meta.name,
     version: meta.version,
@@ -102,9 +111,16 @@ export async function getLiveHealth(meta: {
         id: "app_alive",
         status: "ok",
         detail: "process up",
+        latencyMs: Date.now() - started,
       },
     ],
   });
+  metrics.httpRequest({
+    route: "/health",
+    status: 200,
+    durationMs: Date.now() - started,
+  });
+  return payload;
 }
 
 async function checkDatabase(): Promise<ProbeCheck> {
@@ -119,13 +135,25 @@ async function checkDatabase(): Promise<ProbeCheck> {
   const started = Date.now();
   try {
     await prisma.$queryRaw`SELECT 1`;
+    const latencyMs = Date.now() - started;
+    metrics.dbQuery({
+      operation: "health.select1",
+      durationMs: latencyMs,
+      ok: true,
+    });
     return {
       id: "database",
       status: "ok",
-      latencyMs: Date.now() - started,
+      latencyMs,
       detail: "connected",
     };
   } catch (error) {
+    const latencyMs = Date.now() - started;
+    metrics.dbQuery({
+      operation: "health.select1",
+      durationMs: latencyMs,
+      ok: false,
+    });
     logger.error("Database readiness check failed", {
       span: "health.database",
       err:
@@ -136,7 +164,7 @@ async function checkDatabase(): Promise<ProbeCheck> {
     return {
       id: "database",
       status: "down",
-      latencyMs: Date.now() - started,
+      latencyMs,
       detail: "query failed",
     };
   }
@@ -157,6 +185,10 @@ async function checkSupabaseAuth(): Promise<ProbeCheck> {
     const url = `${env.NEXT_PUBLIC_SUPABASE_URL!.replace(/\/$/, "")}/auth/v1/health`;
     const res = await fetch(url, {
       method: "GET",
+      headers: {
+        apikey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        Authorization: `Bearer ${env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+      },
       signal: AbortSignal.timeout(3_000),
     });
     const latencyMs = Date.now() - started;
@@ -330,6 +362,7 @@ async function checkQueue(): Promise<{
 }> {
   const { getCronRunner } = await import("@/jobs/runner/cron-runner");
   const health = getCronRunner().getQueueHealth();
+  metrics.setQueueDepth(health.depth ?? 0);
   return {
     check: {
       id: "queue",
@@ -340,11 +373,29 @@ async function checkQueue(): Promise<{
   };
 }
 
+async function checkBackgroundWorkers(): Promise<ProbeCheck> {
+  const { getCronRunner } = await import("@/jobs/runner/cron-runner");
+  const health = getCronRunner().getHealth();
+  if (health.status === "running") {
+    return {
+      id: "background_workers",
+      status: "ok",
+      detail: `inFlight=${health.inFlight}; lastTick=${health.lastTickAt ?? "n/a"}`,
+    };
+  }
+  return {
+    id: "background_workers",
+    status: "degraded",
+    detail: `scheduler ${health.status} (enable ZOLANZO_CRON_ENABLED=1 or npm run jobs:cron)`,
+  };
+}
+
 export async function getReadinessHealth(meta: {
   name: string;
   version: string;
 }): Promise<HealthPayload> {
   const env = getEnv();
+  const started = Date.now();
 
   const [
     database,
@@ -353,6 +404,7 @@ export async function getReadinessHealth(meta: {
     redis,
     scheduler,
     queue,
+    workers,
   ] = await Promise.all([
     checkDatabase(),
     checkSupabaseAuth(),
@@ -360,6 +412,7 @@ export async function getReadinessHealth(meta: {
     checkRedis(),
     checkScheduler(),
     checkQueue(),
+    checkBackgroundWorkers(),
   ]);
 
   const environment = checkEnvironment();
@@ -373,6 +426,7 @@ export async function getReadinessHealth(meta: {
     redis,
     queue.check,
     scheduler.check,
+    workers,
   ];
 
   recordDependency("environment", environment);
@@ -387,7 +441,6 @@ export async function getReadinessHealth(meta: {
 
   let status = aggregateStatus(checks);
 
-  // Development without DB is degraded (not down) so local UI still runs.
   if (
     status === "down" &&
     resolveAppEnvironment(env.ZOLANZO_ENV) === "development" &&
@@ -395,6 +448,14 @@ export async function getReadinessHealth(meta: {
   ) {
     status = "degraded";
   }
+
+  const snap = getMetricsSnapshot();
+  const durationMs = Date.now() - started;
+  metrics.httpRequest({
+    route: "/readiness",
+    status: status === "down" ? 503 : 200,
+    durationMs,
+  });
 
   return withProcessMeta({
     status,
@@ -406,5 +467,11 @@ export async function getReadinessHealth(meta: {
     dependencies: dependencyRegistry.list(),
     scheduler: scheduler.health,
     queue: queue.health,
+    observability: {
+      processingLatencyMs: snap.derived.processingLatencyMs,
+      httpErrorRate: snap.derived.httpErrorRate,
+      webhookRejected: snap.derived.webhookRejected,
+      jobFailures: snap.derived.jobFailures,
+    },
   });
 }

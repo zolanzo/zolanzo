@@ -29,29 +29,32 @@ export async function createDraftSubmissionAction(
 export async function attachEvidenceAction(
   input: unknown,
 ): Promise<ApiResponse<EvidenceItemRecord>> {
-  await requireAuthContext();
-  return attachEvidence({ input });
+  const ctx = await requireAuthContext();
+  return attachEvidence({ input, workerUserId: ctx.user.id });
 }
 
 export async function replaceEvidenceAction(
   input: unknown,
 ): Promise<ApiResponse<EvidenceItemRecord>> {
-  await requireAuthContext();
-  return replaceEvidence({ input });
+  const ctx = await requireAuthContext();
+  return replaceEvidence({ input, workerUserId: ctx.user.id });
 }
 
 export async function removeEvidenceAction(
   input: unknown,
 ): Promise<ApiResponse<{ removed: true }>> {
-  await requireAuthContext();
-  return removeEvidence({ input });
+  const ctx = await requireAuthContext();
+  return removeEvidence({ input, workerUserId: ctx.user.id });
 }
 
 export async function markSubmissionReadyAction(
   submissionPublicId: string,
 ): Promise<ApiResponse<SubmissionPackage>> {
-  await requireAuthContext();
-  return markSubmissionReady({ input: { submissionPublicId } });
+  const ctx = await requireAuthContext();
+  return markSubmissionReady({
+    input: { submissionPublicId },
+    workerUserId: ctx.user.id,
+  });
 }
 
 export async function submitPackageAction(
@@ -67,6 +70,10 @@ export async function submitPackageAction(
 export async function getSubmissionPackageAction(
   publicId: string,
 ): Promise<ApiResponse<SubmissionPackage>> {
-  await requireAuthContext();
-  return getSubmissionPackage({ publicId });
+  const ctx = await requireAuthContext();
+  return getSubmissionPackage({
+    publicId,
+    actorUserId: ctx.user.id,
+    platformRoles: ctx.user.platformRoles,
+  });
 }

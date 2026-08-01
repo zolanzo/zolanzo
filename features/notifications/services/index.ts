@@ -7,6 +7,7 @@ export {
   emitNotificationFromDomainEvent,
   upsertNotificationPreference,
 } from "@/features/notifications/services/notification-hub";
+export { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 export {
   BUILTIN_NOTIFICATION_TEMPLATES,
   findBuiltinTemplate,

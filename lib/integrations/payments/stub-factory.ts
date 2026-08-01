@@ -1,5 +1,6 @@
 /**
  * Shared helpers for payment adapter stubs (no live API calls).
+ * Webhook ingress still requires real HMAC verification via lib/security/webhook-auth.
  */
 
 import type {
@@ -12,6 +13,8 @@ import type {
   PaymentVerificationResult,
   PaymentWebhookParseResult,
 } from "@/lib/integrations/types";
+import { AppError } from "@/lib/api/response";
+import { verifyWebhookRequest } from "@/lib/security/webhook-auth";
 
 export function stubRefund(): Promise<{ accepted: false; reason: string }> {
   return Promise.resolve({
@@ -84,17 +87,23 @@ export function createStubAdapter(params: {
         return { validSignature: false, events: [] };
       }
 
-      // Stub: accept when header present or body marks stub
-      const sig =
-        headers["x-payment-signature"] ??
-        headers["x-paystack-signature"] ??
-        headers["stripe-signature"] ??
-        headers["verif-hash"];
-      const validSignature = Boolean(sig) || raw.stub === true;
+      // Never trust body.stub / bare signature presence — HMAC + timestamp + replay only.
+      try {
+        verifyWebhookRequest({
+          provider: providerKey,
+          headers,
+          body,
+        });
+      } catch (error) {
+        if (error instanceof AppError && error.code === "WEBHOOK_REPLAY") {
+          throw error;
+        }
+        return { validSignature: false, events: [] };
+      }
 
       const event = normalizeStubEvent(providerKey, raw);
       return {
-        validSignature,
+        validSignature: true,
         events: event ? [event] : [],
       };
     },

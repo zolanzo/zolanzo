@@ -28,6 +28,11 @@ export const PUBLIC_ID_ENTITIES = [
   "ai_execution",
   "ai_decision",
   "dispute",
+  "trust_profile",
+  "trust_event",
+  "analytics_event",
+  "analytics_snapshot",
+  "analytics_report",
 ] as const;
 
 export type PublicIdEntity = (typeof PUBLIC_ID_ENTITIES)[number];
@@ -222,6 +227,41 @@ export const PUBLIC_ID_DEFINITIONS: Record<PublicIdEntity, PublicIdDefinition> =
       sequenceWidth: 6,
       example: "DSP-000041",
     },
+    trust_profile: {
+      entity: "trust_profile",
+      prefix: "TRS",
+      strategy: "random",
+      randomLength: 6,
+      example: "TRS-7K2N9P",
+    },
+    trust_event: {
+      entity: "trust_event",
+      prefix: "TRE",
+      strategy: "random",
+      randomLength: 6,
+      example: "TRE-4M8Q2R",
+    },
+    analytics_event: {
+      entity: "analytics_event",
+      prefix: "ANE",
+      strategy: "random",
+      randomLength: 6,
+      example: "ANE-3K9P2M",
+    },
+    analytics_snapshot: {
+      entity: "analytics_snapshot",
+      prefix: "ANS",
+      strategy: "random",
+      randomLength: 6,
+      example: "ANS-7H2N4Q",
+    },
+    analytics_report: {
+      entity: "analytics_report",
+      prefix: "ANR",
+      strategy: "random",
+      randomLength: 6,
+      example: "ANR-5M8Q1R",
+    },
   };
 
 /** Crockford-ish alphabet — no 0/O/1/I/L ambiguity */
@@ -252,4 +292,9 @@ export const PUBLIC_ID_REGEX: Record<PublicIdEntity, RegExp> = {
   ai_execution: /^AIX-[2-9A-HJ-NP-Z]{6}$/,
   ai_decision: /^DEC-[2-9A-HJ-NP-Z]{6}$/,
   dispute: /^DSP-\d{6}$/,
+  trust_profile: /^TRS-[2-9A-HJ-NP-Z]{6}$/,
+  trust_event: /^TRE-[2-9A-HJ-NP-Z]{6}$/,
+  analytics_event: /^ANE-[2-9A-HJ-NP-Z]{6}$/,
+  analytics_snapshot: /^ANS-[2-9A-HJ-NP-Z]{6}$/,
+  analytics_report: /^ANR-[2-9A-HJ-NP-Z]{6}$/,
 };

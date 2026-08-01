@@ -107,11 +107,6 @@ export default function DesignSystemPage() {
                 Auth template
               </Link>
             </li>
-            <li>
-              <Link href="/templates/landing" className="text-primary hover:underline">
-                Landing template
-              </Link>
-            </li>
           </ul>
         </section>
       </article>

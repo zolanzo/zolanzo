@@ -36,10 +36,10 @@ export function ErrorLayout({
       <p className="text-body text-muted-foreground mt-3 max-w-md text-center">
         {description}
       </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
-          className="focus-ring inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-button font-semibold text-primary-foreground shadow-soft hover:bg-primary-hover"
+          className="focus-ring inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-button font-semibold text-primary-foreground shadow-soft transition-colors hover:bg-primary-hover"
         >
           Back home
         </Link>

@@ -10,6 +10,9 @@ import { withSchedulerLock } from "@/lib/reliability/scheduler-lock";
 import { getRegisteredJob } from "@/jobs/runner/registry";
 import type { JobName } from "@/jobs/names";
 import type { JobResult } from "@/jobs/runner/types";
+import { metrics } from "@/lib/observability/metrics";
+import { withSpan } from "@/lib/observability/trace";
+import { captureException } from "@/lib/integrations/monitoring";
 
 const log = createLogger("jobs.execute");
 
@@ -78,73 +81,102 @@ export async function executeRegisteredJob(
         operation: opts.jobName,
       },
       async () => {
-        log.info("Job starting", {
-          jobId,
-          jobName: opts.jobName,
-          schedule: opts.schedule,
-          retryPolicy: registered.retryPolicy,
-        });
-
-        const outcome = await withRetry(
-          registered.retryPolicy as RetryPolicyName,
-          async (attempt) =>
-            registered.handler({
+        return withSpan(
+          "job.execute",
+          { job: opts.jobName, jobId },
+          async () => {
+            log.info("Job starting", {
+              jobId,
               jobName: opts.jobName,
               schedule: opts.schedule,
-              attempt,
-            }),
-          { sleep: opts.sleep },
+              retryPolicy: registered.retryPolicy,
+              outcome: "started",
+            });
+
+            const outcome = await withRetry(
+              registered.retryPolicy as RetryPolicyName,
+              async (attempt) =>
+                registered.handler({
+                  jobName: opts.jobName,
+                  schedule: opts.schedule,
+                  attempt,
+                }),
+              { sleep: opts.sleep },
+            );
+
+            const durationMs = Date.now() - started;
+            if (outcome.ok) {
+              const retries = Math.max(0, outcome.attempts - 1);
+              metrics.job({
+                jobName: opts.jobName,
+                durationMs,
+                ok: true,
+                retries,
+              });
+              log.info("Job completed", {
+                jobId,
+                jobName: opts.jobName,
+                schedule: opts.schedule,
+                durationMs,
+                result: outcome.value.ok ? "ok" : "soft_fail",
+                summary: outcome.value.summary,
+                processed: outcome.value.processed,
+                failed: outcome.value.failed,
+                retryCount: retries,
+                outcome: "ok",
+              });
+              return {
+                jobId,
+                jobName: opts.jobName,
+                schedule: opts.schedule,
+                correlationId,
+                durationMs,
+                result: outcome.value,
+                retryCount: retries,
+                skippedDuplicate: false,
+              };
+            }
+
+            const message =
+              outcome.error instanceof Error
+                ? outcome.error.message
+                : String(outcome.error);
+            const retries = Math.max(0, outcome.attempts - 1);
+            metrics.job({
+              jobName: opts.jobName,
+              durationMs,
+              ok: false,
+              retries,
+            });
+            log.error("Job failed", {
+              jobId,
+              jobName: opts.jobName,
+              schedule: opts.schedule,
+              durationMs,
+              retryCount: retries,
+              deadLetterReady: outcome.deadLetterReady,
+              err: { message },
+              outcome: "error",
+              errorCode: "JOB_FAILED",
+            });
+            void captureException(outcome.error, {
+              message: `Job failed: ${opts.jobName}`,
+              tags: { jobName: opts.jobName },
+              extras: { jobId, retries },
+            });
+            return {
+              jobId,
+              jobName: opts.jobName,
+              schedule: opts.schedule,
+              correlationId,
+              durationMs,
+              result: null,
+              retryCount: retries,
+              skippedDuplicate: false,
+              error: message,
+            };
+          },
         );
-
-        const durationMs = Date.now() - started;
-        if (outcome.ok) {
-          log.info("Job completed", {
-            jobId,
-            jobName: opts.jobName,
-            schedule: opts.schedule,
-            durationMs,
-            result: outcome.value.ok ? "ok" : "soft_fail",
-            summary: outcome.value.summary,
-            processed: outcome.value.processed,
-            failed: outcome.value.failed,
-            retryCount: Math.max(0, outcome.attempts - 1),
-          });
-          return {
-            jobId,
-            jobName: opts.jobName,
-            schedule: opts.schedule,
-            correlationId,
-            durationMs,
-            result: outcome.value,
-            retryCount: Math.max(0, outcome.attempts - 1),
-            skippedDuplicate: false,
-          };
-        }
-
-        const message =
-          outcome.error instanceof Error
-            ? outcome.error.message
-            : String(outcome.error);
-        log.error("Job failed", {
-          jobId,
-          jobName: opts.jobName,
-          schedule: opts.schedule,
-          durationMs,
-          retryCount: Math.max(0, outcome.attempts - 1),
-          deadLetterReady: outcome.deadLetterReady,
-          err: { message },
-        });
-        return {
-          jobId,
-          jobName: opts.jobName,
-          schedule: opts.schedule,
-          correlationId,
-          durationMs,
-          result: null,
-          retryCount: Math.max(0, outcome.attempts - 1),
-          skippedDuplicate: false,
-          error: message,
-        };
       },
     );
 

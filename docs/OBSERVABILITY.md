@@ -1,23 +1,14 @@
 # Observability
 
-Contracts for logs, traces, metrics, and health.
+Contracts for logs, traces, metrics, health, monitoring, and alerts.
 
-## Phase 3A.1 (shipped)
+## Phase status
 
-Request lifecycle & correlation — see:
-
-- [CORRELATION_IDS.md](./CORRELATION_IDS.md)
-- [REQUEST_LIFECYCLE.md](./REQUEST_LIFECYCLE.md)
-- [LOGGING_STANDARD.md](./LOGGING_STANDARD.md)
-- [PHASE_3A1_CORRELATION_REPORT.md](./PHASE_3A1_CORRELATION_REPORT.md)
-
-Every request/job/webhook should carry a **correlation ID**. Structured logs auto-merge ALS context via `lib/observability/logger.ts`.
-
-## Goals
-
-- Every request and job has a **correlation ID**
-- Finance and work-engine spans are first-class
-- Health distinguishes **liveness** vs **readiness** vs **dependency** failure
+| Slice | Status |
+| --- | --- |
+| 3A.1 Request lifecycle & correlation | ✅ |
+| 3A.2 Reliability probes / cron | ✅ |
+| 3A.4 Metrics · tracing · Sentry adapter · alerts · admin health | ✅ [PHASE_3A4_OBSERVABILITY_REPORT.md](./PHASE_3A4_OBSERVABILITY_REPORT.md) |
 
 ## Structured logs
 
@@ -25,41 +16,55 @@ Levels: `debug` · `info` · `warn` · `error` · `fatal` (`constants/observabil
 
 Canonical envelope: [LOGGING_STANDARD.md](./LOGGING_STANDARD.md).
 
+Logger auto-merges ALS context and **redacts** secrets (`lib/observability/redact.ts`).
+
 Never log secrets, full PANs, or raw payment payloads.
 
 ## Tracing
 
-Suggested spans (`TRACE_SPANS`): HTTP, DB, queue enqueue/process, ledger post, escrow release, validation, email/SMS, webhook deliver.
+Internal spans via `lib/observability/trace.ts` (`withSpan` / `startSpan` / `endSpan`).
+Correlation IDs remain the primary join key across HTTP, jobs, webhooks, payments, ops, and AI.
 
-OpenTelemetry exporters: later Phase 3A observability work (correlation IDs are the bridge).
+OpenTelemetry OTLP export: deferred (endpoint env reserved: `OTEL_EXPORTER_ENDPOINT`).
 
 ## Metrics
 
-Categories: `http`, `queue`, `database`, `cache`, `payments`, `work_engine`, `finance`, `auth`
+In-process registry: `lib/observability/metrics.ts`
 
-Examples: request latency p95, queue depth, job failures, ledger post rate, escrow release latency, auth failure rate.
+Categories include HTTP, DB, jobs, webhooks, payments, withdrawals, notifications, monitoring.
+
+Snapshot feeds admin health dashboard + alert evaluation.
+
+## Monitoring adapter
+
+Port: `lib/integrations/monitoring/`
+
+| Adapter | Role |
+| --- | --- |
+| `memory` | Local / test capture buffer |
+| `sentry` | Primary — HTTP store API when `SENTRY_DSN` set; stub otherwise |
+
+Use `captureException` / `captureMessage` — never import vendor SDKs from features.
 
 ## Health checks
 
 Live/ready probes: `lib/observability/probes.ts` → `/health`, `/readiness`.
-
-Payload includes `buildVersion`, `gitCommit`, `startupTime`, `uptimeSeconds` plus dependency checks.
 
 | Probe | Endpoint | Meaning |
 | --- | --- | --- |
 | Liveness | `/health` | Process up |
 | Readiness | `/readiness` | Can take traffic |
 
-## Dashboards (design)
+Checks: app, environment, database, supabase_auth, storage, redis, queue, scheduler, **background_workers**.
 
-- **Errors:** Sentry project + release tracking  
-- **Performance:** Next.js / edge latency + DB + queue  
-- **Product:** PostHog (optional) for funnels  
+## Alerts
 
-## Alerting (future runbooks)
+Configurable thresholds: `lib/observability/alerts.ts`  
+Evaluated in admin health dashboard (`features/admin/services/health.ts`).
 
-- Queue depth > threshold  
-- Payment webhook failure spike  
-- Reconciliation mismatch  
-- Auth error rate  
-- Disk / storage 5xx  
+## Related docs
+
+- [CORRELATION_IDS.md](./CORRELATION_IDS.md)
+- [REQUEST_LIFECYCLE.md](./REQUEST_LIFECYCLE.md)
+- [LOGGING_STANDARD.md](./LOGGING_STANDARD.md)
+- [READINESS_PROBES.md](./READINESS_PROBES.md)

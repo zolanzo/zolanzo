@@ -1,37 +1,41 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { AlertCircle } from "lucide-react";
-import { cn } from "@/utils";
+"use client";
 
-export type ErrorStateProps = HTMLAttributes<HTMLDivElement> & {
+import React from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AlertCircleIcon, RefreshIcon } from "@hugeicons/core-free-icons";
+
+interface ErrorStateProps {
   title?: string;
-  description?: string;
-  action?: ReactNode;
-};
+  message?: string;
+  onRetry?: () => void;
+}
 
 export function ErrorState({
   title = "Something went wrong",
-  description = "We could not load this content. Please try again.",
-  action,
-  className,
-  ...props
+  message = "We encountered a temporary network issue. Please retry.",
+  onRetry,
 }: ErrorStateProps) {
   return (
-    <div
-      role="alert"
-      className={cn(
-        "flex flex-col items-center justify-center px-6 py-12 text-center",
-        className,
-      )}
-      {...props}
-    >
-      <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-danger/30 bg-danger/5 text-danger">
-        <AlertCircle className="size-7" aria-hidden />
+    <div className="p-6 rounded-2xl bg-red-950/20 border border-red-500/30 text-center flex flex-col items-center justify-center space-y-3 my-4">
+      <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/20">
+        <HugeiconsIcon icon={AlertCircleIcon} size={20} />
       </div>
-      <h3 className="text-h3 text-foreground">{title}</h3>
-      <p className="mt-2 max-w-md text-small text-muted-foreground">
-        {description}
-      </p>
-      {action ? <div className="mt-6">{action}</div> : null}
+
+      <div className="space-y-1">
+        <h4 className="text-sm font-bold text-white">{title}</h4>
+        <p className="text-xs text-zinc-400">{message}</p>
+      </div>
+
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="h-[36px] px-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 hover:text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+        >
+          <HugeiconsIcon icon={RefreshIcon} size={14} />
+          <span>Retry Request</span>
+        </button>
+      )}
     </div>
   );
 }

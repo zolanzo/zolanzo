@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma/client";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { ApiResponse } from "@/lib/api/response";
 import { apiError, apiSuccess, AppError } from "@/lib/api/response";
+import { metrics } from "@/lib/observability/metrics";
 import { generatePublicId } from "@/lib/public-id/generator";
 import {
   DESTINATION_ACCOUNT_KIND_STATUS,
@@ -33,7 +34,55 @@ import {
   requiresManualApproval,
   type EligibilityResult,
 } from "@/features/withdrawals/services/eligibility";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 import { z } from "zod";
+
+async function emitWithdrawalNotice(params: {
+  event:
+    | "withdrawal.requested"
+    | "withdrawal.approved"
+    | "withdrawal.completed";
+  request: {
+    publicId: string;
+    workerUserId: string;
+    organizationId: string | null;
+    amountMinor: number;
+    currency: string;
+  };
+}): Promise<void> {
+  const worker = await prisma.user.findUnique({
+    where: { id: params.request.workerUserId },
+    select: {
+      email: true,
+      phone: true,
+      profile: { select: { displayName: true } },
+    },
+  });
+  const amountLabel = `${(params.request.amountMinor / 100).toFixed(2)} ${params.request.currency}`;
+  await safeEmitDomainNotification({
+    event: params.event,
+    organizationId: params.request.organizationId,
+    actorUserId: params.request.workerUserId,
+    recipients: [
+      {
+        role: "worker",
+        userId: params.request.workerUserId,
+        email: worker?.email ?? null,
+        phone: worker?.phone ?? null,
+        displayName: worker?.profile?.displayName ?? null,
+      },
+    ],
+    variables: {
+      recipientName: worker?.profile?.displayName ?? "there",
+      organizationName: "Zolanzo",
+      publicRef: params.request.publicId,
+      amountLabel,
+    },
+    idempotencyKey: `${params.event}:${params.request.publicId}`,
+    channels: ["email", "sms", "in_app"],
+    span: "withdrawal.notify",
+  });
+}
 
 function canTransition(
   from: WithdrawalRequestStatus,
@@ -511,9 +560,18 @@ export async function confirmWithdrawalIntent(params: {
 
     // Immediate policy: approved + no batch → complete via ledger now
     if (status === "approved" && policy.batchMode === "none") {
+      await emitWithdrawalNotice({
+        event: "withdrawal.requested",
+        request,
+      });
       const completed = await completeWithdrawalLedger(request.id);
       return apiSuccess(completed);
     }
+
+    await emitWithdrawalNotice({
+      event: "withdrawal.requested",
+      request,
+    });
 
     return apiSuccess(mapRequest(request));
   } catch (error) {
@@ -570,6 +628,7 @@ export async function recordWithdrawalApproval(params: {
       });
       await releaseReservation(request.id, "released");
       await projectWallet(request.walletId);
+      metrics.withdrawal({ outcome: "rejected" });
       return apiSuccess(mapRequest(updated));
     }
 
@@ -606,6 +665,17 @@ export async function recordWithdrawalApproval(params: {
         status: next,
         batchId,
         scheduledAt: next === "scheduled" ? new Date() : request.scheduledAt,
+      },
+    });
+    metrics.withdrawal({ outcome: "approved" });
+    await emitWithdrawalNotice({
+      event: "withdrawal.approved",
+      request: {
+        publicId: updated.publicId,
+        workerUserId: updated.workerUserId,
+        organizationId: updated.organizationId,
+        amountMinor: updated.amountMinor,
+        currency: updated.currency,
       },
     });
     return apiSuccess(mapRequest(updated));
@@ -686,6 +756,17 @@ async function completeWithdrawalLedger(
     });
     await releaseReservation(request.id, "consumed");
     await projectWallet(request.walletId);
+    metrics.withdrawal({ outcome: "completed" });
+    await emitWithdrawalNotice({
+      event: "withdrawal.completed",
+      request: {
+        publicId: updated.publicId,
+        workerUserId: updated.workerUserId,
+        organizationId: updated.organizationId,
+        amountMinor: updated.amountMinor,
+        currency: updated.currency,
+      },
+    });
     return mapRequest(updated);
   } catch (error) {
     await prisma.withdrawalRequest.update({
@@ -698,6 +779,7 @@ async function completeWithdrawalLedger(
     });
     await releaseReservation(request.id, "released");
     await projectWallet(request.walletId);
+    metrics.withdrawal({ outcome: "failed" });
     throw error;
   }
 }

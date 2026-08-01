@@ -1,7 +1,10 @@
 "use server";
 
 import type { ApiResponse } from "@/lib/api/response";
+import { AppError } from "@/lib/api/response";
 import { requireAuthContext } from "@/lib/auth/session";
+import { assertPaymentIntentAccess } from "@/lib/auth/resource-guards";
+import { prisma } from "@/lib/prisma/client";
 import {
   createDomainPaymentIntent,
   handlePaymentWebhook,
@@ -34,6 +37,26 @@ export async function verifyPaymentAction(
   paymentPublicId: string,
 ): Promise<ApiResponse<PaymentIntentRecord>> {
   const ctx = await requireAuthContext();
+  const intent = await prisma.paymentIntent.findUnique({
+    where: { publicId: paymentPublicId },
+  });
+  if (!intent) {
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "Payment intent not found" },
+    };
+  }
+  try {
+    assertPaymentIntentAccess({
+      user: ctx.user,
+      clientUserId: intent.clientUserId,
+      organizationId: intent.organizationId,
+    });
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    throw error;
+  }
+
   return withServerRequestContext(
     {
       operation: "payment.verify",
@@ -45,9 +68,8 @@ export async function verifyPaymentAction(
 }
 
 /**
- * Webhook ingress — typically called from a route handler without session auth.
- * Signature verification is performed by the provider adapter.
- * Correlation is established inside handlePaymentWebhook from inbound headers.
+ * Webhook ingress — no session auth.
+ * Signature / timestamp / replay verification runs inside adapter + webhook-auth.
  */
 export async function handlePaymentWebhookAction(
   input: unknown,
@@ -59,4 +81,33 @@ export async function handlePaymentWebhookAction(
   }>
 > {
   return handlePaymentWebhook({ input });
+}
+
+export async function requestPaymentRefundAction(
+  input: unknown,
+): Promise<
+  ApiResponse<{
+    paymentPublicId: string;
+    accepted: boolean;
+    providerRefundRef: string | null;
+    reason?: string;
+  }>
+> {
+  const { requirePermission } = await import("@/lib/rbac/guards");
+  const { requestPaymentRefund } = await import(
+    "@/features/payments/services/refunds"
+  );
+  const ctx = await requirePermission("payments.refund");
+  return withServerRequestContext(
+    {
+      operation: "payment.refund",
+      module: "payments",
+      userId: ctx.user.id,
+    },
+    () =>
+      requestPaymentRefund({
+        input,
+        actorUserId: ctx.user.id,
+      }),
+  );
 }

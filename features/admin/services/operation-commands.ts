@@ -28,6 +28,7 @@ import { dispatchNotificationJob } from "@/features/notifications/services/notif
 import { cancelWithdrawal } from "@/features/withdrawals/services/withdrawal-service";
 import { archiveCampaign } from "@/features/campaigns/services/campaign-service";
 import { verifyAndCompletePayment } from "@/features/payments/services/payment-platform";
+import { forceReleaseReservation } from "@/features/task-marketplace/services/reservation-engine";
 import {
   enrichRequestContext,
   ensureRequestContext,
@@ -216,14 +217,17 @@ async function applyDomainEffect(params: {
   }
 
   if (targetType === "reservation" && commandType === "cancel") {
-    const updated = await prisma.reservation.update({
-      where: { id: targetId },
-      data: { status: "released" },
-    });
+    // ARCH-1: must restore task instance inventory atomically (domain release).
+    const released = await forceReleaseReservation({ reservationId: targetId });
     return {
       status: "applied",
       reversible: false,
-      result: { reservationId: updated.id, status: updated.status },
+      result: {
+        reservationId: released.id,
+        status: released.status,
+        taskInstanceId: released.taskInstanceId,
+        inventoryRestored: true,
+      },
     };
   }
 

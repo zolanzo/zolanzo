@@ -56,6 +56,12 @@ export const envSchema = z.object({
   // Security
   CSRF_SECRET: optionalSecret32,
   WEBHOOK_SIGNING_SECRET: optionalNonEmpty,
+  /** Comma-separated previous secrets for webhook secret rotation */
+  WEBHOOK_SIGNING_SECRETS: optionalNonEmpty,
+
+  // Observability
+  SENTRY_DSN: optionalNonEmpty,
+  OTEL_EXPORTER_ENDPOINT: optionalUrl,
 
   // Cache / rate limit
   RATE_LIMIT_REDIS_URL: optionalUrl,
@@ -66,6 +72,268 @@ export const envSchema = z.object({
   STANKINGS_PASSPORT_KEY: optionalNonEmpty,
   SENDCHAMP_API_KEY: optionalNonEmpty,
   SENDCHAMP_SENDER_ID: optionalNonEmpty,
+  SENDCHAMP_WHATSAPP_SENDER: optionalNonEmpty,
+  SENDCHAMP_WEBHOOK_SECRET: optionalNonEmpty,
+
+  // Payments — optional until Phase 3B live keys
+  PAYSTACK_SECRET_KEY: optionalNonEmpty,
+  PAYSTACK_PUBLIC_KEY: optionalNonEmpty,
+
+  // Email — optional until Phase 3B.2 live keys
+  RESEND_API_KEY: optionalNonEmpty,
+  RESEND_FROM_EMAIL: optionalNonEmpty,
+  RESEND_WEBHOOK_SECRET: optionalNonEmpty,
+
+  // AI Intelligence (Phase 4.1A/B) — optional; default stub/mock
+  AI_ENABLED: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_PROVIDER: z.preprocess(
+    emptyToUndefined,
+    z.enum(["mock", "openai"]).optional(),
+  ),
+  OPENAI_API_KEY: optionalNonEmpty,
+  OPENAI_MODEL: optionalNonEmpty,
+  OPENAI_EMBEDDING_MODEL: optionalNonEmpty,
+  AI_MATCH_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_EXPLAINABILITY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_FAIRNESS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_FRAUD_DETECTION: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_FRAUD_EXPLAINABILITY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_DUPLICATE_ANALYSIS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_GEO_ANALYSIS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_REVIEW_ASSISTANT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_REVIEW_SUMMARIES: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_REVIEW_FEEDBACK: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_ORG_COPILOT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_ORG_MEMORY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_ORG_RECOMMENDATIONS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_WORKER_COPILOT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_WORKER_MEMORY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AI_WORKER_RECOMMENDATIONS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_EXPLAINABILITY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_TRENDS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_PASSPORT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_BADGES: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  TRUST_TIMELINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  ANALYTICS_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  ANALYTICS_SNAPSHOTS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  ANALYTICS_REPORTS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  ANALYTICS_DASHBOARDS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  EXECUTIVE_DASHBOARD: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  OPERATIONS_DASHBOARD: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  FORECAST_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  FORECAST_RECOMMENDATIONS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  FORECAST_MODELS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  REPORTS_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  REPORT_EXPORTS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  REPORT_SCHEDULES: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_ENGINE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_RULES: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_ACTIONS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_LIBRARY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_TEMPLATES: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_BUILDER: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_SIMULATION: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_IMPORT_EXPORT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_GOVERNANCE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_APPROVALS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  AUTOMATION_AUDIT: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  PUBLIC_API: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  PUBLIC_API_V1: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  PUBLIC_OPENAPI: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  PUBLIC_RATE_LIMITING: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  PUBLIC_WEBHOOKS: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  WEBHOOK_DELIVERY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  WEBHOOK_REPLAY: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  INTEGRATION_MARKETPLACE: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  CONNECTOR_RUNTIME: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  CONNECTOR_HEALTH: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  DEVELOPER_PORTAL: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  SDK_GENERATION: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+  API_EXPLORER: z.preprocess(
+    emptyToUndefined,
+    z.enum(["0", "1", "true", "false", "on", "off", "yes", "no"]).optional(),
+  ),
+
+  // Storage — supabase | memory | s3 | gcs (adapters)
+  STORAGE_PROVIDER: z.preprocess(
+    emptyToUndefined,
+    z.enum(["supabase", "memory", "s3", "gcs"]).optional(),
+  ),
 
   SKIP_ENV_VALIDATION: z
     .preprocess(emptyToUndefined, z.enum(["1", "true", "yes"]).optional())

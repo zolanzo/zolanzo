@@ -76,7 +76,6 @@ export function SearchInput({
             variant="ghost"
             className="size-7 text-muted-foreground hover:text-foreground"
             onClick={handleClear}
-            tabIndex={-1}
           >
             <X className="size-4" aria-hidden />
           </IconButton>

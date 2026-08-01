@@ -4,24 +4,18 @@
 **Platform**
 
 ## Responsibility
-Keys, docs links, sandbox onboarding.
+Keys, docs links, sandbox onboarding. UI shell for the Public API developer experience.
 
-## Structure
-- `components/` — Feature-specific UI only (compose `components/ui` + layouts; never duplicate primitives)
-- `hooks/` — Feature React hooks
-- `services/` — Use-cases / orchestration (extends `services/base`)
-- `repositories/` — Persistence adapters (extends `repositories/base`)
-- `types/` — Feature types (import shared IDs from `@/types/domain`)
-- `constants/` — Feature constants
-- `validators/` — Zod schemas for this feature
+## Implementation
+Core logic lives in `lib/developer-portal/` (Phase 4.5D):
 
-## Dependencies
-- Design system: `@/components/ui`, `@/components/layout`, `@/components/templates`
-- Domain: `@/types/domain`, `@/constants/campaign-types`, `@/constants/events`, `@/constants/permissions`
-- Infra: `@/lib/events`, `@/lib/rbac`, `@/lib/feature-flags`
+- `DeveloperPortalService` — portal facade (Public API / OpenAPI only)
+- `SDKGenerator` — TypeScript/Node from OpenAPI
+- `APIExplorer` — dry-run curl + TypeScript previews
+- `ExampleGenerator` / `QuickStartGenerator` / `ChangelogService`
 
-## Events
-See `docs/EVENTS.md` and `constants/events.ts`. Bind concrete publishers/subscribers when implementing.
+UI: `/developer`  
+Public API: `/api/v1/developer/*`
 
 ## Status
-Architecture scaffold only — **no business logic** in Step 3.
+Phase 4.5D complete — see `docs/PHASE_4_5D_DEVELOPER_PORTAL.md`.

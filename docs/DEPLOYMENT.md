@@ -46,6 +46,23 @@ tag/release → production → migrations → workers roll
 - Schema: forward-fix preferred; restore from backup if catastrophic  
 - Feature flags for kill-switches (`constants/feature-flags.ts`)  
 
+## Release Candidate (RC1) & closed pilot
+
+- Governance: [RC1_GOVERNANCE.md](./RC1_GOVERNANCE.md) (`main` · `release/1.0` · `develop`)  
+- Pilot ops: [CLOSED_PILOT_PROGRAM.md](./CLOSED_PILOT_PROGRAM.md)  
+- Kickoff readiness: [CLOSED_PILOT_REPORT.md](./CLOSED_PILOT_REPORT.md) — **GO WITH CONDITIONS**  
+- During pilot: bug/security/reliability only on `release/1.0` — no schema or features  
+
+## Disaster recovery
+
+Full backup / restore / incident procedures:
+
+- [DISASTER_RECOVERY_PLAN.md](./DISASTER_RECOVERY_PLAN.md)
+- [BUSINESS_CONTINUITY_PLAN.md](./BUSINESS_CONTINUITY_PLAN.md)
+- [INCIDENT_RESPONSE_RUNBOOK.md](./INCIDENT_RESPONSE_RUNBOOK.md)
+- [PRODUCTION_RECOVERY_CHECKLIST.md](./PRODUCTION_RECOVERY_CHECKLIST.md)
+- [PHASE_3A5_DR_REPORT.md](./PHASE_3A5_DR_REPORT.md)
+
 ## Regional roadmap
 
 Suggested regions: `us-east-1`, `eu-west-1`, `af-south-1`  

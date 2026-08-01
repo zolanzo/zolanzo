@@ -17,8 +17,14 @@ export type RequestContextStore = {
   workerId?: string;
   clientId?: string;
   operation?: string;
+  /** Stable operation / command public id when known (e.g. OPC-…) */
+  operationId?: string;
   /** Background job name when running inside a job */
   jobName?: string;
+  /** Job execution id */
+  jobId?: string;
+  /** External provider key (paystack, sendchamp, …) */
+  provider?: string;
   /** True when this is a retry of a prior attempt */
   isRetry?: boolean;
   /** Retry / attempt number when known */
@@ -59,7 +65,10 @@ export function createRequestContext(params: {
   workerId?: string;
   clientId?: string;
   operation?: string;
+  operationId?: string;
   jobName?: string;
+  jobId?: string;
+  provider?: string;
   isRetry?: boolean;
   attempt?: number;
   module?: string;
@@ -73,7 +82,10 @@ export function createRequestContext(params: {
     workerId: params.workerId,
     clientId: params.clientId,
     operation: params.operation,
+    operationId: params.operationId,
     jobName: params.jobName,
+    jobId: params.jobId,
+    provider: params.provider,
     isRetry: params.isRetry,
     attempt: params.attempt,
     module: params.module,
@@ -93,8 +105,11 @@ export function enrichRequestContext(
       | "workerId"
       | "clientId"
       | "operation"
+      | "operationId"
       | "module"
       | "jobName"
+      | "jobId"
+      | "provider"
       | "isRetry"
       | "attempt"
     >

@@ -62,8 +62,12 @@ export function Popover({
   return (
     <div ref={containerRef} className={cn("relative inline-flex", className)} {...props}>
       <div
+        role="button"
+        tabIndex={0}
         aria-expanded={open}
         aria-controls={id}
+        aria-haspopup="dialog"
+        className="focus-ring inline-flex rounded-lg"
         onClick={toggle}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {

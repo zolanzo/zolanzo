@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   revokeAllSessionsAction,
   revokeSessionAction,
@@ -35,7 +36,11 @@ export function SessionsClient(props: {
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-semibold">Active sessions</h2>
         {props.sessions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tracked sessions.</p>
+          <EmptyState
+            title="No tracked sessions"
+            description="Sign-ins will appear here after you use other devices or browsers."
+            className="items-start py-6 text-left"
+          />
         ) : (
           props.sessions.map((session) => (
             <div
@@ -75,7 +80,11 @@ export function SessionsClient(props: {
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-semibold">Trusted devices</h2>
         {props.devices.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No trusted devices.</p>
+          <EmptyState
+            title="No trusted devices"
+            description="Trusted devices will show up here when available."
+            className="items-start py-6 text-left"
+          />
         ) : (
           props.devices.map((device) => (
             <div key={device.id} className="border-b border-border py-3 text-sm">

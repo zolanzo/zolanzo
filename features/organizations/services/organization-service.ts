@@ -17,6 +17,7 @@ import { getEnv, isServiceRoleConfigured } from "@/lib/validation/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { logger } from "@/lib/observability/logger";
 import { allocateOrganizationPublicId } from "@/lib/public-id/generator";
+import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
 
 export type InviteResult = {
   invitationId: string;
@@ -199,9 +200,37 @@ export async function createInvitation(params: {
     });
 
     const env = getEnv();
+    const inviteUrl = `${env.NEXT_PUBLIC_APP_URL}/auth/accept-invite?token=${token}`;
+    const org = await prisma.organization.findUnique({
+      where: { id: params.organizationId },
+      select: { name: true, publicId: true },
+    });
+
+    await safeEmitDomainNotification({
+      event: "org.invite_member",
+      organizationId: params.organizationId,
+      actorUserId: params.actorUserId,
+      recipients: [
+        {
+          role: "organization_member",
+          email: params.email.toLowerCase(),
+          displayName: params.email.split("@")[0] ?? "member",
+        },
+      ],
+      variables: {
+        recipientName: params.email.split("@")[0] ?? "there",
+        organizationName: org?.name ?? "organization",
+        publicRef: org?.publicId ?? params.organizationId,
+        actionUrl: inviteUrl,
+      },
+      idempotencyKey: `org.invite_member:${invitation.id}`,
+      channels: ["email"],
+      span: "org.invite",
+    });
+
     return apiSuccess({
       invitationId: invitation.id,
-      inviteUrl: `${env.NEXT_PUBLIC_APP_URL}/auth/accept-invite?token=${token}`,
+      inviteUrl,
     });
   } catch (error) {
     if (error instanceof AppError) return error.toApiError();

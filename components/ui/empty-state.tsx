@@ -1,41 +1,60 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { cn } from "@/utils";
+"use client";
 
-export type EmptyStateProps = HTMLAttributes<HTMLDivElement> & {
-  icon?: ReactNode;
+import React from "react";
+import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { FolderIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+
+interface EmptyStateProps {
   title: string;
-  description?: string;
-  action?: ReactNode;
-};
+  description: string;
+  actionLabel?: string;
+  actionHref?: string;
+  onAction?: () => void;
+  icon?: typeof FolderIcon;
+  className?: string;
+}
 
 export function EmptyState({
-  icon,
   title,
   description,
-  action,
-  className,
-  ...props
+  actionLabel,
+  actionHref,
+  onAction,
+  icon: Icon = FolderIcon,
+  className = "",
 }: EmptyStateProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center px-6 py-12 text-center",
-        className,
+    <div className={`p-8 sm:p-12 rounded-3xl bg-[#0A0F12] border border-white/10 text-center flex flex-col items-center justify-center space-y-4 shadow-sm my-4 ${className}`}>
+      <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center shadow-inner">
+        <HugeiconsIcon icon={Icon} size={32} />
+      </div>
+
+      <div className="space-y-1 max-w-sm">
+        <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+        <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+      </div>
+
+      {actionLabel && actionHref && (
+        <Link
+          href={actionHref}
+          className="h-[42px] px-6 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:-translate-y-[1px]"
+        >
+          <span>{actionLabel}</span>
+          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+        </Link>
       )}
-      {...props}
-    >
-      {icon ? (
-        <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-border bg-surface text-muted-foreground">
-          {icon}
-        </div>
-      ) : null}
-      <h3 className="text-h3 text-foreground">{title}</h3>
-      {description ? (
-        <p className="mt-2 max-w-md text-small text-muted-foreground">
-          {description}
-        </p>
-      ) : null}
-      {action ? <div className="mt-6">{action}</div> : null}
+
+      {actionLabel && onAction && !actionHref && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="h-[42px] px-6 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:-translate-y-[1px]"
+        >
+          <span>{actionLabel}</span>
+          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+        </button>
+      )}
     </div>
   );
 }

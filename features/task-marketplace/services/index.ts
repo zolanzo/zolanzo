@@ -2,6 +2,7 @@ export { evaluateWorkerEligibility } from "./eligibility-evaluate";
 export { evaluateClaimPolicies } from "./claim-policies";
 export {
   expireReservations,
+  forceReleaseReservation,
   releaseReservation,
   reserveTaskInstance,
 } from "./reservation-engine";

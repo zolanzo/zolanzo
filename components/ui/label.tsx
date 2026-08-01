@@ -19,9 +19,12 @@ export function Label({
     >
       {children}
       {required ? (
-        <span className="ml-0.5 text-danger" aria-hidden>
-          *
-        </span>
+        <>
+          <span className="ml-0.5 text-danger" aria-hidden>
+            *
+          </span>
+          <span className="sr-only"> (required)</span>
+        </>
       ) : null}
     </label>
   );

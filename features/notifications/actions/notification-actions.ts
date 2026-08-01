@@ -1,7 +1,10 @@
 "use server";
 
 import type { ApiResponse } from "@/lib/api/response";
+import { AppError } from "@/lib/api/response";
 import { requireAuthContext } from "@/lib/auth/session";
+import { requirePermission } from "@/lib/rbac/guards";
+import { assertOrgMember } from "@/lib/auth/resource-guards";
 import {
   createNotificationIntent,
   dispatchNotificationJob,
@@ -26,7 +29,7 @@ export async function createNotificationIntentAction(
     }
   >
 > {
-  await requireAuthContext();
+  await requirePermission("notifications.send");
   return createNotificationIntent({ input });
 }
 
@@ -34,7 +37,7 @@ export async function dispatchNotificationJobAction(
   jobId: string,
   preferLive = true,
 ): Promise<ApiResponse<NotificationJobRecord>> {
-  const ctx = await requireAuthContext();
+  const ctx = await requirePermission("notifications.send");
   return withServerRequestContext(
     {
       operation: "notification.dispatch",
@@ -48,8 +51,38 @@ export async function dispatchNotificationJobAction(
 export async function upsertNotificationPreferenceAction(
   input: unknown,
 ): Promise<ApiResponse<{ subjectKey: string; scope: string }>> {
-  await requireAuthContext();
-  return upsertNotificationPreference({ input });
+  const ctx = await requireAuthContext();
+  const raw =
+    typeof input === "object" && input !== null
+      ? (input as Record<string, unknown>)
+      : {};
+
+  if (raw.scope === "organization") {
+    const organizationId =
+      typeof raw.organizationId === "string"
+        ? raw.organizationId
+        : ctx.user.activeOrganizationId;
+    if (!organizationId) {
+      return {
+        ok: false,
+        error: { code: "NO_ORG", message: "Organization required" },
+      };
+    }
+    try {
+      assertOrgMember(ctx.user, organizationId);
+    } catch (error) {
+      if (error instanceof AppError) return error.toApiError();
+      throw error;
+    }
+    return upsertNotificationPreference({
+      input: { ...raw, organizationId, userId: undefined },
+    });
+  }
+
+  // User-scoped prefs always bind to the authenticated user (IDOR).
+  return upsertNotificationPreference({
+    input: { ...raw, scope: "user", userId: ctx.user.id },
+  });
 }
 
 /**
@@ -71,7 +104,7 @@ export async function emitNotificationAction(params: {
     }
   >
 > {
-  const ctx = await requireAuthContext();
+  const ctx = await requirePermission("notifications.send");
   return emitNotificationFromDomainEvent({
     ...params,
     actorUserId: ctx.user.id,

@@ -127,7 +127,9 @@ export async function listOperationalQueue(params: {
       }
       case "notification": {
         const rows = await prisma.notificationJob.findMany({
-          where: { status: { in: ["scheduled", "queued", "failed"] } },
+          where: {
+            status: { in: ["scheduled", "queued", "failed", "dead_lettered"] },
+          },
           orderBy: { scheduledAt: "asc" },
           take: limit,
           include: { intent: { select: { publicId: true, event: true } } },

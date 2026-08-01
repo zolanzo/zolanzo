@@ -40,7 +40,7 @@ export function buildPageMetadata({
       type: "website",
       images: [
         {
-          url: BRAND_ASSETS.logo.png,
+          url: BRAND_ASSETS.logo.webp,
           alt: BRAND_ASSETS.logo.alt,
         },
       ],
@@ -50,17 +50,15 @@ export function buildPageMetadata({
       title: pageTitle,
       description,
       creator: SITE_CONFIG.twitterHandle,
-      images: [BRAND_ASSETS.logo.png],
+      images: [BRAND_ASSETS.logo.webp],
     },
     robots: noIndex
       ? { index: false, follow: false }
       : { index: true, follow: true },
     icons: {
-      icon: [
-        { url: "/brand/favicon.webp", type: "image/webp" },
-        { url: "/brand/favicon.png", type: "image/png" },
-      ],
-      apple: [{ url: "/brand/app-icon.png", type: "image/png" }],
+      icon: [{ url: "/brand/icon.webp", type: "image/webp" }],
+      shortcut: [{ url: "/brand/icon.webp", type: "image/webp" }],
+      apple: [{ url: "/brand/icon.webp", type: "image/webp" }],
     },
     manifest: "/manifest.webmanifest",
   };

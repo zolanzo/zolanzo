@@ -505,6 +505,77 @@ export async function recordReviewDecision(params: {
       outcome: parsed.outcome,
     });
 
+    const trustType =
+      parsed.outcome === "approved" ||
+      parsed.outcome === "approved_with_warning"
+        ? "submission_approved"
+        : parsed.outcome === "rejected"
+          ? "submission_rejected"
+          : parsed.outcome === "revision_requested"
+            ? "submission_revision_requested"
+            : null;
+    const { safeRecordTrustEvent } = await import("@/lib/trust/safe-emit");
+    if (trustType) {
+      await safeRecordTrustEvent({
+        subjectType: "worker",
+        subjectId: submission.workerUserId,
+        eventType: trustType,
+        idempotencyKey: `trust:${trustType}:${decisionPkg.decision.publicId}`,
+        payload: {
+          decisionPublicId: decisionPkg.decision.publicId,
+          outcome: parsed.outcome,
+        },
+        span: "review.decision.trust",
+      });
+    }
+    await safeRecordTrustEvent({
+      subjectType: "worker",
+      subjectId: submission.workerUserId,
+      eventType: "review_completed",
+      idempotencyKey: `trust:review_completed:${decisionPkg.decision.publicId}`,
+      payload: { outcome: parsed.outcome },
+      span: "review.decision.trust",
+    });
+
+    const { safeRecordAnalyticsEvent } = await import(
+      "@/lib/analytics/safe-emit"
+    );
+    await safeRecordAnalyticsEvent({
+      source: "reviews",
+      eventType: "review.completed",
+      idempotencyKey: `analytics:review.completed:${decisionPkg.decision.publicId}`,
+      entityType: "review_decision",
+      entityId: decisionPkg.decision.publicId,
+      userId: submission.workerUserId,
+      payload: { outcome: parsed.outcome },
+      span: "review.decision.analytics",
+    });
+
+    const { safeRecordAutomationEvent } = await import(
+      "@/lib/automation/safe-emit"
+    );
+    const automationTrigger =
+      parsed.outcome === "approved" ||
+      parsed.outcome === "approved_with_warning"
+        ? "submission.approved"
+        : parsed.outcome === "rejected"
+          ? "submission.rejected"
+          : null;
+    if (automationTrigger) {
+      await safeRecordAutomationEvent({
+        trigger: automationTrigger,
+        idempotencyKey: `automation:${automationTrigger}:${decisionPkg.decision.publicId}`,
+        userId: submission.workerUserId,
+        payload: {
+          submissionId: submission.publicId,
+          decisionPublicId: decisionPkg.decision.publicId,
+          outcome: parsed.outcome,
+          userId: submission.workerUserId,
+        },
+        span: "review.decision.automation",
+      });
+    }
+
     return apiSuccess(decisionPkg);
   } catch (error) {
     if (error instanceof AppError) return error.toApiError();

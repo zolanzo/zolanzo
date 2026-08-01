@@ -5,6 +5,7 @@
 export const NOTIFICATION_CHANNELS = [
   "email",
   "sms",
+  "whatsapp",
   "push",
   "in_app",
   "webhook",
@@ -27,6 +28,7 @@ export type ChannelAdapterKey = (typeof CHANNEL_ADAPTER_KEYS)[number];
 export const CHANNEL_CAPABILITIES = [
   "email",
   "sms",
+  "whatsapp",
   "push",
   "in_app",
   "webhook",
@@ -38,6 +40,7 @@ export const CHANNEL_CAPABILITIES = [
 export type ChannelCapability = (typeof CHANNEL_CAPABILITIES)[number];
 
 export const NOTIFICATION_HUB_EVENTS = [
+  // Existing domain ops
   "review.approved",
   "review.rejected",
   "review.revision_requested",
@@ -47,6 +50,40 @@ export const NOTIFICATION_HUB_EVENTS = [
   "campaign.funded",
   "assignment.claimed",
   "submission.received",
+  // Auth
+  "auth.welcome",
+  "auth.email_verification",
+  "auth.password_reset",
+  "auth.magic_link",
+  // Organizations
+  "org.invite_member",
+  "org.invite_accepted",
+  "org.invite_revoked",
+  // Campaigns / assignments
+  "campaign.published",
+  "assignment.received",
+  "assignment.reminder",
+  "assignment.expired",
+  // Marketplace
+  "marketplace.listing_approved",
+  "marketplace.listing_rejected",
+  "marketplace.offer_received",
+  "marketplace.offer_accepted",
+  // Payments
+  "payment.receipt",
+  "payment.refund_processed",
+  "withdrawal.requested",
+  // Digests / security
+  "digest.daily_summary",
+  "digest.weekly",
+  "security.alert",
+  // Auth SMS / WhatsApp
+  "auth.otp",
+  "auth.login_verification",
+  // Security SMS
+  "security.new_device",
+  "security.password_changed",
+  "security.suspicious_activity",
 ] as const;
 
 export type NotificationHubEvent = (typeof NOTIFICATION_HUB_EVENTS)[number];
@@ -65,6 +102,32 @@ export const HUB_EVENT_TO_DOMAIN: Record<
   "campaign.funded": "campaign.funded",
   "assignment.claimed": "assignment.claimed",
   "submission.received": "submission.submitted",
+  "auth.welcome": "auth.welcome",
+  "auth.email_verification": "auth.email_verification",
+  "auth.password_reset": "auth.password_reset",
+  "auth.magic_link": "auth.magic_link",
+  "org.invite_member": "organization.member_invited",
+  "org.invite_accepted": "organization.member_joined",
+  "org.invite_revoked": "organization.invite_revoked",
+  "campaign.published": "campaign.published",
+  "assignment.received": "assignment.assigned",
+  "assignment.reminder": "assignment.reminder",
+  "assignment.expired": "assignment.expired",
+  "marketplace.listing_approved": "marketplace.listing_approved",
+  "marketplace.listing_rejected": "marketplace.listing_rejected",
+  "marketplace.offer_received": "marketplace.offer_received",
+  "marketplace.offer_accepted": "marketplace.offer_accepted",
+  "payment.receipt": "payment.succeeded",
+  "payment.refund_processed": "payment.refunded",
+  "withdrawal.requested": "withdrawal.requested",
+  "digest.daily_summary": "notification.digest_daily",
+  "digest.weekly": "notification.digest_weekly",
+  "security.alert": "security.alert",
+  "auth.otp": "auth.otp",
+  "auth.login_verification": "auth.login_verification",
+  "security.new_device": "security.new_device",
+  "security.password_changed": "security.password_changed",
+  "security.suspicious_activity": "security.suspicious_activity",
 };
 
 export const RECIPIENT_ROLES = [
@@ -116,6 +179,7 @@ export const NOTIFICATION_JOB_STATUSES = [
   "delivering",
   "delivered",
   "failed",
+  "dead_lettered",
   "cancelled",
   "skipped",
 ] as const;

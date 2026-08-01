@@ -1,27 +1,15 @@
 # features/api
 
 ## Bounded context
-**Platform**
+**Platform — Public API**
 
 ## Responsibility
-Public/partner API surface; API-first contracts.
-
-## Structure
-- `components/` — Feature-specific UI only (compose `components/ui` + layouts; never duplicate primitives)
-- `hooks/` — Feature React hooks
-- `services/` — Use-cases / orchestration (extends `services/base`)
-- `repositories/` — Persistence adapters (extends `repositories/base`)
-- `types/` — Feature types (import shared IDs from `@/types/domain`)
-- `constants/` — Feature constants
-- `validators/` — Zod schemas for this feature
-
-## Dependencies
-- Design system: `@/components/ui`, `@/components/layout`, `@/components/templates`
-- Domain: `@/types/domain`, `@/constants/campaign-types`, `@/constants/events`, `@/constants/permissions`
-- Infra: `@/lib/events`, `@/lib/rbac`, `@/lib/feature-flags`
-
-## Events
-See `docs/EVENTS.md` and `constants/events.ts`. Bind concrete publishers/subscribers when implementing.
+Partner/public HTTP contract (`/api/v1`). Implementation lives in `lib/public-api/` (gateway, auth, scopes, schemas). This feature folder remains the product home for future portal UI / key management surfaces.
 
 ## Status
-Architecture scaffold only — **no business logic** in Step 3.
+**Phase 4.5A complete** — see `docs/PHASE_4_5A_PUBLIC_API_PLATFORM.md`.
+
+## Dependencies
+- `lib/public-api`
+- Domain application services via public catalog adapters only
+- Never import repositories or internal DTOs into response shapes

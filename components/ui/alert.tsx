@@ -77,7 +77,7 @@ export function Alert({
         {title ? (
           <p className="mb-1 text-small font-semibold text-foreground">{title}</p>
         ) : null}
-        <div className="text-small text-muted-foreground">{children}</div>
+        <div className="text-small text-foreground/90">{children}</div>
       </div>
       {dismissible ? (
         <IconButton

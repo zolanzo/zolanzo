@@ -1,7 +1,7 @@
 "use server";
 
 import type { ApiResponse } from "@/lib/api/response";
-import { requireAuthContext } from "@/lib/auth/session";
+import { requirePermission } from "@/lib/rbac/guards";
 import type {
   EnqueueReviewResult,
   ReviewDecisionPackage,
@@ -21,14 +21,14 @@ import { getReviewerWorkspace } from "@/features/verification/services/review-wo
 export async function enqueueForReviewAction(
   input: unknown,
 ): Promise<ApiResponse<EnqueueReviewResult>> {
-  await requireAuthContext();
+  await requirePermission("submissions.review");
   return enqueueForReview({ input });
 }
 
 export async function claimQueueItemAction(
   queueItemId: string,
 ): Promise<ApiResponse<ReviewQueueItemRecord>> {
-  const ctx = await requireAuthContext();
+  const ctx = await requirePermission("submissions.review");
   return claimQueueItem({
     input: { queueItemId },
     reviewerUserId: ctx.user.id,
@@ -38,7 +38,7 @@ export async function claimQueueItemAction(
 export async function startReviewAction(
   queueItemId: string,
 ): Promise<ApiResponse<ReviewQueueItemRecord>> {
-  const ctx = await requireAuthContext();
+  const ctx = await requirePermission("submissions.review");
   return startReview({
     input: { queueItemId },
     reviewerUserId: ctx.user.id,
@@ -48,7 +48,7 @@ export async function startReviewAction(
 export async function recordReviewDecisionAction(
   input: unknown,
 ): Promise<ApiResponse<ReviewDecisionPackage>> {
-  const ctx = await requireAuthContext();
+  const ctx = await requirePermission("submissions.review");
   return recordReviewDecision({
     input,
     reviewerUserId: ctx.user.id,
@@ -58,20 +58,20 @@ export async function recordReviewDecisionAction(
 export async function getReviewDecisionAction(
   decisionPublicId: string,
 ): Promise<ApiResponse<ReviewDecisionPackage>> {
-  await requireAuthContext();
+  await requirePermission("submissions.review");
   return getReviewDecision({ input: { decisionPublicId } });
 }
 
 export async function listReviewQueueAction(
   input: unknown = {},
 ): Promise<ApiResponse<ReviewQueueItemRecord[]>> {
-  await requireAuthContext();
+  await requirePermission("submissions.review");
   return listReviewQueue({ input });
 }
 
 export async function getReviewerWorkspaceAction(
   queueItemId: string,
 ): Promise<ApiResponse<ReviewerWorkspace>> {
-  await requireAuthContext();
+  await requirePermission("submissions.review");
   return getReviewerWorkspace({ input: { queueItemId } });
 }

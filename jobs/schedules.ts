@@ -18,6 +18,11 @@ export const CRON_SCHEDULES: readonly CronSchedule[] = [
     description: "Daily financial reconciliation",
   },
   {
+    job: "payments.reconcile-paystack",
+    cron: "30 2 * * *",
+    description: "Nightly Paystack ↔ ledger reconciliation",
+  },
+  {
     job: "notifications.digest",
     cron: "0 8 * * *",
     description: "Morning notification digests",

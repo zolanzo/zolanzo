@@ -132,6 +132,24 @@ export async function releaseReservation(params: {
   if (reservation.workerUserId !== params.workerUserId) {
     throw new AppError("FORBIDDEN", "Reservation belongs to another worker", 403);
   }
+  return releaseReservationAtomic({
+    reservationId: params.reservationId,
+    taskInstanceId: reservation.taskInstanceId,
+    expectedStatus: "pending",
+  });
+}
+
+/**
+ * Ops / system release — restores inventory without worker ownership check.
+ * Only pending reservations are releasable (confirmed implies claim in progress).
+ */
+export async function forceReleaseReservation(params: {
+  reservationId: string;
+}): Promise<ReservationRecord> {
+  const reservation = await reservationRepository.findById(params.reservationId);
+  if (!reservation) {
+    throw new AppError("NOT_FOUND", "Reservation not found", 404);
+  }
   if (reservation.status !== "pending") {
     throw new AppError(
       "RESERVATION_NOT_PENDING",
@@ -139,14 +157,38 @@ export async function releaseReservation(params: {
       409,
     );
   }
+  return releaseReservationAtomic({
+    reservationId: params.reservationId,
+    taskInstanceId: reservation.taskInstanceId,
+    expectedStatus: "pending",
+  });
+}
 
+async function releaseReservationAtomic(params: {
+  reservationId: string;
+  taskInstanceId: string;
+  expectedStatus: "pending";
+}): Promise<ReservationRecord> {
   await prisma.$transaction(async (tx) => {
-    await tx.reservation.update({
-      where: { id: params.reservationId },
+    const updated = await tx.reservation.updateMany({
+      where: {
+        id: params.reservationId,
+        status: params.expectedStatus,
+      },
       data: { status: "released", releasedAt: new Date() },
     });
+    if (updated.count !== 1) {
+      throw new AppError(
+        "RESERVATION_RACE",
+        "Reservation was already released or changed",
+        409,
+      );
+    }
     await tx.taskInstance.updateMany({
-      where: { id: reservation.taskInstanceId, status: "reserved" },
+      where: {
+        id: params.taskInstanceId,
+        status: "reserved",
+      },
       data: { status: "available", reserved: false, reservedAt: null },
     });
   });

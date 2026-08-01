@@ -15,6 +15,7 @@ import { processSettlement } from "@/features/settlements/services/settlement-se
 import { processWithdrawal } from "@/features/withdrawals/services/withdrawal-service";
 import { dispatchNotificationJob } from "@/features/notifications/services/notification-hub";
 import { projectWallet } from "@/features/wallet/services/projection";
+import { reconcilePaystackPayments } from "@/features/payments/services/reconciliation";
 import { JOB_NAMES, type JobName } from "@/jobs/names";
 import { registerJob } from "@/jobs/runner/registry";
 import type { JobHandler, JobResult } from "@/jobs/runner/types";
@@ -150,6 +151,21 @@ export const reconcileFinanceHandler: JobHandler = async () => {
   };
 };
 
+export const reconcilePaystackHandler: JobHandler = async () => {
+  const report = await reconcilePaystackPayments({ windowHours: 24 });
+  return {
+    ok: report.mismatches.length === 0,
+    summary: "payments.reconcile-paystack",
+    processed: report.matched,
+    failed: report.mismatches.length,
+    metadata: {
+      providerCount: report.providerCount,
+      internalCount: report.internalCount,
+      mode: report.mode,
+    },
+  };
+};
+
 export const retryNotificationsHandler: JobHandler = async () => {
   const now = new Date();
   const jobs = await prisma.notificationJob.findMany({
@@ -227,6 +243,51 @@ function maintenanceHandler(
   };
 }
 
+export const projectAnalyticsHandler: JobHandler = async () => {
+  const { setAnalyticsBackend } = await import("@/lib/analytics/analytics-service");
+  setAnalyticsBackend("prisma");
+  const { rollup, snapshot } = await import("@/lib/analytics/analytics-service");
+  const rollupResult = await rollup({ period: "daily" });
+  const snap = await snapshot({ period: "daily" });
+
+  let scheduleRuns = 0;
+  try {
+    const { executeDueSchedules } = await import("@/lib/analytics/reports");
+    const runs = await executeDueSchedules();
+    scheduleRuns = runs.filter((r) => r.ok).length;
+  } catch {
+    /* reports optional */
+  }
+
+  let automationRetries = 0;
+  try {
+    const { runAutomationScheduler } = await import("@/lib/automation");
+    const result = await runAutomationScheduler();
+    automationRetries = result.retried;
+  } catch {
+    /* automation optional */
+  }
+
+  return {
+    ok: true,
+    summary: "analytics.project-snapshot",
+    processed:
+      rollupResult.metricsWritten +
+      (snap ? 1 : 0) +
+      scheduleRuns +
+      automationRetries,
+    failed: 0,
+    metadata: {
+      metricsWritten: rollupResult.metricsWritten,
+      rollupMs: rollupResult.durationMs,
+      snapshotPublicId: snap?.publicId ?? null,
+      snapshotDurationMs: snap?.durationMs ?? null,
+      reportScheduleRuns: scheduleRuns,
+      automationRetries,
+    },
+  };
+};
+
 const CATALOG: Array<{
   name: JobName;
   handler: JobHandler;
@@ -258,6 +319,12 @@ const CATALOG: Array<{
     description: "Rebuild wallet projections from ledger",
   },
   {
+    name: JOB_NAMES.RECONCILE_PAYSTACK,
+    handler: reconcilePaystackHandler,
+    retryPolicy: "finance",
+    description: "Reconcile Paystack transactions vs internal ledger",
+  },
+  {
     name: JOB_NAMES.NOTIFICATION_RETRY,
     handler: retryNotificationsHandler,
     retryPolicy: "notifications",
@@ -280,12 +347,21 @@ const CATALOG: Array<{
   },
   {
     name: JOB_NAMES.CLEANUP_TEMP_UPLOADS,
-    handler: maintenanceHandler(
-      JOB_NAMES.CLEANUP_TEMP_UPLOADS,
-      "storage.cleanup-temp",
-    ),
+    handler: async () => {
+      const { runStorageCleanup } = await import(
+        "@/features/storage/services/cleanup"
+      );
+      const result = await runStorageCleanup();
+      return {
+        ok: result.failures === 0,
+        summary: "storage.cleanup-temp",
+        processed: result.deletedTemp + result.deletedTrash,
+        failed: result.failures,
+        metadata: result as unknown as Record<string, unknown>,
+      };
+    },
     retryPolicy: "immediate",
-    description: "Temp upload cleanup placeholder",
+    description: "Temp upload + expired trash cleanup",
   },
   {
     name: JOB_NAMES.CLEANUP_EXPIRED_SESSIONS,
@@ -298,12 +374,9 @@ const CATALOG: Array<{
   },
   {
     name: JOB_NAMES.PROJECT_ANALYTICS,
-    handler: maintenanceHandler(
-      JOB_NAMES.PROJECT_ANALYTICS,
-      "analytics.project-snapshot",
-    ),
+    handler: projectAnalyticsHandler,
     retryPolicy: "immediate",
-    description: "Analytics snapshot placeholder",
+    description: "Analytics daily rollup + snapshot",
   },
 ];
 

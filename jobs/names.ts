@@ -31,6 +31,7 @@ export const JOB_NAMES = {
   SETTLEMENT_BATCH: "settlements.process-batch",
   REFERRAL_PAYOUT: "referrals.payout",
   RECONCILE_DAILY: "finance.reconcile-daily",
+  RECONCILE_PAYSTACK: "payments.reconcile-paystack",
   // Analytics / search / cleanup
   PROJECT_ANALYTICS: "analytics.project-snapshot",
   GENERATE_REPORT: "reports.generate",
@@ -79,6 +80,7 @@ export const JOB_QUEUE_ROUTING: Record<JobName, JobQueueName> = {
   "settlements.process-batch": "finance",
   "referrals.payout": "finance",
   "finance.reconcile-daily": "finance",
+  "payments.reconcile-paystack": "finance",
   "analytics.project-snapshot": "default",
   "reports.generate": "default",
   "search.reindex": "search",

@@ -1,18 +1,12 @@
 /**
- * Validates that all brand WebP assets exist alongside PNG originals.
+ * Validates that required brand assets exist.
  * Usage: npx tsx scripts/verify-brand-assets.ts
  */
 
 import { access } from "node:fs/promises";
 import path from "node:path";
 
-const REQUIRED = [
-  "logo",
-  "icon",
-  "app-icon",
-  "favicon",
-  "monochrome",
-] as const;
+const REQUIRED = ["light-theme-logo.webp", "icon.webp"] as const;
 
 async function exists(filePath: string): Promise<boolean> {
   try {
@@ -28,21 +22,14 @@ async function main(): Promise<void> {
   let ok = true;
 
   for (const name of REQUIRED) {
-    const png = path.join(brandDir, `${name}.png`);
-    const webp = path.join(brandDir, `${name}.webp`);
-    const hasPng = await exists(png);
-    const hasWebp = await exists(webp);
+    const assetPath = path.join(brandDir, name);
+    const hasAsset = await exists(assetPath);
 
-    if (!hasPng) {
-      console.error(`✗ Missing PNG: ${name}.png`);
+    if (!hasAsset) {
+      console.error(`✗ Missing asset: ${name}`);
       ok = false;
-    }
-    if (!hasWebp) {
-      console.error(`✗ Missing WebP: ${name}.webp`);
-      ok = false;
-    }
-    if (hasPng && hasWebp) {
-      console.log(`✓ ${name}.png + ${name}.webp`);
+    } else {
+      console.log(`✓ Verified asset: ${name}`);
     }
   }
 

@@ -1,45 +1,56 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { cn } from "@/utils";
+"use client";
+
+import React from "react";
 
 export type BadgeVariant =
-  | "default"
   | "primary"
+  | "secondary"
   | "success"
   | "warning"
   | "danger"
   | "outline"
-  | "gold";
+  | "info"
+  | "verified"
+  | "new"
+  | "live"
+  | "pending"
+  | "completed"
+  | "rejected"
+  | "premium"
+  | "ai"
+  | "quick";
 
-export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
-  children: ReactNode;
+export interface BadgeProps {
   variant?: BadgeVariant;
-};
+  children: React.ReactNode;
+  className?: string;
+}
 
-const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-surface text-foreground border border-border",
-  primary: "bg-primary/15 text-primary border border-primary/25",
-  success: "bg-success/15 text-success border border-success/25",
-  warning: "bg-warning/15 text-warning border border-warning/25",
-  danger: "bg-danger/15 text-danger border border-danger/25",
-  outline: "bg-transparent text-foreground border border-border",
-  gold: "bg-accent/15 text-accent-foreground border border-accent/30",
-};
+export function Badge({ variant = "live", children, className = "" }: BadgeProps) {
+  const baseStyles =
+    "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold border leading-tight select-none";
 
-export function Badge({
-  children,
-  variant = "default",
-  className,
-  ...props
-}: BadgeProps) {
+  const variantStyles: Record<BadgeVariant, string> = {
+    primary: "bg-[#008744]/15 text-emerald-400 border-[#008744]/30",
+    secondary: "bg-zinc-800 text-zinc-300 border-zinc-700",
+    success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    warning: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    danger: "bg-red-500/10 text-red-400 border-red-500/20",
+    outline: "bg-transparent text-zinc-300 border-zinc-700",
+    info: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    verified: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    new: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    live: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 animate-pulse",
+    pending: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    completed: "bg-teal-500/10 text-teal-400 border-teal-500/20",
+    rejected: "bg-red-500/10 text-red-400 border-red-500/20",
+    premium: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    ai: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+    quick: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  };
+
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-pill px-2.5 py-0.5 text-caption font-medium",
-        variantClasses[variant],
-        className,
-      )}
-      {...props}
-    >
+    <span className={`${baseStyles} ${variantStyles[variant]} ${className}`}>
       {children}
     </span>
   );

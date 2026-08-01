@@ -13,10 +13,6 @@ export {
 export { DocsLayout, type DocsLayoutProps } from "@/components/layout/docs-layout";
 export { ErrorLayout, type ErrorLayoutProps } from "@/components/layout/error-layout";
 export {
-  MarketingLayout,
-  type MarketingLayoutProps,
-} from "@/components/layout/marketing-layout";
-export {
   PageTransition,
   type PageTransitionProps,
 } from "@/components/layout/page-transition";

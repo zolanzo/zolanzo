@@ -19,9 +19,7 @@ import {
 import { Sidebar, type SidebarNavItem } from "@/components/navigation/sidebar";
 import { Topbar } from "@/components/navigation/topbar";
 import { FloatingActionButton } from "@/components/navigation/floating-action-button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Drawer } from "@/components/ui/drawer";
-import { cn } from "@/utils";
 
 type DashboardShellContextValue = {
   sidebarCollapsed: boolean;
@@ -41,82 +39,92 @@ export function useDashboardShell(): DashboardShellContextValue {
   return ctx;
 }
 
-const DEFAULT_NAV: SidebarNavItem[] = [
-  { href: "/templates/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/templates/list", label: "Work", icon: ListTodo },
-  { href: "/templates/detail", label: "Workforce", icon: Users },
-  { href: "/templates/settings", label: "Billing", icon: Wallet },
-  { href: "/templates/settings", label: "Settings", icon: Settings },
-];
-
 export type DashboardShellProps = {
   children: ReactNode;
   title?: string;
-  navItems?: SidebarNavItem[];
+  role?: "worker" | "employer" | "admin";
   activePath?: string;
-  className?: string;
+  navItems?: SidebarNavItem[];
   showFab?: boolean;
 };
 
-/**
- * Enterprise dashboard shell — desktop collapsible sidebar,
- * tablet/mobile drawer, sticky topbar, theme toggle, placeholders.
- */
+const DEFAULT_WORKER_NAV: SidebarNavItem[] = [
+  { href: "/worker/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/worker/jobs", label: "Available Tasks", icon: ListTodo },
+  { href: "/worker/wallet", label: "Wallet & Earnings", icon: Wallet },
+];
+
+const DEFAULT_EMPLOYER_NAV: SidebarNavItem[] = [
+  { href: "/organization/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/organization/campaigns", label: "Campaigns", icon: ListTodo },
+  { href: "/organization/escrow", label: "Escrow & Billing", icon: Wallet },
+  { href: "/organization/applicants", label: "Applicants", icon: Users },
+];
+
+const DEFAULT_ADMIN_NAV: SidebarNavItem[] = [
+  { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin/campaigns", label: "Campaign Approvals", icon: ListTodo },
+  { href: "/admin/payouts", label: "Payout Approvals", icon: Wallet },
+  { href: "/admin/users", label: "Users & Organizations", icon: Users },
+  { href: "/admin/settings", label: "Platform Settings", icon: Settings },
+];
+
 export function DashboardShell({
   children,
   title = "Dashboard",
-  navItems = DEFAULT_NAV,
-  activePath = "/templates/dashboard",
-  className,
+  role = "worker",
+  activePath,
+  navItems: customNavItems,
   showFab = true,
 }: DashboardShellProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleSidebarCollapsed = useCallback(() => {
-    setSidebarCollapsed((v) => !v);
+    setCollapsed((prev) => !prev);
   }, []);
 
-  const value = useMemo(
+  const openMobileSidebar = useCallback(() => {
+    setMobileOpen(true);
+  }, []);
+
+  const closeMobileSidebar = useCallback(() => {
+    setMobileOpen(false);
+  }, []);
+
+  const navItems = useMemo(() => {
+    if (customNavItems) return customNavItems;
+    if (role === "admin") return DEFAULT_ADMIN_NAV;
+    if (role === "employer") return DEFAULT_EMPLOYER_NAV;
+    return DEFAULT_WORKER_NAV;
+  }, [customNavItems, role]);
+
+  const contextValue = useMemo<DashboardShellContextValue>(
     () => ({
-      sidebarCollapsed,
+      sidebarCollapsed: collapsed,
       toggleSidebarCollapsed,
-      openMobileSidebar: () => setMobileOpen(true),
-      closeMobileSidebar: () => setMobileOpen(false),
+      openMobileSidebar,
+      closeMobileSidebar,
     }),
-    [sidebarCollapsed, toggleSidebarCollapsed],
+    [collapsed, toggleSidebarCollapsed, openMobileSidebar, closeMobileSidebar],
   );
 
   return (
-    <DashboardShellContext.Provider value={value}>
-      <div
-        className={cn(
-          "bg-background text-foreground flex min-h-dvh w-full",
-          className,
-        )}
-      >
-        <a
-          href="#main-content"
-          className="focus:bg-primary focus:text-primary-foreground sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:px-3 focus:py-2"
-        >
-          Skip to content
-        </a>
-
-        <div className="sticky top-0 hidden h-dvh lg:block">
-          <Sidebar
-            items={navItems}
-            activePath={activePath}
-            collapsed={sidebarCollapsed}
-            onCollapsedChange={setSidebarCollapsed}
-          />
-        </div>
+    <DashboardShellContext.Provider value={contextValue}>
+      <div className="bg-background text-foreground flex min-h-dvh">
+        <Sidebar
+          items={navItems}
+          activePath={activePath}
+          collapsed={collapsed}
+          onCollapsedChange={toggleSidebarCollapsed}
+          className="hidden md:flex"
+        />
 
         <Drawer
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          side="left"
           title="Navigation"
-          className="bg-sidebar p-0 lg:hidden"
+          side="left"
         >
           <Sidebar
             items={navItems}
@@ -129,7 +137,6 @@ export function DashboardShell({
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
             title={title}
-            themeToggle={<ThemeToggle />}
             onSidebarToggle={() => setMobileOpen(true)}
             showSidebarToggle
           />
