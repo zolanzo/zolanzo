@@ -55,8 +55,8 @@ export function ProfileDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-[#0A0F12] border border-white/10 rounded-2xl shadow-2xl p-2 z-50 animate-fadeIn text-xs space-y-1">
-          <div className="px-3 py-2 border-b border-zinc-800/80 mb-1">
+        <div className="absolute right-0 mt-2 w-56 bg-[#131922] border border-white/[0.08] rounded-2xl shadow-2xl p-2 z-50 animate-fadeIn text-xs space-y-1">
+          <div className="px-3 py-2 border-b border-white/[0.08] mb-1">
             <p className="font-bold text-white text-sm">{userName}</p>
             <p className="text-[11px] text-emerald-400 font-semibold">Active Earner</p>
           </div>
@@ -64,25 +64,25 @@ export function ProfileDropdown({
           <Link
             href="/profile"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
           >
             <HugeiconsIcon icon={UserIcon} size={16} className="text-emerald-400" />
-            <span>Profile</span>
+            <span>My Reputation</span>
           </Link>
 
           <Link
             href="/settings"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
           >
-            <HugeiconsIcon icon={Settings01Icon} size={16} className="text-purple-400" />
-            <span>Settings</span>
+            <HugeiconsIcon icon={Settings01Icon} size={16} className="text-emerald-400" />
+            <span>My Settings</span>
           </Link>
 
           <Link
             href="/support"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
           >
             <HugeiconsIcon icon={HelpCircleIcon} size={16} className="text-teal-400" />
             <span>Help & Support</span>

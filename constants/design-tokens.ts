@@ -4,20 +4,20 @@
  */
 
 export const COLOR = {
-  darkBackground: "#081320",
-  darkSurface: "#0F1E33",
-  darkCard: "#152540",
-  lightBackground: "#F8FAFC",
-  lightSurface: "#FFFFFF",
+  darkBackground: "#050608",
+  darkSurface: "#0B0F14",
+  darkCard: "#131922",
+  lightBackground: "#F6F8FB",
+  lightSurface: "#FBFDFF",
   lightCard: "#FFFFFF",
   navy: "#071B34",
-  primary: "#16C6C6",
-  primaryHover: "#0FA5A5",
-  gold: "#F6B81A",
-  success: "#22C55E",
+  primary: "#00B35A",
+  primaryHover: "#00C864",
+  gold: "#D9B15B",
+  success: "#00B35A",
   warning: "#F59E0B",
-  danger: "#EF4444",
-  borderDark: "rgba(255,255,255,0.08)",
+  danger: "#FF5A5F",
+  borderDark: "#242D3D",
   borderLight: "rgba(0,0,0,0.08)",
 } as const;
 

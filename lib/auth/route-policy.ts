@@ -1,6 +1,11 @@
 /**
  * Route Access Policy — Used by middleware and server guards.
- * Earn / Hire Role & Routing Refactor
+ * Unified Architecture:
+ * - Public: /, /login, /signup, /careers, /forgot-password, /forgot-pin, /reset-pin, /verify-email, /verify-phone
+ * - Earn: /earner/dashboard
+ * - Hire: /hirer/dashboard
+ * - Staff: /lex/staff
+ * - Super Admin: /lex/auth
  */
 
 export type RouteAccessLevel =
@@ -8,6 +13,7 @@ export type RouteAccessLevel =
   | "authenticated"
   | "onboarding"
   | "organization"
+  | "staff"
   | "admin"
   | "super_admin"
   | "developer";
@@ -21,8 +27,8 @@ export type RouteRule = {
  * First matching prefix wins (order matters — more specific first).
  */
 export const ROUTE_RULES: readonly RouteRule[] = [
-  { prefix: "/admin/super", access: "super_admin" },
-  { prefix: "/admin", access: "admin" },
+  { prefix: "/lex/auth", access: "super_admin" },
+  { prefix: "/lex/staff", access: "staff" },
   { prefix: "/developer", access: "developer" },
   { prefix: "/onboarding", access: "onboarding" },
   { prefix: "/dashboard", access: "authenticated" },
@@ -36,16 +42,15 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: "/notifications", access: "authenticated" },
   { prefix: "/support", access: "authenticated" },
   { prefix: "/earner", access: "authenticated" },
-  { prefix: "/hire", access: "authenticated" },
-  { prefix: "/worker", access: "authenticated" },
-  { prefix: "/employer", access: "authenticated" },
+  { prefix: "/hirer", access: "authenticated" },
   { prefix: "/api/webhooks", access: "public" },
   { prefix: "/api/v1", access: "public" },
   { prefix: "/api/auth", access: "public" },
   { prefix: "/api/payments/callback", access: "public" },
   { prefix: "/login", access: "public" },
   { prefix: "/signup", access: "public" },
-  { prefix: "/register", access: "public" },
+  { prefix: "/careers", access: "public" },
+  { prefix: "/forgot-password", access: "public" },
   { prefix: "/forgot-pin", access: "public" },
   { prefix: "/reset-pin", access: "public" },
   { prefix: "/verify-email", access: "public" },
@@ -70,7 +75,7 @@ export function isAuthEntryPath(pathname: string): boolean {
   return (
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname === "/register" ||
+    pathname === "/forgot-password" ||
     pathname === "/forgot-pin" ||
     pathname === "/auth/sign-in" ||
     pathname === "/auth/sign-up"

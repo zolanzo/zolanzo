@@ -12,7 +12,7 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange, placeholder = "Search opportunities..." }: SearchBarProps) {
   return (
-    <div className="sticky top-16 z-20 bg-[#04090B]/90 backdrop-blur-md py-3 mb-4">
+    <div className="sticky top-16 z-20 bg-[#050608]/90 backdrop-blur-md py-3 mb-4">
       <div className="relative w-full">
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
           <HugeiconsIcon icon={Search01Icon} size={18} />
@@ -23,7 +23,7 @@ export function SearchBar({ value, onChange, placeholder = "Search opportunities
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full h-[50px] pl-11 pr-10 rounded-2xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] text-white text-sm focus:outline-none transition-all placeholder-zinc-500 shadow-sm"
+          className="w-full h-[50px] pl-11 pr-10 rounded-2xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-sm focus:outline-none transition-all placeholder-zinc-500 shadow-sm"
         />
 
         {value && (

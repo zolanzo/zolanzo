@@ -19,12 +19,12 @@ interface TopHeaderProps {
   avatarUrl?: string;
 }
 
-export function TopHeader({ userName = "Grace Adebayo", avatarUrl = "/brand/lady1.png" }: TopHeaderProps) {
+export function TopHeader({ userName = "ZOLANZO Member", avatarUrl = "/brand/lady1.png" }: TopHeaderProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const [availableBalance, setAvailableBalance] = useState("₦283,600");
+  const [availableBalance, setAvailableBalance] = useState("₦0");
   const [unreadCount, setUnreadCount] = useState(() => notificationService.getUnreadCount());
 
   // Realtime Subscriptions
@@ -39,20 +39,18 @@ export function TopHeader({ userName = "Grace Adebayo", avatarUrl = "/brand/lady
   });
 
   return (
-    <header className="h-16 bg-[#04090B] border-b border-white/10 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 select-none">
+    <header className="sticky top-0 z-30 hidden h-14 select-none items-center justify-between border-b border-border bg-topbar px-4 text-foreground backdrop-blur-md lg:flex sm:px-8">
       
-      {/* Search Input Trigger */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+      {/* Search Modal Trigger */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-zinc-900/90 border border-zinc-800 text-zinc-400 text-xs hover:border-zinc-700 transition-colors cursor-pointer"
+          className="focus-ring flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40"
         >
-          <div className="flex items-center gap-2">
-            <HugeiconsIcon icon={Search01Icon} size={16} className="text-zinc-500" />
-            <span>Search opportunities, applications, transactions...</span>
-          </div>
-          <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] text-zinc-400 font-mono">
+          <HugeiconsIcon icon={Search01Icon} size={15} className="text-muted-foreground" />
+          <span className="hidden sm:inline">Search...</span>
+          <kbd className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
             ⌘K
           </kbd>
         </button>
@@ -60,15 +58,14 @@ export function TopHeader({ userName = "Grace Adebayo", avatarUrl = "/brand/lady
 
       <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Right Actions: Live Earnings Badge, Notifications, User Profile */}
+      {/* Right Actions: Clean Balance, Notifications, User Profile */}
       <div className="flex items-center gap-3">
         
-        {/* Live Balance Chip */}
+        {/* Balance Chip */}
         <Link
           href="/wallet"
-          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-extrabold hover:bg-[#008744] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-extrabold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
         >
-          <span className="w-2 h-2 rounded-full bg-[#008744] animate-pulse" />
           <span>{availableBalance}</span>
         </Link>
 
@@ -80,13 +77,13 @@ export function TopHeader({ userName = "Grace Adebayo", avatarUrl = "/brand/lady
               setNotificationsOpen(!notificationsOpen);
               setProfileOpen(false);
             }}
-            className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center relative transition-colors cursor-pointer"
+            className="focus-ring relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground transition-colors hover:text-foreground"
           >
             <HugeiconsIcon icon={Notification01Icon} size={18} />
             {unreadCount > 0 && (
               <>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 animate-ping rounded-full bg-primary" />
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
               </>
             )}
           </button>
@@ -104,16 +101,16 @@ export function TopHeader({ userName = "Grace Adebayo", avatarUrl = "/brand/lady
               setProfileOpen(!profileOpen);
               setNotificationsOpen(false);
             }}
-            className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-zinc-900 transition-colors cursor-pointer"
+            className="focus-ring flex cursor-pointer items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-muted"
           >
             <Image
               src={avatarUrl}
               alt={userName}
               width={34}
               height={34}
-              className="w-8 h-8 rounded-lg object-cover border border-emerald-500/30"
+              className="h-8 w-8 rounded-lg border border-primary/30 object-cover"
             />
-            <span className="hidden md:inline-block text-xs font-bold text-zinc-200">
+            <span className="hidden text-xs font-bold text-foreground md:inline-block">
               {userName.split(" ")[0]}
             </span>
           </button>

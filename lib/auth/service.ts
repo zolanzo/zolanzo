@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { formatStoredPin, verifyStoredPin } from "@/lib/security/hash";
 import { generateOtpCode, hashOtpCode, verifyOtpCode } from "@/lib/otp/generator";
 import { sendEmailOtp, sendPinResetEmail } from "@/lib/email/resend";
@@ -33,9 +34,6 @@ export interface PhoneVerificationInput {
  * Main ZOLANZO Authentication Backend Service
  */
 export class AuthService {
-  /**
-   * Helper to generate unique referral code (e.g. ZOL8492X)
-   */
   static generateReferralCode(): string {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "ZOL";
@@ -45,23 +43,23 @@ export class AuthService {
     return code;
   }
 
-  /**
-   * Register new user account & send email OTP
-   */
   static async registerUser(input: SignupInput, ipAddress?: string, userAgent?: string) {
+    if (!input.role) {
+      throw new Error("Account creation requires an explicit role selection ('worker' or 'employer').");
+    }
+
     const supabase = await createSupabaseServerClient();
     const pinHash = formatStoredPin(input.pin);
     const userReferralCode = this.generateReferralCode();
 
     if (supabase) {
-      // 1. Create user in Supabase auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: input.email,
         password: input.pin + "_ZOLANZO_SECURE_KEY",
         options: {
           data: {
             full_name: input.fullName,
-            referral_code: userReferralCode,
+            role: input.role,
           },
         },
       });
@@ -72,29 +70,27 @@ export class AuthService {
 
       const userId = authData.user?.id;
       if (!userId) {
-        throw new Error("Failed to register account.");
+        throw new Error("Failed to create user account.");
       }
 
-      // 2. Validate referral code if supplied
       let referrerId: string | null = null;
       if (input.referralCode) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: refUser } = await (supabase.from("profiles") as any)
+        const { data: refProfile } = await (supabase.from("profiles") as any)
           .select("id")
           .eq("referral_code", input.referralCode.trim().toUpperCase())
           .single();
-        if (refUser && refUser.id !== userId) {
-          referrerId = refUser.id;
+        if (refProfile) {
+          referrerId = refProfile.id;
         }
       }
 
-      // 3. Create Profile record
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("profiles") as any).insert({
         id: userId,
         full_name: input.fullName,
         email: input.email,
-        role: input.role || "worker",
+        role: input.role,
         pin_hash: pinHash,
         email_verified: false,
         phone_verified: false,
@@ -103,7 +99,6 @@ export class AuthService {
         status: "active",
       });
 
-      // 4. Create Referral relationship if present
       if (referrerId) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from("referrals") as any).insert({
@@ -113,7 +108,6 @@ export class AuthService {
         });
       }
 
-      // 5. Generate 6-digit Email OTP & send via Resend
       const otp = generateOtpCode(6);
       const codeHash = hashOtpCode(otp);
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -127,54 +121,47 @@ export class AuthService {
       });
 
       await sendEmailOtp(input.email, otp, input.fullName);
-
-      // Audit Log
       await this.logAuditEvent(userId, "signup", ipAddress, userAgent);
 
       return { userId, email: input.email };
     }
 
-    // Dev/Mock fallback
     const mockOtp = generateOtpCode(6);
     await sendEmailOtp(input.email, mockOtp, input.fullName);
     return { userId: `mock_${Date.now()}`, email: input.email, mockOtp };
   }
 
-  /**
-   * Verify Email OTP
-   */
+  static async getProfileByEmail(email: string) {
+    const adminSupabase = createSupabaseAdminClient();
+    if (adminSupabase) {
+      const { data } = await adminSupabase
+        .from("profiles")
+        .select("*")
+        .eq("email", email)
+        .single();
+      if (data) return data;
+    }
+    return null;
+  }
+
   static async verifyEmail(email: string, code: string, ipAddress?: string, userAgent?: string) {
     const supabase = await createSupabaseServerClient();
 
     if (supabase) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profile } = await (supabase.from("profiles") as any)
-        .select("id, full_name")
+      const { data: latest } = await (supabase.from("email_verifications") as any)
+        .select("*")
         .eq("email", email)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .single();
 
-      if (!profile) {
-        throw new Error("Invalid verification request.");
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: verifications } = await (supabase.from("email_verifications") as any)
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      const latest = verifications?.[0];
       if (!latest) {
-        throw new Error("No active verification code found.");
+        throw new Error("No active verification code found for this email.");
       }
 
-      if (new Date() > new Date(latest.expires_at)) {
-        throw new Error("Verification code has expired. Please request a new code.");
-      }
-
-      if (latest.attempts >= 5) {
-        throw new Error("Maximum attempts exceeded. Please request a new code.");
+      if (new Date(latest.expires_at) < new Date()) {
+        throw new Error("Verification code has expired. Please request a new OTP.");
       }
 
       const isValid = verifyOtpCode(code, latest.code_hash);
@@ -186,18 +173,23 @@ export class AuthService {
         throw new Error("Invalid verification code. Please check and try again.");
       }
 
-      // Mark email as verified
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("profiles") as any)
-        .update({ email_verified: true })
-        .eq("id", profile.id);
+      const { data: profile } = await (supabase.from("profiles") as any)
+        .select("id")
+        .eq("email", email)
+        .single();
 
-      // Clean up verification record
+      if (profile) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("profiles") as any)
+          .update({ email_verified: true })
+          .eq("id", profile.id);
+
+        await this.logAuditEvent(profile.id, "email_verification", ipAddress, userAgent);
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("email_verifications") as any).delete().eq("id", latest.id);
-
-      // Audit Log
-      await this.logAuditEvent(profile.id, "email_verification", ipAddress, userAgent);
 
       return { success: true };
     }
@@ -205,22 +197,68 @@ export class AuthService {
     return { success: true };
   }
 
+  static async sendPhoneOtp(userId: string, phone: string) {
+    const otp = generateOtpCode(6);
+    await sendSmsOtp({ to: phone, message: `Your ZOLANZO verification code is ${otp}` });
+    return { success: true, userId, phone };
+  }
+
   /**
    * Authenticate user via Email + 6-digit PIN
+   * Pipeline: Authenticate -> Load profile -> Verify profile exists & role -> Sync Auth metadata -> Verify status -> Determine onboarding -> Redirect
    */
   static async loginUser(input: LoginInput, ipAddress?: string, userAgent?: string) {
     const supabase = await createSupabaseServerClient();
+    const supabaseAdmin = createSupabaseAdminClient();
+    const dbClient = supabaseAdmin || supabase;
 
-    if (supabase) {
+    if (dbClient) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profile } = await (supabase.from("profiles") as any)
+      let { data: profile } = await (dbClient.from("profiles") as any)
         .select("*")
         .eq("email", input.email)
         .single();
 
       if (!profile) {
-        await this.logAuditEvent(null, "failed_login", ipAddress, userAgent, { email: input.email });
-        throw new Error("Invalid credentials. Please verify your email and PIN.");
+        const { data: authData } = await dbClient.auth.admin.listUsers();
+        const authUser = authData?.users?.find((u) => u.email?.toLowerCase() === input.email.toLowerCase());
+        
+        if (authUser) {
+          const userRole = authUser.user_metadata?.role;
+          if (!userRole) {
+            throw new Error("Unable to resolve user role. Account profile corrupted.");
+          }
+          const newProfile = {
+            id: authUser.id,
+            full_name: authUser.user_metadata?.full_name || input.email.split("@")[0],
+            email: input.email,
+            role: userRole,
+            pin_hash: formatStoredPin(input.pin),
+            email_verified: true,
+            phone_verified: true,
+            onboarding_completed: userRole === "admin" || userRole === "staff",
+            first_login_completed: true,
+            status: "active",
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (dbClient.from("profiles") as any).insert(newProfile);
+          profile = newProfile;
+        } else {
+          await this.logAuditEvent(null, "failed_login", ipAddress, userAgent, { email: input.email });
+          throw new Error("Invalid credentials. Please verify your email and PIN.");
+        }
+      }
+
+      if (!profile.role) {
+        throw new Error("User profile role is missing. Please contact platform support.");
+      }
+
+      // Synchronize Supabase Auth metadata with DB profile role
+      if (supabaseAdmin) {
+        await supabaseAdmin.auth.admin.updateUserById(profile.id, {
+          app_metadata: { roles: [profile.role] },
+          user_metadata: { role: profile.role },
+        });
       }
 
       const isPinValid = verifyStoredPin(input.pin, profile.pin_hash);
@@ -229,27 +267,44 @@ export class AuthService {
         throw new Error("Invalid credentials. Please verify your email and PIN.");
       }
 
+      if (profile.status && profile.status !== "active") {
+        throw new Error("Your account is currently inactive or suspended. Please contact support.");
+      }
+
       if (!profile.email_verified) {
         return { requiresEmailVerification: true, email: profile.email };
       }
 
-      // Sign in via Supabase Auth session
-      await supabase.auth.signInWithPassword({
-        email: input.email,
-        password: input.pin + "_ZOLANZO_SECURE_KEY",
-      });
+      if (supabase) {
+        await supabase.auth.signInWithPassword({
+          email: input.email,
+          password: input.pin + "_ZOLANZO_SECURE_KEY",
+        });
+      }
+
+      const role = profile.role.toLowerCase();
+      let redirectUrl = "";
+
+      if (role === "admin" || role === "super_admin") {
+        redirectUrl = "/lex/auth";
+      } else if (role === "staff") {
+        redirectUrl = "/lex/staff";
+      } else if (role === "employer" || role === "hirer") {
+        redirectUrl = profile.onboarding_completed ? "/hirer/dashboard" : "/onboarding";
+      } else if (role === "worker" || role === "earner") {
+        redirectUrl = profile.onboarding_completed ? "/earner/dashboard" : "/onboarding";
+      } else {
+        throw new Error(`Unrecognized user role '${role}' during login redirect calculation.`);
+      }
 
       await this.logAuditEvent(profile.id, "login", ipAddress, userAgent);
 
-      return { success: true, profile };
+      return { success: true, profile, redirectUrl };
     }
 
-    return { success: true, mockUser: true };
+    throw new Error("Database service client unavailable.");
   }
 
-  /**
-   * Request PIN Reset OTP
-   */
   static async requestPinReset(email: string, ipAddress?: string, userAgent?: string) {
     const supabase = await createSupabaseServerClient();
     const otp = generateOtpCode(6);
@@ -283,14 +338,33 @@ export class AuthService {
     return { success: true };
   }
 
-  /**
-   * Reset 6-Digit PIN
-   */
-  static async resetPin(email: string, newPin: string, ipAddress?: string, userAgent?: string) {
+  static async resetPin(email: string, code: string, newPin: string, ipAddress?: string, userAgent?: string) {
     const supabase = await createSupabaseServerClient();
-    const newPinHash = formatStoredPin(newPin);
 
     if (supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: latest } = await (supabase.from("email_verifications") as any)
+        .select("*")
+        .eq("email", email)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!latest) {
+        throw new Error("No active PIN reset request found.");
+      }
+
+      if (new Date(latest.expires_at) < new Date()) {
+        throw new Error("PIN reset OTP code has expired.");
+      }
+
+      const isValid = verifyOtpCode(code, latest.code_hash);
+      if (!isValid) {
+        throw new Error("Invalid PIN reset code.");
+      }
+
+      const newPinHash = formatStoredPin(newPin);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase.from("profiles") as any)
         .select("id")
@@ -300,52 +374,38 @@ export class AuthService {
       if (profile) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase.from("profiles") as any)
-          .update({ pin_hash: newPinHash })
+          .update({ pin_hash: newPinHash, must_change_pin: false })
           .eq("id", profile.id);
 
-        await this.logAuditEvent(profile.id, "pin_reset", ipAddress, userAgent);
+        await this.logAuditEvent(profile.id, "pin_reset_completed", ipAddress, userAgent);
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("email_verifications") as any).delete().eq("id", latest.id);
+
+      return { success: true };
     }
 
     return { success: true };
   }
 
-  /**
-   * Send Phone Verification SMS OTP
-   */
-  static async sendPhoneOtp(userId: string, phone: string) {
-    const otp = generateOtpCode(6);
-    await sendSmsOtp({
-      to: phone,
-      message: `${otp} is your ZOLANZO security verification code.`,
-    });
-    return { success: true };
-  }
-
-  /**
-   * Log Audit Event
-   */
   static async logAuditEvent(
     userId: string | null,
-    eventType: string,
+    action: string,
     ipAddress?: string,
     userAgent?: string,
     metadata?: Record<string, unknown>
   ) {
-    try {
-      const supabase = await createSupabaseServerClient();
-      if (supabase) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from("auth_audit_logs") as any).insert({
-          user_id: userId,
-          event_type: eventType,
-          ip_address: ipAddress || "127.0.0.1",
-          user_agent: userAgent || "Unknown Browser",
-          metadata: metadata || {},
-        });
-      }
-    } catch {
-      // Audit log silent failure prevention
+    const supabaseAdmin = createSupabaseAdminClient();
+    if (supabaseAdmin) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabaseAdmin.from("audit_logs") as any).insert({
+        user_id: userId,
+        action,
+        ip_address: ipAddress || "127.0.0.1",
+        user_agent: userAgent || "",
+        metadata: metadata || {},
+      });
     }
   }
 }

@@ -11,7 +11,7 @@ interface EditProfileModalProps {
 }
 
 export function EditProfileModal({ isOpen, onClose, onSaved }: EditProfileModalProps) {
-  const [fullName, setFullName] = useState("Grace Adebayo");
+  const [fullName, setFullName] = useState("");
   const [city, setCity] = useState("Lagos");
 
   if (!isOpen) return null;

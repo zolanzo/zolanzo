@@ -1,55 +1,80 @@
-/* ZOLANZO Design System 2.0 — Enterprise tokens across Light, Dark & High Contrast modes */
+/* ZOLANZO Design System 4.0 — Logo-Derived Brand Identity (Moniepoint/Stripe/Linear/Apple Quality)
+   Color Breakdown:
+   - 80% Neutrals: Background #F8FAFC, Cards #FFFFFF, Navy Text #0F172A, Secondary Text #475569
+   - 15% Brand Emerald (#059669 / #0B8F4D): Primary buttons, success states, active navigation
+   - 5% Accent Colors: 
+     * Brand Teal (#0D9488): Secondary highlights, hover states
+     * Brand Blue (#2563EB): Info, selection indicators, links
+     * Brand Gold (#D97706 / #F59E0B): Wallet earnings, high-paying task rewards, bonuses
+*/
 
 :root {
-  /* Brand primitives */
-  --z-navy: #071b34;
-  --z-primary: #16c6c6;
-  --z-primary-hover: #0fa5a5;
-  --z-primary-light: rgba(22, 198, 198, 0.12);
-  --z-gold: #f6b81a;
-  --z-success: #22c55e;
-  --z-warning: #f59e0b;
-  --z-danger: #ef4444;
-  --z-info: #3b82f6;
+  /* Logo-Derived Brand Primitives */
+  --z-emerald: #059669;
+  --z-emerald-hover: #047857;
+  --z-emerald-subtle: #ECFDF5;
+  --z-emerald-border: rgba(5, 150, 105, 0.25);
+  
+  --z-teal: #0D9488;
+  --z-teal-hover: #0F766E;
+  --z-teal-subtle: #F0FDFA;
 
-  --z-dark-bg: #081320;
-  --z-dark-surface: #0f1e33;
-  --z-dark-card: #152540;
-  --z-light-bg: #f8fafc;
-  --z-light-surface: #ffffff;
-  --z-light-card: #ffffff;
+  --z-blue: #2563EB;
+  --z-blue-hover: #1D4ED8;
+  --z-blue-subtle: #EFF6FF;
 
-  --z-border-dark: rgba(255, 255, 255, 0.08);
-  --z-border-light: rgba(0, 0, 0, 0.08);
+  --z-gold: #D97706;
+  --z-gold-bright: #F59E0B;
+  --z-gold-subtle: #FEF3C7;
+  --z-gold-border: rgba(217, 119, 6, 0.3);
 
-  /* Semantic Layer (Light Mode) */
-  --background: var(--z-light-bg);
-  --foreground: var(--z-navy);
-  --surface: var(--z-light-surface);
-  --card: var(--z-light-card);
-  --card-foreground: var(--z-navy);
-  --muted: #e2e8f0;
-  --muted-foreground: #64748b;
-  --border: var(--z-border-light);
-  --input: var(--z-border-light);
-  --ring: var(--z-primary);
-  --primary: var(--z-primary);
-  --primary-foreground: var(--z-navy);
-  --primary-hover: var(--z-primary-hover);
-  --accent: var(--z-gold);
-  --accent-foreground: var(--z-navy);
-  --success: var(--z-success);
-  --success-foreground: #ffffff;
-  --warning: var(--z-warning);
-  --warning-foreground: var(--z-navy);
-  --danger: var(--z-danger);
-  --danger-foreground: #ffffff;
-  --info: var(--z-info);
-  --info-foreground: #ffffff;
-  --overlay: rgba(8, 19, 32, 0.55);
-  --sidebar: #071b34;
-  --sidebar-foreground: #f1f5f9;
-  --topbar: rgba(248, 250, 252, 0.85);
+  --z-red: #DC2626;
+  --z-red-subtle: #FEE2E2;
+
+  --z-navy-text: #0F172A;
+  --z-slate-text: #475569;
+  --z-gray-bg: #F8FAFC;
+  --z-gray-card: #FFFFFF;
+  --z-gray-border: #E2E8F0;
+  --z-gray-subtle: #F1F5F9;
+
+  /* Semantic System Mapping */
+  --background: var(--z-gray-bg);
+  --foreground: var(--z-navy-text);
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: var(--z-navy-text);
+  --muted: var(--z-gray-subtle);
+  --muted-foreground: var(--z-slate-text);
+  --border: var(--z-gray-border);
+  --input: var(--z-gray-border);
+  --ring: var(--z-emerald);
+  
+  --primary: var(--z-emerald);
+  --primary-foreground: #FFFFFF;
+  --primary-hover: var(--z-emerald-hover);
+  
+  --accent: var(--z-teal);
+  --accent-foreground: #FFFFFF;
+
+  --info: var(--z-blue);
+  --info-foreground: #FFFFFF;
+  
+  --success: var(--z-emerald);
+  --success-foreground: #FFFFFF;
+  
+  --warning: var(--z-gold);
+  --warning-foreground: #FFFFFF;
+  
+  --danger: var(--z-red);
+  --danger-foreground: #FFFFFF;
+  
+  --overlay: rgba(15, 23, 42, 0.6);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: var(--z-navy-text);
+  --topbar: rgba(255, 255, 255, 0.96);
+  --elevated: #FFFFFF;
+  --subtle: var(--z-gray-subtle);
 
   /* Radius Scale */
   --radius-xs: 0.25rem;
@@ -57,98 +82,37 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  --radius-2xl: 1.25rem; /* 20px Premium Card Radius */
+  --radius-3xl: 1.5rem;
   --radius-pill: 9999px;
 
-  /* Shadows & Elevation (Light) */
-  --shadow-xs: 0 1px 2px rgba(8, 19, 32, 0.04);
-  --shadow-soft: 0 1px 2px rgba(8, 19, 32, 0.06), 0 1px 3px rgba(8, 19, 32, 0.04);
-  --shadow-medium: 0 4px 12px rgba(8, 19, 32, 0.08), 0 2px 4px rgba(8, 19, 32, 0.04);
-  --shadow-floating: 0 12px 32px rgba(8, 19, 32, 0.14), 0 4px 8px rgba(8, 19, 32, 0.06);
-  --shadow-dialog: 0 24px 48px rgba(8, 19, 32, 0.22), 0 8px 16px rgba(8, 19, 32, 0.1);
-  --shadow-hero: 0 32px 64px rgba(8, 19, 32, 0.28), 0 12px 24px rgba(22, 198, 198, 0.08);
-
-  /* Spacing Scale (8-pt Grid) */
-  --space-0-5: 0.125rem;
-  --space-1: 0.25rem;
-  --space-1-5: 0.375rem;
-  --space-2: 0.5rem;
-  --space-2-5: 0.625rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+  /* Premium Depth Shadows (Moniepoint/Stripe Quality) */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  --shadow-medium: 0 4px 16px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
+  --shadow-floating: 0 12px 32px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+  --shadow-dialog: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
+  --shadow-hero: 0 20px 40px rgba(5, 150, 105, 0.15);
 
   /* Typography Scale */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Plus Jakarta Sans', var(--font-sans);
-  --text-display: 3.5rem;
-  --text-h1: 2.5rem;
-  --text-h2: 2rem;
-  --text-h3: 1.5rem;
-  --text-h4: 1.25rem;
-  --text-body-lg: 1.125rem;
-  --text-body: 1rem;
-  --text-small: 0.875rem;
-  --text-caption: 0.75rem;
-  --text-tiny: 0.625rem;
-
-  /* Motion & Animation Timings */
-  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 400ms;
 }
 
-/* Dark Mode */
 .dark {
-  --background: var(--z-dark-bg);
-  --foreground: #f1f5f9;
-  --surface: var(--z-dark-surface);
-  --card: var(--z-dark-card);
-  --card-foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: var(--z-border-dark);
-  --input: var(--z-border-dark);
-  --primary-foreground: var(--z-navy);
-  --overlay: rgba(0, 0, 0, 0.65);
-  --sidebar: #061525;
-  --sidebar-foreground: #f1f5f9;
-  --topbar: rgba(15, 30, 51, 0.85);
-
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
-  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
-  --shadow-dialog: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.35);
-  --shadow-hero: 0 32px 64px rgba(0, 0, 0, 0.55), 0 12px 24px rgba(22, 198, 198, 0.12);
-}
-
-/* High Contrast Mode */
-.high-contrast {
-  --background: #000000;
-  --foreground: #ffffff;
-  --surface: #0a0a0a;
-  --card: #121212;
-  --card-foreground: #ffffff;
-  --muted: #262626;
-  --muted-foreground: #e5e5e5;
-  --border: #ffffff;
-  --input: #ffffff;
-  --ring: #00ffff;
-  --primary: #00ffff;
-  --primary-foreground: #000000;
-  --primary-hover: #80ffff;
-  --accent: #ffff00;
-  --accent-foreground: #000000;
-  --success: #00ff00;
-  --warning: #ffcc00;
-  --danger: #ff3333;
-  --overlay: rgba(0, 0, 0, 0.9);
+  --background: var(--z-gray-bg);
+  --foreground: var(--z-navy-text);
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: var(--z-navy-text);
+  --muted: var(--z-gray-subtle);
+  --muted-foreground: var(--z-slate-text);
+  --border: var(--z-gray-border);
+  --input: var(--z-gray-border);
+  --primary-foreground: #FFFFFF;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: var(--z-navy-text);
+  --topbar: rgba(255, 255, 255, 0.96);
+  --elevated: #FFFFFF;
+  --subtle: var(--z-gray-subtle);
 }

@@ -57,16 +57,26 @@ export default function LoginPage() {
       }
 
       const profile = data.data?.profile;
-      if (profile && !profile.onboarding_completed) {
+      const role = (profile?.role || "worker").toLowerCase();
+      const isStaffOrAdmin = role === "admin" || role === "super_admin" || role === "staff";
+
+      if (role === "admin" || role === "super_admin") {
+        router.push("/lex/auth");
+        return;
+      }
+
+      if (role === "staff") {
+        router.push("/lex/staff");
+        return;
+      }
+
+      if (profile && profile.onboarding_completed === false && !isStaffOrAdmin) {
         router.push("/onboarding");
         return;
       }
 
-      const role = profile?.role || "worker";
-      if (role === "admin" || role === "super_admin") {
-        router.push("/admin");
-      } else if (role === "employer") {
-        router.push("/hire/dashboard");
+      if (role === "employer") {
+        router.push("/hirer/dashboard");
       } else {
         router.push("/earner/dashboard");
       }
@@ -89,11 +99,11 @@ export default function LoginPage() {
 
           {/* Email Field */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="email" className="text-xs font-semibold text-zinc-300">
+            <label htmlFor="email" className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400 pointer-events-none">
                 <HugeiconsIcon icon={Mail01Icon} size={18} />
               </div>
               <input
@@ -103,7 +113,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200"
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.12] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200"
               />
             </div>
           </div>
@@ -119,7 +129,7 @@ export default function LoginPage() {
 
           {/* Remember Me & Forgot PIN */}
           <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-zinc-100 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -157,9 +167,9 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="relative my-6 text-center">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-zinc-800" />
+            <div className="w-full border-t border-slate-200 dark:border-white/[0.08]" />
           </div>
-          <span className="relative px-3 bg-[#0A0F12] text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <span className="relative px-3 bg-white dark:bg-[#101419] text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
             OR
           </span>
         </div>
@@ -168,11 +178,11 @@ export default function LoginPage() {
         <SocialLoginButtons />
 
         {/* Bottom Switch to Sign Up */}
-        <div className="mt-6 pt-4 border-t border-white/5 text-center text-xs text-zinc-400">
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-600 dark:text-zinc-400">
           <span>Don&apos;t have an account? </span>
           <Link
             href="/signup"
-            className="text-[#008744] hover:text-emerald-400 font-bold transition-colors"
+            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-extrabold transition-colors"
           >
             Create Account
           </Link>

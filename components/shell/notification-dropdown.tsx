@@ -41,14 +41,14 @@ export function NotificationDropdown({ unreadCount = 3 }: NotificationDropdownPr
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-[#0A0F12] border border-white/10 rounded-2xl shadow-2xl p-4 text-xs z-50 animate-fadeIn space-y-3">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+        <div className="absolute right-0 mt-2 w-80 bg-[#131922] border border-white/[0.08] rounded-2xl shadow-2xl p-4 text-xs z-50 animate-fadeIn space-y-3">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
             <span className="font-bold text-white text-sm">Notifications</span>
             <span className="text-[10px] text-emerald-400 font-semibold">{unreadCount} unread</span>
           </div>
 
           <div className="space-y-2">
-            <div className="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
+            <div className="p-2.5 rounded-xl bg-[#0D1218] border border-white/[0.08] space-y-1">
               <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} />
                 <span>Task Payout Approved</span>
@@ -59,7 +59,7 @@ export function NotificationDropdown({ unreadCount = 3 }: NotificationDropdownPr
               <span className="text-[9px] text-zinc-500 block pt-0.5">10 mins ago</span>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
+            <div className="p-2.5 rounded-xl bg-[#0D1218] border border-white/[0.08] space-y-1">
               <div className="flex items-center gap-1.5 text-blue-400 font-bold">
                 <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} />
                 <span>Withdrawal Processed</span>

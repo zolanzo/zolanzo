@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Shield01Icon, ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { ThemeLogo } from "@/components/brand/theme-logo";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -20,41 +20,42 @@ export function AuthLayout({
   backLinkLabel = "Back to home",
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col justify-between selection:bg-[#008744] selection:text-white font-sans relative overflow-hidden">
+    <div className="surface-shell relative flex min-h-screen flex-col justify-between overflow-hidden font-sans selection:bg-primary selection:text-primary-foreground">
       {/* Background Ambient Radial Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-600/15 via-emerald-950/5 to-transparent pointer-events-none z-0" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Grid Overlay Accent */}
+      {/* Dotted Grid Overlay Accent */}
       <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none z-0"
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.035]"
         style={{
-          backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
+          backgroundImage:
+            "radial-gradient(color-mix(in srgb, var(--foreground) 28%, transparent) 1.2px, transparent 1.2px)",
+          backgroundSize: "28px 28px",
         }}
       />
 
-      {/* Top Header Navigation */}
-      <header className="relative z-10 max-w-[1440px] w-full mx-auto px-6 py-6 flex items-center justify-between">
-        <Link href="/" className="inline-block group focus-visible:outline-2 focus-visible:outline-[#008744] rounded-lg">
-          <Image
-            src="/brand/dark-theme-logo.webp"
-            alt="ZOLANZO Logo"
-            width={140}
-            height={36}
-            className="h-[34px] w-auto object-contain transition-transform group-hover:scale-[1.02]"
-            priority
-          />
-        </Link>
-
-        {showBackLink && (
-          <Link
-            href={backLinkHref}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
-            <span>{backLinkLabel}</span>
+      <header className="relative z-10 w-full border-b border-white/[0.08] bg-[#050608] text-white backdrop-blur-[18px]">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between px-6">
+          <Link href="/" className="focus-ring group inline-block rounded-lg">
+            <ThemeLogo
+              forceDark
+              className="h-[34px] w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              priority
+            />
           </Link>
-        )}
+
+          <div className="flex items-center gap-3">
+            {showBackLink && (
+              <Link
+                href={backLinkHref}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white px-3.5 py-1.5 text-xs font-semibold transition-colors"
+              >
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
+                <span>{backLinkLabel}</span>
+              </Link>
+            )}
+          </div>
+        </div>
       </header>
 
       {/* Main Form Center Container */}
@@ -62,11 +63,11 @@ export function AuthLayout({
         {children}
       </main>
 
-      {/* Bottom Footer Navigation */}
-      <footer className="relative z-10 w-full py-6 text-center text-xs text-zinc-500 border-t border-white/5">
-        <div className="max-w-[1440px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Bottom Footer Navigation — Permanently Dark */}
+      <footer className="relative z-10 w-full border-t border-white/[0.08] bg-[#050608] py-6 text-center text-xs text-zinc-400">
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-between gap-3 px-6 sm:flex-row">
           <div className="flex items-center gap-2">
-            <HugeiconsIcon icon={Shield01Icon} size={14} className="text-emerald-500" />
+            <HugeiconsIcon icon={Shield01Icon} size={14} className="text-emerald-400" />
             <span>Bank-Grade Escrow Security & Encryption</span>
           </div>
           <p>© 2026 ZOLANZO LTD • A Stankings Company</p>

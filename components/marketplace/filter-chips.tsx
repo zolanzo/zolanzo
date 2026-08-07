@@ -53,7 +53,7 @@ export function FilterChips({ selectedCategory, onSelect }: FilterChipsProps) {
             className={`h-[38px] px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 border ${
               isSelected
                 ? "bg-[#008744]/20 border-[#008744] text-white ring-1 ring-[#008744]/40"
-                : "bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                : "bg-[#0D1218] border-white/[0.08] text-zinc-400 hover:border-emerald-500/40 hover:text-white"
             }`}
           >
             {cat}

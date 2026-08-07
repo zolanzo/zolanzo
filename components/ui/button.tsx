@@ -28,19 +28,19 @@ export function Button({
 
   const variantStyles = {
     primary:
-      "bg-[#008744] hover:bg-[#00753b] text-white shadow-md shadow-emerald-950/20 hover:-translate-y-[1px]",
+      "primary-action",
     secondary:
-      "bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 hover:border-zinc-700",
+      "secondary-action",
     outline:
-      "bg-transparent border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-900/50",
+      "bg-transparent border border-border hover:border-primary/40 text-foreground hover:bg-muted",
     ghost:
-      "bg-transparent hover:bg-zinc-900 text-zinc-400 hover:text-white",
+      "bg-transparent hover:bg-muted text-muted-foreground hover:text-foreground",
     danger:
-      "bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30",
+      "bg-danger/10 hover:bg-danger/15 text-danger border border-danger/30",
     success:
-      "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30",
+      "bg-success/10 hover:bg-success/15 text-success border border-success/30",
     gold:
-      "bg-amber-500 hover:bg-amber-400 text-black font-extrabold shadow-md",
+      "bg-accent hover:bg-accent/90 text-accent-foreground font-extrabold shadow-md",
   };
 
   const sizeStyles = {

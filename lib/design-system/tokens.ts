@@ -6,23 +6,23 @@
 export const tokens = {
   colors: {
     primary: {
-      DEFAULT: "#008744",
-      hover: "#00753b",
-      light: "rgba(0, 135, 68, 0.15)",
-      border: "rgba(0, 135, 68, 0.4)",
+      DEFAULT: "var(--primary)",
+      hover: "var(--primary-hover)",
+      light: "color-mix(in srgb, var(--primary) 15%, transparent)",
+      border: "color-mix(in srgb, var(--primary) 40%, transparent)",
     },
     background: {
-      deep: "#04090B",
-      surface: "#0A0F12",
-      elevated: "#12181C",
-      border: "rgba(255, 255, 255, 0.1)",
+      deep: "var(--background)",
+      surface: "var(--surface)",
+      elevated: "var(--card)",
+      border: "var(--border)",
     },
     status: {
-      success: { text: "#34D399", bg: "rgba(52, 211, 153, 0.1)", border: "rgba(52, 211, 153, 0.2)" },
-      warning: { text: "#FBBF24", bg: "rgba(251, 191, 36, 0.1)", border: "rgba(251, 191, 36, 0.2)" },
-      error: { text: "#F87171", bg: "rgba(248, 113, 113, 0.1)", border: "rgba(248, 113, 113, 0.2)" },
-      info: { text: "#60A5FA", bg: "rgba(96, 165, 250, 0.1)", border: "rgba(96, 165, 250, 0.2)" },
-      purple: { text: "#C084FC", bg: "rgba(192, 132, 252, 0.1)", border: "rgba(192, 132, 252, 0.2)" },
+      success: { text: "var(--success)", bg: "color-mix(in srgb, var(--success) 10%, transparent)", border: "color-mix(in srgb, var(--success) 24%, transparent)" },
+      warning: { text: "var(--warning)", bg: "color-mix(in srgb, var(--warning) 10%, transparent)", border: "color-mix(in srgb, var(--warning) 24%, transparent)" },
+      error: { text: "var(--danger)", bg: "color-mix(in srgb, var(--danger) 10%, transparent)", border: "color-mix(in srgb, var(--danger) 24%, transparent)" },
+      info: { text: "var(--info)", bg: "color-mix(in srgb, var(--info) 10%, transparent)", border: "color-mix(in srgb, var(--info) 24%, transparent)" },
+      purple: { text: "var(--accent)", bg: "color-mix(in srgb, var(--accent) 10%, transparent)", border: "color-mix(in srgb, var(--accent) 24%, transparent)" },
     },
   },
 

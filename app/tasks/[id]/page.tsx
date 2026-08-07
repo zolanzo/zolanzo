@@ -157,7 +157,7 @@ export default function OpportunityDetailsPage({ params }: OpportunityDetailsPag
             </div>
           </div>
 
-          {/* Right Sidebar: Employer Card & Sticky Apply */}
+          {/* Right Sidebar: Hirer Card & Sticky Apply */}
           <div className="space-y-6">
             <div className="bg-[#0A0F12] border border-white/10 rounded-3xl p-6 space-y-4 text-center">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center font-bold">

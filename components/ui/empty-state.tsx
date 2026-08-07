@@ -2,57 +2,55 @@
 
 import React from "react";
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { FolderIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { CustomBrandIllustration } from "@/components/brand/custom-brand-illustration";
 
 interface EmptyStateProps {
+  type?: "tasks" | "wallet" | "profile" | "referral" | "support" | "success";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon?: any;
   title: string;
   description: string;
   actionLabel?: string;
   actionHref?: string;
   onAction?: () => void;
-  icon?: typeof FolderIcon;
   className?: string;
 }
 
 export function EmptyState({
+  type = "tasks",
   title,
   description,
   actionLabel,
   actionHref,
   onAction,
-  icon: Icon = FolderIcon,
   className = "",
 }: EmptyStateProps) {
   return (
-    <div className={`p-8 sm:p-12 rounded-3xl bg-[#0A0F12] border border-white/10 text-center flex flex-col items-center justify-center space-y-4 shadow-sm my-4 ${className}`}>
-      <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center shadow-inner">
-        <HugeiconsIcon icon={Icon} size={32} />
-      </div>
+    <div className={`flex flex-col items-center justify-center text-center p-8 sm:p-10 rounded-[20px] bg-white border border-slate-200/80 shadow-soft space-y-4 my-3 ${className}`}>
+      {/* Brand Custom Illustration */}
+      <CustomBrandIllustration type={type} className="w-24 h-24 mb-1" />
 
       <div className="space-y-1 max-w-sm">
-        <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
-        <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+        <h3 className="text-base font-bold text-slate-900 tracking-tight">{title}</h3>
+        <p className="text-xs text-slate-600 leading-relaxed">{description}</p>
       </div>
 
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="h-[42px] px-6 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:-translate-y-[1px]"
+          className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-1"
         >
-          <span>{actionLabel}</span>
-          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+          {actionLabel}
         </Link>
       )}
 
-      {actionLabel && onAction && !actionHref && (
+      {actionLabel && !actionHref && onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="h-[42px] px-6 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md hover:-translate-y-[1px]"
+          className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-1"
         >
-          <span>{actionLabel}</span>
-          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+          {actionLabel}
         </button>
       )}
     </div>

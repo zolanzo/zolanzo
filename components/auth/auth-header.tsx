@@ -12,15 +12,15 @@ export function AuthHeader({ title, subtitle, badge }: AuthHeaderProps) {
   return (
     <div className="text-center mb-6 space-y-2">
       {badge && (
-        <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-1">
+        <span className="mb-1 inline-block rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           {badge}
         </span>
       )}
-      <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight">
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-tight">
         {title}
       </h1>
       {subtitle && (
-        <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-[340px] mx-auto">
+        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[340px] mx-auto">
           {subtitle}
         </p>
       )}

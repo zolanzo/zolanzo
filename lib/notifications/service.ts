@@ -1,3 +1,5 @@
+import { zolanzoRealtime } from "../realtime/engine";
+
 export type NotificationCategory =
   | "Applications"
   | "Payments"
@@ -28,55 +30,8 @@ export interface NotificationPreferences {
   inApp: boolean;
 }
 
-import { zolanzoRealtime } from "../realtime/engine";
-
 class NotificationEngine {
-  private notifications: NotificationItem[] = [
-    {
-      id: "notif_1",
-      title: "Task Payout Approved (+₦850)",
-      body: "Your submission for AI Model Image Labeling was approved by Kora AI Labs. Earnings credited to wallet.",
-      category: "Payments",
-      priority: "high",
-      deepLink: "/wallet",
-      createdAt: "10 mins ago",
-      readAt: null,
-      archived: false,
-    },
-    {
-      id: "notif_2",
-      title: "Disbursement Successful (₦18,400)",
-      body: "₦18,400 has been transferred directly to your GTBank account (012****890).",
-      category: "Withdrawals",
-      priority: "high",
-      deepLink: "/wallet",
-      createdAt: "1 hour ago",
-      readAt: null,
-      archived: false,
-    },
-    {
-      id: "notif_3",
-      title: "New Recommended Opportunity Available",
-      body: "Customer Support Live Chat Assistance (₦5,000 Payout) is now open for application.",
-      category: "Applications",
-      priority: "medium",
-      deepLink: "/tasks/task-105",
-      createdAt: "3 hours ago",
-      readAt: "Today • 12:00 PM",
-      archived: false,
-    },
-    {
-      id: "notif_4",
-      title: "Security Alert: New Sign-in Detected",
-      body: "New sign-in from Safari on macOS (Lagos, Nigeria). Verify if this was you.",
-      category: "Security",
-      priority: "high",
-      deepLink: "/settings",
-      createdAt: "Yesterday",
-      readAt: "Yesterday • 4:00 PM",
-      archived: false,
-    },
-  ];
+  private notifications: NotificationItem[] = [];
 
   private preferences: NotificationPreferences = {
     email: true,

@@ -105,7 +105,7 @@ export default function SignupPage() {
 
           {/* 1. Account Type Selector (Earn vs Hire - First Field) */}
           <div className="space-y-1.5 text-left">
-            <label className="text-xs font-semibold text-zinc-300">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               I want to...
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -114,11 +114,11 @@ export default function SignupPage() {
                 onClick={() => setRole("worker")}
                 className={`h-[48px] rounded-xl border flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer ${
                   role === "worker"
-                    ? "bg-[#008744]/15 border-[#008744] text-white ring-1 ring-[#008744]"
-                    : "bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                    ? "bg-[#008744]/15 border-[#008744] text-slate-900 dark:text-white ring-1 ring-[#008744]"
+                    : "bg-slate-100 dark:bg-zinc-900/90 border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-400 dark:hover:border-zinc-700 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <span className="text-emerald-400 font-black">{role === "worker" ? "◉" : "○"}</span>
+                <span className="text-emerald-500 dark:text-emerald-400 font-black">{role === "worker" ? "◉" : "○"}</span>
                 <span>Earn</span>
               </button>
 
@@ -127,11 +127,11 @@ export default function SignupPage() {
                 onClick={() => setRole("employer")}
                 className={`h-[48px] rounded-xl border flex items-center justify-center gap-2 font-bold text-sm transition-all duration-200 cursor-pointer ${
                   role === "employer"
-                    ? "bg-purple-500/15 border-purple-500 text-white ring-1 ring-purple-500"
-                    : "bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                    ? "bg-purple-500/15 border-purple-500 text-slate-900 dark:text-white ring-1 ring-purple-500"
+                    : "bg-slate-100 dark:bg-zinc-900/90 border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:border-slate-400 dark:hover:border-zinc-700 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <span className="text-purple-400 font-black">{role === "employer" ? "◉" : "○"}</span>
+                <span className="text-purple-500 dark:text-purple-400 font-black">{role === "employer" ? "◉" : "○"}</span>
                 <span>Hire</span>
               </button>
             </div>
@@ -139,11 +139,11 @@ export default function SignupPage() {
 
           {/* 2. Full Name */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="fullName" className="text-xs font-semibold text-zinc-300">
+            <label htmlFor="fullName" className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               Full Name
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none">
                 <HugeiconsIcon icon={UserIcon} size={18} />
               </div>
               <input
@@ -153,18 +153,18 @@ export default function SignupPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200"
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.08] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200"
               />
             </div>
           </div>
 
           {/* 3. Email Address */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="email" className="text-xs font-semibold text-zinc-300">
+            <label htmlFor="email" className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none">
                 <HugeiconsIcon icon={Mail01Icon} size={18} />
               </div>
               <input
@@ -174,7 +174,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200"
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.08] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200"
               />
             </div>
           </div>
@@ -199,11 +199,11 @@ export default function SignupPage() {
 
           {/* 6. Referral Code (Optional) */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="referralCode" className="text-xs font-semibold text-zinc-300">
+            <label htmlFor="referralCode" className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               Referral Code (Optional)
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none">
                 <HugeiconsIcon icon={Tag01Icon} size={18} />
               </div>
               <input
@@ -212,18 +212,18 @@ export default function SignupPage() {
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200 uppercase"
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.08] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200 uppercase"
               />
             </div>
           </div>
 
           {/* 7. Maths: What is: 4 + 7 */}
           <div className="space-y-1.5 text-left pt-1">
-            <label htmlFor="mathAnswer" className="text-xs font-semibold text-zinc-300 block">
-              What is: <span className="text-emerald-400 font-bold font-mono">{num1} + {num2}</span>
+            <label htmlFor="mathAnswer" className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block">
+              What is: <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">{num1} + {num2}</span>
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none">
                 <HugeiconsIcon icon={MathIcon} size={18} />
               </div>
               <input
@@ -233,27 +233,27 @@ export default function SignupPage() {
                 value={mathAnswer}
                 onChange={(e) => setMathAnswer(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200 font-mono"
+                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.08] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200 font-mono"
               />
             </div>
           </div>
 
           {/* 8. Terms & Conditions Required Checkbox */}
           <div className="pt-2 text-left">
-            <label className="flex items-start gap-2.5 text-xs text-zinc-400 hover:text-zinc-200 cursor-pointer select-none">
+            <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 cursor-pointer select-none">
               <input
                 type="checkbox"
                 required
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="w-4 h-4 mt-0.5 rounded bg-zinc-900 border-zinc-800 text-[#008744] focus:ring-0 cursor-pointer shrink-0"
+                className="w-4 h-4 mt-0.5 rounded bg-slate-100 dark:bg-zinc-900 border-slate-300 dark:border-zinc-800 text-[#008744] focus:ring-0 cursor-pointer shrink-0"
               />
               <span className="leading-snug">
                 I accept the{" "}
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="text-[#008744] hover:text-emerald-400 font-bold underline underline-offset-2 transition-colors"
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold underline underline-offset-2 transition-colors"
                 >
                   Terms & Conditions
                 </Link>{" "}
@@ -261,7 +261,7 @@ export default function SignupPage() {
                 <Link
                   href="/privacy"
                   target="_blank"
-                  className="text-[#008744] hover:text-emerald-400 font-bold underline underline-offset-2 transition-colors"
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold underline underline-offset-2 transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -292,9 +292,9 @@ export default function SignupPage() {
         {/* Divider */}
         <div className="relative my-6 text-center">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-zinc-800" />
+            <div className="w-full border-t border-slate-200 dark:border-white/[0.08]" />
           </div>
-          <span className="relative px-3 bg-[#0A0F12] text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+          <span className="relative px-3 bg-white dark:bg-[#101419] text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
             OR
           </span>
         </div>
@@ -303,11 +303,11 @@ export default function SignupPage() {
         <SocialLoginButtons />
 
         {/* Bottom Switch to Login */}
-        <div className="mt-6 pt-4 border-t border-white/5 text-center text-xs text-zinc-400">
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-600 dark:text-zinc-400">
           <span>Already have an account? </span>
           <Link
             href="/login"
-            className="text-[#008744] hover:text-emerald-400 font-bold transition-colors"
+            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-extrabold transition-colors"
           >
             Log In
           </Link>

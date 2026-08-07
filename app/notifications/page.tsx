@@ -46,45 +46,40 @@ export default function NotificationsPage() {
   };
 
   return (
-    <AppShell userName="Grace" avatarUrl="/brand/lady1.png">
-      <div className="max-w-[900px] mx-auto space-y-6 pb-20">
+    <AppShell userName="Earner" avatarUrl="/brand/lady1.png">
+      <div className="max-w-2xl mx-auto space-y-3 px-4 sm:px-0 py-1">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Alerts & Notifications
-              </h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                {notificationService.getUnreadCount()} Unread
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mt-1">
-              Real-time notification engine tracking payments, approvals, withdrawals, and security alerts.
-            </p>
+        {/* COMPACT DENSE HEADER */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <h1 className="text-sm font-bold text-[#111111] tracking-tight">
+              Alerts & Notifications
+            </h1>
+            <span className="px-2 py-0.5 rounded-full bg-[#E6F4ED] text-[#0B8F4D] text-[10px] font-extrabold border border-[#0B8F4D]/20">
+              {notificationService.getUnreadCount()} Unread
+            </span>
           </div>
 
           <button
             type="button"
             onClick={handleMarkAllRead}
-            className="h-[38px] px-4 rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900 text-zinc-300 font-bold text-xs transition-colors shrink-0 cursor-pointer"
+            className="text-xs text-[#0B8F4D] hover:underline font-bold cursor-pointer"
           >
-            Mark All as Read
+            Mark all read
           </button>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto no-scrollbar">
-          {(["All", "Unread", "Applications", "Payments", "Withdrawals", "Security"] as const).map((cat) => (
+        {/* HORIZONTAL CATEGORY CHIPS */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {["All", "Unread", "Payments", "Withdrawals", "Applications", "Security"].map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 h-[38px] rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`h-[36px] px-3.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 activeCategory === cat
-                  ? "bg-[#008744]/20 border border-[#008744] text-white"
-                  : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+                  ? "bg-[#0B8F4D] text-white shadow-xs"
+                  : "bg-white border border-gray-200 text-[#666666] hover:text-[#111111] hover:border-gray-300"
               }`}
             >
               {cat}
@@ -92,48 +87,57 @@ export default function NotificationsPage() {
           ))}
         </div>
 
-        {/* Notifications Feed */}
+        {/* NOTIFICATIONS LIST */}
         {filteredItems.length === 0 ? (
           <EmptyState
-            title="You're all caught up!"
-            description="No active notifications in this category."
+            title="No Notifications Found"
+            description="You are all caught up! Important account alerts and payment updates will appear here."
           />
         ) : (
-          <div className="space-y-3">
+          <div className="bg-white border border-gray-200 rounded-2xl divide-y divide-gray-100 overflow-hidden shadow-xs">
             {filteredItems.map((n) => {
-              const Icon = getCategoryIcon(n.category);
+              const IconComp = getCategoryIcon(n.category);
+              const isUnread = !n.readAt;
+
               return (
-                <Link
+                <div
                   key={n.id}
-                  href={n.deepLink}
                   onClick={() => handleMarkItemRead(n.id)}
-                  className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-4 block ${
-                    !n.readAt
-                      ? "bg-zinc-900/90 border-emerald-500/30 ring-1 ring-emerald-500/20"
-                      : "bg-[#0A0F12] border-white/10 opacity-80"
+                  className={`p-3.5 flex items-start justify-between gap-3 transition-colors cursor-pointer ${
+                    isUnread ? "bg-[#E6F4ED]/30" : "hover:bg-gray-50"
                   }`}
                 >
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-white/5">
-                      <HugeiconsIcon icon={Icon} size={20} />
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                      isUnread ? "bg-[#E6F4ED] text-[#0B8F4D]" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      <HugeiconsIcon icon={IconComp} size={18} />
                     </div>
-
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs sm:text-sm font-bold text-white leading-snug">{n.title}</h3>
-                        {!n.readAt && (
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className={`text-xs leading-tight truncate ${isUnread ? "font-black text-[#111111]" : "font-bold text-[#111111]"}`}>
+                          {n.title}
+                        </h3>
+                        {isUnread && (
+                          <span className="w-2 h-2 rounded-full bg-[#0B8F4D] shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs text-zinc-400 leading-relaxed">{n.body}</p>
-                      <span className="text-[10px] text-zinc-500 font-semibold block pt-1">{n.createdAt}</span>
+                      <p className="text-xs text-[#666666] line-clamp-2 leading-relaxed">{n.body}</p>
+                      <span className="text-[10px] text-gray-400 block pt-0.5">{n.createdAt}</span>
                     </div>
                   </div>
 
-                  <div className="shrink-0 pt-1">
-                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-zinc-500" />
-                  </div>
-                </Link>
+                  {n.deepLink && (
+                    <Link
+                      href={n.deepLink}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-[30px] px-2.5 rounded-lg bg-gray-100 hover:bg-[#E6F4ED] text-[#111111] hover:text-[#0B8F4D] text-[11px] font-bold flex items-center gap-1 shrink-0 transition-colors"
+                    >
+                      <span>View</span>
+                      <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
+                    </Link>
+                  )}
+                </div>
               );
             })}
           </div>

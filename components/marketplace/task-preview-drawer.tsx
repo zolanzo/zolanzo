@@ -111,17 +111,17 @@ export function TaskPreviewDrawer({
           </ul>
         </div>
 
-        {/* Employer Info */}
+        {/* Hirer Info */}
         <div className="p-4 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white">{task.employerName}</span>
             <div className="flex items-center gap-1 text-amber-400 font-bold text-xs">
               <HugeiconsIcon icon={StarIcon} size={14} className="fill-amber-400" />
-              <span>{task.employerRating} Employer Rating</span>
+              <span>{task.employerRating} Hirer Rating</span>
             </div>
           </div>
           <p className="text-[11px] text-zinc-400">
-            Verified employer with 100% escrow funding record on ZOLANZO.
+            Verified hirer with 100% escrow funding record on ZOLANZO.
           </p>
         </div>
 

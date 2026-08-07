@@ -19,12 +19,12 @@ interface AppShellProps {
 
 export function AppShell({
   children,
-  userName = "Grace",
+  userName = "ZOLANZO Member",
   avatarUrl = "/brand/lady1.png",
   maxWidth = "default",
 }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-[#04090B] text-zinc-100 flex font-sans selection:bg-[#008744] selection:text-white">
+    <div className="surface-shell flex min-h-screen font-sans selection:bg-primary selection:text-primary-foreground">
       {/* Desktop Left Sidebar */}
       <Sidebar />
 
@@ -42,14 +42,12 @@ export function AppShell({
         <BottomNav />
       </div>
 
-      {/* Realtime Engine Dev Debug Panel */}
-      <RealtimeDebugPanel />
-
-      {/* Performance & Scalability Dashboard */}
-      <PerformanceDashboard />
-
-      {/* Security & Production Hardening Dashboard */}
-      <SecurityDashboard />
+      {/* Developer Debug Panels (Desktop Only) */}
+      <div className="hidden lg:block">
+        <RealtimeDebugPanel />
+        <PerformanceDashboard />
+        <SecurityDashboard />
+      </div>
     </div>
   );
 }

@@ -4,8 +4,7 @@ import PricingPage from "../app/pricing/page";
 import ContactPage from "../app/contact/page";
 import FaqPage from "../app/faq/page";
 import LoginPage from "../app/login/page";
-import RegisterWorkerPage from "../app/register/worker/page";
-import RegisterOrganizationPage from "../app/register/organization/page";
+import SignupPage from "../app/signup/page";
 import ForgotPasswordPage from "../app/forgot-password/page";
 import ResetPasswordPage from "../app/reset-password/page";
 import VerifyEmailPage from "../app/verify-email/page";
@@ -22,8 +21,7 @@ const components = [
   { name: "ContactPage", comp: ContactPage },
   { name: "FaqPage", comp: FaqPage },
   { name: "LoginPage", comp: LoginPage },
-  { name: "RegisterWorkerPage", comp: RegisterWorkerPage },
-  { name: "RegisterOrganizationPage", comp: RegisterOrganizationPage },
+  { name: "SignupPage", comp: SignupPage },
   { name: "ForgotPasswordPage", comp: ForgotPasswordPage },
   { name: "ResetPasswordPage", comp: ResetPasswordPage },
   { name: "VerifyEmailPage", comp: VerifyEmailPage },
@@ -41,4 +39,4 @@ for (const item of components) {
   }
 }
 
-console.log("🎉 All 14 Sprint 1 pages & routes verified successfully!");
+console.log("🎉 All Sprint 1 pages & routes verified successfully!");

@@ -49,7 +49,7 @@ export default function OnboardingPage() {
 
   const handleCompleteLater = () => {
     // Complete Later does not block access — route directly to role dashboard
-    const destination = role === "worker" ? "/earner/dashboard" : "/hire/dashboard";
+    const destination = role === "worker" ? "/earner/dashboard" : "/hirer/dashboard";
     router.push(destination);
   };
 
@@ -82,7 +82,7 @@ export default function OnboardingPage() {
       }
 
       // Automatic Dashboard Routing based on stored role
-      const destination = role === "worker" ? "/earner/dashboard" : "/hire/dashboard";
+      const destination = role === "worker" ? "/earner/dashboard" : "/hirer/dashboard";
       router.push(destination);
     } catch {
       setLoading(false);

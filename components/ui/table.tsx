@@ -10,18 +10,18 @@ export function Table({
   className?: string;
 }) {
   return (
-    <div className="w-full overflow-x-auto rounded-2xl border border-white/10 bg-[#0A0F12]">
-      <table className={`w-full text-left text-xs text-zinc-300 ${className}`}>{children}</table>
+    <div className="w-full overflow-x-auto rounded-2xl border border-border bg-card shadow-soft">
+      <table className={`w-full text-left text-xs text-foreground ${className}`}>{children}</table>
     </div>
   );
 }
 
 export function TableHeader({ children }: { children: React.ReactNode }) {
-  return <thead className="bg-zinc-900/90 text-[11px] uppercase tracking-wider text-zinc-400 border-b border-white/5 font-semibold">{children}</thead>;
+  return <thead className="border-b border-border bg-muted text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-white/5">{children}</tbody>;
+  return <tbody className="divide-y divide-border">{children}</tbody>;
 }
 
 export function TableRow({
@@ -31,7 +31,7 @@ export function TableRow({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <tr className={`hover:bg-zinc-900/40 transition-colors ${className}`}>{children}</tr>;
+  return <tr className={`transition-colors hover:bg-muted/70 ${className}`}>{children}</tr>;
 }
 
 export function TableHead({

@@ -35,7 +35,7 @@ export default function WorkSubmittedPage({ params }: SubmittedPageProps) {
             Work Submitted Successfully
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Awaiting Employer Review
+            Awaiting Hirer Review
           </h1>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md mx-auto">
             Your submission for <strong className="text-white">{task.title}</strong> has been logged in escrow.

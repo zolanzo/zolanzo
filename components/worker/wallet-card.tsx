@@ -13,9 +13,9 @@ interface WalletCardProps {
 }
 
 export function WalletCard({
-  availableBalance = "₦283,600",
-  todayEarnings = "₦18,400",
-  pendingEarnings = "₦7,250",
+  availableBalance = "₦0",
+  todayEarnings = "₦0",
+  pendingEarnings = "₦0",
   onWithdraw,
   onHistory,
 }: WalletCardProps) {

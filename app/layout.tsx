@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
+import { ImpersonationBanner } from "@/components/auth/impersonation-banner";
 import { buildPageMetadata } from "@/components/seo/build-metadata";
 import "./globals.css";
 
@@ -53,7 +54,10 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <ImpersonationBanner />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

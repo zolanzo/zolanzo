@@ -10,7 +10,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { AppShell } from "@/components/shell/app-shell";
 import { ApplicationDetailsModal, type ApplicationItem } from "@/components/applications/application-details-modal";
+import { type ApplicationStatus } from "@/components/applications/application-timeline";
 import { EmptyState } from "@/components/ui/empty-state";
+
+import { zolanzoEngine } from "@/lib/engine/business-engine";
+import { useRealtimeChannel } from "@/lib/realtime/subscriptions";
 
 type ApplicationFilterTab = "All" | "In Progress" | "Awaiting Review" | "Approved" | "Rejected" | "Paid";
 
@@ -19,41 +23,34 @@ export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApp, setSelectedApp] = useState<ApplicationItem | null>(null);
 
-  const applications: ApplicationItem[] = [
-    {
-      id: "app_1",
-      title: "AI Model Image Labeling",
-      employer: "Kora AI Labs",
-      reward: "₦850",
-      status: "Awaiting Review",
-      submittedDate: "Today, 2:15 PM",
-      reviewTimeline: "Review within 12 hours",
-      taskId: "task-101",
-      payoutRef: "TX_90182410",
-    },
-    {
-      id: "app_2",
-      title: "Fintech App UI Testing",
-      employer: "Mono Technologies",
-      reward: "₦2,500",
-      status: "In Progress",
-      submittedDate: "In Progress",
-      reviewTimeline: "24 mins remaining",
-      taskId: "task-102",
-      payoutRef: "TX_90182411",
-    },
-    {
-      id: "app_3",
-      title: "E-Commerce Product Background Removal",
-      employer: "Jumia Merchant",
-      reward: "₦6,000",
-      status: "Paid",
-      submittedDate: "Yesterday",
-      reviewTimeline: "Wallet Credited",
-      taskId: "task-103",
-      payoutRef: "TX_90182412",
-    },
-  ];
+  const [appsList, setAppsList] = useState(() => zolanzoEngine.getApplicationsForWorker("WORKER_100"));
+
+  useRealtimeChannel("applications", () => {
+    setAppsList(zolanzoEngine.getApplicationsForWorker("WORKER_100"));
+  });
+
+  const applications: ApplicationItem[] = appsList.map((a) => {
+    let status: ApplicationStatus = "Applied";
+    if (a.status === "AwaitingReview") status = "Awaiting Review";
+    else if (a.status === "InWork") status = "In Progress";
+    else if (a.status === "Approved") status = "Approved";
+    else if (a.status === "Rejected") status = "Rejected";
+    else if (a.status === "Paid") status = "Paid";
+    else if (a.status === "Accepted") status = "Accepted";
+    else if (a.status === "Submitted") status = "Submitted";
+
+    return {
+      id: a.id,
+      title: a.opportunityTitle,
+      employer: "Verified Hirer",
+      reward: a.reward,
+      status,
+      submittedDate: a.submittedAt || a.appliedAt,
+      reviewTimeline: status === "Awaiting Review" ? "Review within 12 hours" : "Active",
+      taskId: a.opportunityId,
+      payoutRef: `TX_${a.id.substring(4)}`,
+    };
+  });
 
   const filteredApps = applications.filter((app) => {
     const matchesTab =

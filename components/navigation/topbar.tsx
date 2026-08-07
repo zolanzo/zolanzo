@@ -29,7 +29,7 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-topbar px-4 backdrop-blur-md sm:gap-4 sm:px-6",
+        "sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-topbar px-4 text-foreground backdrop-blur-md sm:gap-4 sm:px-6",
         className,
       )}
     >

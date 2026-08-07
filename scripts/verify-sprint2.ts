@@ -1,61 +1,19 @@
-import WorkerDashboardPage from "../app/worker/dashboard/page";
-import WorkerJobsPage from "../app/worker/jobs/page";
-import JobDetailPage from "../app/worker/jobs/[id]/page";
-import ActiveJobsPage from "../app/worker/jobs/active/page";
-import CompletedJobsPage from "../app/worker/jobs/completed/page";
-import WorkerWalletPage from "../app/worker/wallet/page";
-import WorkerWithdrawalsPage from "../app/worker/withdrawals/page";
-import WorkerProfilePage from "../app/worker/profile/page";
-import WorkerNotificationsPage from "../app/worker/notifications/page";
-
-import OrganizationDashboardPage from "../app/organization/dashboard/page";
-import OrganizationCampaignsPage from "../app/organization/campaigns/page";
-import NewCampaignPage from "../app/organization/campaigns/new/page";
-import OrganizationApplicantsPage from "../app/organization/applicants/page";
-import OrganizationReviewsPage from "../app/organization/reviews/page";
-import OrganizationEscrowPage from "../app/organization/escrow/page";
-import OrganizationTransactionsPage from "../app/organization/transactions/page";
-import OrganizationProfilePage from "../app/organization/profile/page";
-
-import AdminDashboardPage from "../app/admin/dashboard/page";
-import AdminUsersPage from "../app/admin/users/page";
-import AdminOrganizationsPage from "../app/admin/organizations/page";
-import AdminCampaignsPage from "../app/admin/campaigns/page";
-import AdminSubmissionsPage from "../app/admin/submissions/page";
-import AdminPayoutsPage from "../app/admin/payouts/page";
-import AdminSettingsPage from "../app/admin/settings/page";
+import EarnerDashboardPage from "../app/earner/dashboard/page";
+import HirerDashboardPage from "../app/hirer/dashboard/page";
+import SuperAdminAuthPage from "../app/lex/auth/page";
+import StaffPage from "../app/lex/staff/page";
 
 import { KorapayPaymentAdapter } from "../lib/integrations/payments/korapay-adapter";
 import { recordFinancialLedgerEntry, computeServerVerifiedBalance } from "../lib/audit/financial-ledger";
 
 async function runAudit() {
-  console.log("=== ZOLANZO Sprint 2 End-to-End Vertical Journey Audit ===");
+  console.log("=== ZOLANZO End-to-End Vertical Journey Audit ===");
 
   const components = [
-    { name: "WorkerDashboardPage", comp: WorkerDashboardPage },
-    { name: "WorkerJobsPage", comp: WorkerJobsPage },
-    { name: "JobDetailPage", comp: JobDetailPage },
-    { name: "ActiveJobsPage", comp: ActiveJobsPage },
-    { name: "CompletedJobsPage", comp: CompletedJobsPage },
-    { name: "WorkerWalletPage", comp: WorkerWalletPage },
-    { name: "WorkerWithdrawalsPage", comp: WorkerWithdrawalsPage },
-    { name: "WorkerProfilePage", comp: WorkerProfilePage },
-    { name: "WorkerNotificationsPage", comp: WorkerNotificationsPage },
-    { name: "OrganizationDashboardPage", comp: OrganizationDashboardPage },
-    { name: "OrganizationCampaignsPage", comp: OrganizationCampaignsPage },
-    { name: "NewCampaignPage", comp: NewCampaignPage },
-    { name: "OrganizationApplicantsPage", comp: OrganizationApplicantsPage },
-    { name: "OrganizationReviewsPage", comp: OrganizationReviewsPage },
-    { name: "OrganizationEscrowPage", comp: OrganizationEscrowPage },
-    { name: "OrganizationTransactionsPage", comp: OrganizationTransactionsPage },
-    { name: "OrganizationProfilePage", comp: OrganizationProfilePage },
-    { name: "AdminDashboardPage", comp: AdminDashboardPage },
-    { name: "AdminUsersPage", comp: AdminUsersPage },
-    { name: "AdminOrganizationsPage", comp: AdminOrganizationsPage },
-    { name: "AdminCampaignsPage", comp: AdminCampaignsPage },
-    { name: "AdminSubmissionsPage", comp: AdminSubmissionsPage },
-    { name: "AdminPayoutsPage", comp: AdminPayoutsPage },
-    { name: "AdminSettingsPage", comp: AdminSettingsPage },
+    { name: "EarnerDashboardPage", comp: EarnerDashboardPage },
+    { name: "HirerDashboardPage", comp: HirerDashboardPage },
+    { name: "StaffPage", comp: StaffPage },
+    { name: "SuperAdminAuthPage", comp: SuperAdminAuthPage },
   ];
 
   for (const item of components) {
@@ -115,7 +73,7 @@ async function runAudit() {
   const balance = await computeServerVerifiedBalance("USER_AUDIT_1");
   console.log(`✓ Server-Verified Balance: Available $${balance.availableBalance}, Escrow $${balance.escrowBalance}`);
 
-  console.log("\n🎉 All 24 Sprint 2 components, Korapay integration, and financial ledger assertions passed!");
+  console.log("\n🎉 All active components, Korapay integration, and financial ledger assertions passed!");
 }
 
 runAudit();

@@ -22,13 +22,13 @@ interface WithdrawalModalProps {
 
 export function WithdrawalModal({
   isOpen,
-  availableBalance = "₦283,600",
+  availableBalance = "₦0",
   onClose,
   onSuccess,
 }: WithdrawalModalProps) {
   const [step, setStep] = useState<"amount" | "bank" | "pin" | "success">("amount");
-  const [amount, setAmount] = useState("18400");
-  const [bank] = useState("GTBank — Grace Adebayo (012****890)");
+  const [amount, setAmount] = useState("5000");
+  const [bank] = useState("Primary Linked Bank Account");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

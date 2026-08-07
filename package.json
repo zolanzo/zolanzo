@@ -20,6 +20,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed/index.ts",
+    "seed:test-users": "tsx scripts/seed-test-users.ts",
+    "verify:auth": "tsx scripts/run-e2e-auth-verification.ts",
     "db:validate": "prisma validate",
     "db:studio": "prisma studio",
     "jobs:cron": "tsx jobs/runner/main.ts",

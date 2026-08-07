@@ -36,14 +36,14 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   if (!isOpen) return null;
 
   const quickLinks = [
-    { title: "AI Model Image Labeling", category: "Opportunity (₦850)", href: "/tasks/task-101", icon: CursorPointer01Icon },
-    { title: "GTBank Disbursement (₦18,400)", category: "Wallet Transaction", href: "/wallet", icon: Wallet01Icon },
-    { title: "Fintech App UI Testing", category: "Application (In Progress)", href: "/applications", icon: ClipboardListIcon },
-    { title: "How do I withdraw earnings?", category: "Help Center Article", href: "/support", icon: HeadsetIcon },
+    { title: "AI Model Image Labeling Campaign", category: "Opportunity (₦850)", href: "/tasks", icon: CursorPointer01Icon },
+    { title: "Bank Disbursement Payout (₦18,400)", category: "Wallet Transaction", href: "/wallet", icon: Wallet01Icon },
+    { title: "Fintech App UI Quality Inspection", category: "Application (In Progress)", href: "/applications", icon: ClipboardListIcon },
+    { title: "How do I withdraw earnings to my bank?", category: "Help Center Article", href: "/support", icon: HeadsetIcon },
     { title: "Task Payout Approved (+₦850)", category: "Alert Notification", href: "/notifications", icon: Notification01Icon },
-    { title: "Kora AI Labs Corporate Profile", category: "Employer Company", href: "/hire/company", icon: CursorPointer01Icon },
-    { title: "Workforce Spend & Analytics", category: "Executive Dashboard", href: "/hire/analytics", icon: Wallet01Icon },
-    { title: "Grace Adebayo (Earn User)", category: "Admin Users Directory", href: "/admin/users", icon: CursorPointer01Icon },
+    { title: "Company & Workforce Profile", category: "Hirer Company Profile", href: "/hirer/company", icon: CursorPointer01Icon },
+    { title: "Workforce Analytics & Escrow Spend", category: "Hirer Analytics", href: "/hirer/analytics", icon: Wallet01Icon },
+    { title: "Staff Oversight & System Audits", category: "Super Admin Command", href: "/lex/auth", icon: CursorPointer01Icon },
   ];
 
   const filteredLinks = query.trim()
@@ -52,9 +52,9 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-[560px] bg-[#0A0F12] border border-white/10 rounded-3xl p-5 shadow-2xl relative text-white space-y-4">
+      <div className="w-full max-w-[560px] bg-[#131922] border border-white/[0.08] rounded-3xl p-5 shadow-2xl relative text-white space-y-4">
         
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div className="flex items-center gap-2.5 flex-1 pr-4">
             <HugeiconsIcon icon={Search01Icon} size={20} className="text-[#008744]" />
             <input
@@ -78,7 +78,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
 
         <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
           <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block px-2">
-            Search Results
+            Platform Index Search Results
           </span>
 
           {filteredLinks.length === 0 ? (
@@ -89,7 +89,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
                 key={i}
                 href={link.href}
                 onClick={onClose}
-                className="p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800/80 hover:border-zinc-700 transition-colors flex items-center justify-between text-xs group block"
+                className="p-3 rounded-2xl bg-[#0D1218] border border-white/[0.08] hover:border-emerald-500/40 transition-colors flex items-center justify-between text-xs group block"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">

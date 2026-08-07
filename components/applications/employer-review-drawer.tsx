@@ -54,7 +54,6 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fadeIn">
       <div className="w-full max-w-[560px] bg-[#0A0F12] border-l border-white/10 h-full p-6 space-y-6 overflow-y-auto text-white shadow-2xl relative">
-        
         <button
           type="button"
           onClick={onClose}
@@ -64,14 +63,14 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
         </button>
 
         <div className="space-y-1">
-          <span className="text-[10px] text-purple-400 font-bold uppercase tracking-wider">
-            Worker Evidence Submission Inspection
+          <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+            Earner Evidence Submission Inspection
           </span>
           <h3 className="text-xl font-bold tracking-tight">{application.opportunityTitle}</h3>
           <p className="text-xs text-zinc-400">Submitted {application.submittedAt}</p>
         </div>
 
-        {/* Worker Identity Card */}
+        {/* Earner Identity Card */}
         <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
@@ -88,7 +87,7 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
           </div>
 
           <span className="text-xs font-bold text-[#008744] bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <HugeiconsIcon icon={Shield01Icon} size={12} /> Verified
+            <HugeiconsIcon icon={Shield01Icon} size={12} /> Verified Earner
           </span>
         </div>
 
@@ -101,7 +100,7 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
 
           {application.evidenceFileName && (
             <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center gap-3">
-              <HugeiconsIcon icon={File01Icon} size={18} className="text-purple-400" />
+              <HugeiconsIcon icon={File01Icon} size={18} className="text-emerald-400" />
               <div>
                 <p className="font-bold text-white text-[11px]">{application.evidenceFileName}</p>
                 <p className="text-[10px] text-zinc-500">Verified Evidence Screenshot</p>
@@ -111,9 +110,9 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
         </div>
 
         {/* Escrow Lock Banner */}
-        <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-xs">
+        <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <HugeiconsIcon icon={Coins01Icon} size={18} className="text-purple-400" />
+            <HugeiconsIcon icon={Coins01Icon} size={18} className="text-emerald-400" />
             <span className="font-bold text-white">Reward Escrow Held</span>
           </div>
           <span className="text-emerald-400 font-mono font-black text-sm">{application.reward}</span>
@@ -151,7 +150,6 @@ export function EmployerReviewDrawer({ application, onClose, onAction }: Employe
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

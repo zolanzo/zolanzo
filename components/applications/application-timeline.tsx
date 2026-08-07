@@ -73,8 +73,8 @@ export function ApplicationTimeline({
     },
     {
       status: "Approved",
-      title: "Employer Approved",
-      explanation: "Quality score verified by employer.",
+      title: "Hirer Approved",
+      explanation: "Quality score verified by hirer.",
       timestamp: approvedAt,
       isCompleted: ["Approved", "Paid"].includes(currentStatus),
       isCurrent: currentStatus === "Approved",

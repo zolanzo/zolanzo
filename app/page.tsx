@@ -27,6 +27,7 @@ import {
   Notification01Icon,
 } from "@hugeicons/core-free-icons";
 import { Navbar } from "@/components/navigation/navbar";
+import { ThemedHeroImage } from "@/components/brand/themed-hero-image";
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -34,13 +35,13 @@ export default function HomePage() {
   const successStories = [
     { name: "Grace A.", city: "Lagos", country: "Nigeria", amount: "₦384,000 earned", text: "Reliable way to earn extra income each month after my main job.", joined: "Joined 2025", initial: "GA" },
     { name: "Samuel K.", city: "Accra", country: "Ghana", amount: "₦520,000 earned", text: "Work on AI data projects from anywhere while studying at university.", joined: "Joined 2025", initial: "SK" },
-    { name: "Amina H.", city: "Abuja", country: "Nigeria", amount: "₦1.85M disbursed", text: "Recruited verified workers quickly for our mobile app launch campaign.", joined: "Verified Employer", initial: "AH" },
+    { name: "Amina H.", city: "Abuja", country: "Nigeria", amount: "₦1.85M disbursed", text: "Recruited verified earners quickly for our mobile app launch campaign.", joined: "Verified Hirer", initial: "AH" },
     { name: "David O.", city: "Port Harcourt", country: "Nigeria", amount: "₦410,000 earned", text: "Instant bank withdrawals work every single time without delay.", joined: "Joined 2025", initial: "DO" },
     { name: "Blessing E.", city: "Benin", country: "Nigeria", amount: "₦290,000 earned", text: "Great platform for flexible side income on weekends.", joined: "Joined 2025", initial: "BE" },
     { name: "Kofi M.", city: "Kumasi", country: "Ghana", amount: "₦640,000 earned", text: "Completed over 1,500 survey microtasks during my free time.", joined: "Top Earner", initial: "KM" },
     { name: "Ada N.", city: "Enugu", country: "Nigeria", amount: "₦375,000 earned", text: "Proofreading tasks match my schedule perfectly.", joined: "Joined 2025", initial: "AN" },
     { name: "Emmanuel T.", city: "Ibadan", country: "Nigeria", amount: "₦480,000 earned", text: "AI model labeling tasks pay very well for attentive work.", joined: "Pro Contributor", initial: "ET" },
-    { name: "Zainab B.", city: "Kano", country: "Nigeria", amount: "₦1.45M disbursed", text: "Hired top remote chat support workers for our e-commerce business.", joined: "Verified Employer", initial: "ZB" },
+    { name: "Zainab B.", city: "Kano", country: "Nigeria", amount: "₦1.45M disbursed", text: "Hired top remote chat support earners for our e-commerce business.", joined: "Verified Hirer", initial: "ZB" },
     { name: "Chioma U.", city: "Asaba", country: "Nigeria", amount: "₦310,000 earned", text: "User-friendly interface and transparent payout tracking.", joined: "Joined 2025", initial: "CU" },
     { name: "Tariq S.", city: "Nairobi", country: "Kenya", amount: "₦720,000 earned", text: "Highest quality digital work platform in Africa.", joined: "Top Earner", initial: "TS" },
     { name: "Funke O.", city: "Abeokuta", country: "Nigeria", amount: "₦265,000 earned", text: "Quick social media tasks during breaks pay instantly to my bank.", joined: "Joined 2025", initial: "FO" },
@@ -90,27 +91,27 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 flex flex-col font-sans overflow-x-hidden">
-      {/* SECTION 1 — NAVIGATION */}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#050608] text-slate-900 dark:text-white flex flex-col font-sans overflow-x-hidden">
+      {/* SECTION 1 — NAVIGATION (Permanently Dark Header) */}
       <Navbar />
 
       {/* SECTION 1 — HERO */}
-      <section className="relative w-full bg-white text-zinc-950 overflow-hidden border-b border-zinc-100 pb-5 sm:pb-7">
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-amber-100/25 via-emerald-50/15 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
+      <section className="relative w-full bg-white dark:bg-[#050608] text-slate-900 dark:text-white overflow-hidden border-b border-slate-200 dark:border-white/[0.06] py-10 sm:py-16 lg:py-20">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/15 via-emerald-950/5 to-transparent rounded-full blur-3xl pointer-events-none z-0" />
 
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 pt-5 sm:pt-7 relative z-10">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
           
           {/* Top Hero Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[54%_46%] gap-5 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[54%_46%] gap-8 items-center">
             
             {/* Left Column */}
             <div className="w-full max-w-[640px] text-left flex flex-col items-start">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold mb-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#008744] animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-4">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Africa&apos;s #1 Digital Workforce Marketplace</span>
               </div>
 
-              <h1 className="text-[40px] sm:text-[52px] lg:text-[60px] xl:text-[64px] font-black tracking-[-0.05em] leading-[1.04] text-zinc-950 text-left space-y-1.5">
+              <h1 className="text-[42px] sm:text-[56px] lg:text-[64px] xl:text-[68px] font-black tracking-[-0.05em] leading-[1.02] text-slate-950 dark:text-white text-left space-y-2">
                 <span className="block">
                   Work that <span className="text-[#008744] font-black">pays.</span>
                 </span>
@@ -119,23 +120,23 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-zinc-600 font-medium max-w-[500px] leading-relaxed mt-2.5 text-left">
+              <p className="text-base sm:text-lg text-slate-600 dark:text-zinc-300 font-medium max-w-[500px] leading-relaxed mt-3 text-left">
                 Simple online tasks. Real income.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 w-full sm:w-auto">
                 <Link
                   href="/tasks"
-                  className="h-[48px] px-8 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-[15px] transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-[2px] flex items-center justify-center gap-2 group w-full sm:w-auto"
+                  className="h-[48px] px-8 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-[15px] transition-all duration-200 shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-[2px] flex items-center justify-center gap-2 group w-full sm:w-auto cursor-pointer"
                 >
                   Find Work <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
 
                 <Link
                   href="/signup"
-                  className="h-[48px] px-8 rounded-xl border border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50 bg-white text-zinc-950 font-bold text-[15px] transition-all duration-200 hover:-translate-y-[2px] flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="h-[48px] px-8 rounded-xl border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 bg-slate-100 dark:bg-zinc-900/80 text-slate-900 dark:text-white font-bold text-[15px] transition-all duration-200 hover:-translate-y-[2px] flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer"
                 >
-                  <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-zinc-800" /> Hire Talent
+                  <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-slate-700 dark:text-zinc-300" /> Hire Talent
                 </Link>
               </div>
             </div>
@@ -143,13 +144,14 @@ export default function HomePage() {
             {/* Right Lady Talent Artwork */}
             <div className="w-full flex items-end justify-center lg:justify-end self-end">
               <div className="relative w-full max-w-[480px] lg:max-w-none flex items-end justify-center lg:justify-end">
-                <Image
-                  src="/brand/lady1.png"
+                <ThemedHeroImage
+                  lightSrc="/brand/lady1.png"
+                  darkSrc="/brand/lady2.png"
                   alt="ZOLANZO Talent displaying mobile app interface"
                   width={620}
                   height={620}
+                  className="w-full h-auto max-h-[500px] sm:max-h-[560px] lg:max-h-[600px] object-contain object-bottom select-none"
                   priority
-                  className="w-auto h-auto max-h-[400px] sm:max-h-[480px] lg:max-h-[520px] object-contain object-bottom select-none drop-shadow-md"
                 />
               </div>
             </div>
@@ -199,7 +201,7 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 2 — CATEGORIES */}
-      <section className="w-full bg-zinc-50/60 py-2.5 border-b border-zinc-100">
+      <section className="w-full bg-slate-100 dark:bg-[#0B0F14] py-3.5 border-b border-slate-200 dark:border-white/[0.06]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
             {[
@@ -209,21 +211,21 @@ export default function HomePage() {
               { icon: PencilEdit01Icon, label: "Writing" },
               { icon: HeadsetIcon, label: "Virtual Assistant" },
             ].map((cat, i) => (
-              <Link key={i} href="/tasks" className="flex flex-col items-center justify-center p-2 text-center group cursor-pointer hover:bg-white hover:shadow-xs rounded-xl transition-all duration-200">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-[#008744] flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                  <HugeiconsIcon icon={cat.icon} size={20} className="text-[#008744]" />
+              <Link key={i} href="/tasks" className="flex flex-col items-center justify-center p-2.5 text-center group cursor-pointer hover:bg-white dark:hover:bg-[#131922] rounded-xl transition-all duration-200 hover:shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                  <HugeiconsIcon icon={cat.icon} size={20} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <span className="text-[11px] sm:text-[12px] font-semibold text-zinc-900 leading-tight">
+                <span className="text-[11px] sm:text-[12px] font-semibold text-slate-800 dark:text-zinc-200 leading-tight">
                   {cat.label}
                 </span>
               </Link>
             ))}
 
-            <Link href="/tasks" className="flex flex-col items-center justify-center p-2 text-center group cursor-pointer hover:bg-white hover:shadow-xs rounded-xl transition-all duration-200">
-              <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+            <Link href="/tasks" className="flex flex-col items-center justify-center p-2.5 text-center group cursor-pointer hover:bg-white dark:hover:bg-[#131922] rounded-xl transition-all duration-200 hover:shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-slate-800 dark:bg-zinc-800 text-white flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                 <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
               </div>
-              <span className="text-[11px] sm:text-[12px] font-bold text-zinc-950 leading-tight">
+              <span className="text-[11px] sm:text-[12px] font-bold text-slate-900 dark:text-white leading-tight">
                 Browse More →
               </span>
             </Link>
@@ -232,38 +234,38 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 3 — PLATFORM STATISTICS */}
-      <section className="w-full bg-white py-4 border-b border-zinc-100">
+      <section className="w-full bg-white dark:bg-[#050608] py-8 border-b border-slate-200 dark:border-white/[0.06]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/80 gap-2 sm:gap-0">
-            <div className="flex items-center gap-3 p-1.5 sm:justify-center">
-              <HugeiconsIcon icon={Coins01Icon} size={22} className="text-[#008744] shrink-0" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-white/[0.08] gap-4 sm:gap-0">
+            <div className="flex items-center gap-3.5 p-2 sm:justify-center">
+              <HugeiconsIcon icon={Coins01Icon} size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div>
-                <p className="text-2xl sm:text-3xl font-black text-zinc-950 leading-none">18M+</p>
-                <p className="text-[11px] font-semibold text-zinc-500 mt-0.5">Paid to workers</p>
+                <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white leading-none">₦18M+</p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">Paid to workers</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-1.5 sm:justify-center">
-              <HugeiconsIcon icon={AnalyticsUpIcon} size={22} className="text-[#D97706] shrink-0" />
+            <div className="flex items-center gap-3.5 p-2 sm:justify-center">
+              <HugeiconsIcon icon={AnalyticsUpIcon} size={24} className="text-amber-500 dark:text-amber-400 shrink-0" />
               <div>
-                <p className="text-2xl sm:text-3xl font-black text-zinc-950 leading-none">58,000+</p>
-                <p className="text-[11px] font-semibold text-zinc-500 mt-0.5">Tasks completed</p>
+                <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white leading-none">58,000+</p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">Tasks completed</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-1.5 sm:justify-center">
-              <HugeiconsIcon icon={UserGroupIcon} size={22} className="text-[#008744] shrink-0" />
+            <div className="flex items-center gap-3.5 p-2 sm:justify-center">
+              <HugeiconsIcon icon={UserGroupIcon} size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div>
-                <p className="text-2xl sm:text-3xl font-black text-zinc-950 leading-none">21,000+</p>
-                <p className="text-[11px] font-semibold text-zinc-500 mt-0.5">Active earners</p>
+                <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white leading-none">21,000+</p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">Active earners</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-1.5 sm:justify-center">
-              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={22} className="text-[#008744] shrink-0" />
+            <div className="flex items-center gap-3.5 p-2 sm:justify-center">
+              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={24} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div>
-                <p className="text-2xl sm:text-3xl font-black text-zinc-950 leading-none">98%</p>
-                <p className="text-[11px] font-semibold text-zinc-500 mt-0.5">Approval rate</p>
+                <p className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white leading-none">98%</p>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">Approval rate</p>
               </div>
             </div>
           </div>
@@ -271,38 +273,38 @@ export default function HomePage() {
       </section>
 
       {/* SECTION 4 — AVAILABLE TASKS */}
-      <section className="w-full bg-zinc-50/50 py-6 sm:py-8 border-b border-zinc-100" id="available-tasks">
+      <section className="w-full bg-slate-50 dark:bg-[#0B0F14] py-10 sm:py-14 border-b border-slate-200 dark:border-white/[0.06]" id="available-tasks">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
           
-          <div className="text-center mb-4 sm:mb-5">
-            <h2 className="text-2xl sm:text-3xl font-bold text-zinc-950 tracking-tight">
-              Available Tasks
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Available Opportunities
             </h2>
-            <div className="w-12 h-1 bg-[#008744] mx-auto mt-1.5 rounded-full" />
+            <div className="w-12 h-1 bg-emerald-500 mx-auto mt-2 rounded-full" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             
             {/* Task 1 */}
-            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs hover:shadow-md hover:border-zinc-300 hover:-translate-y-[2px] transition-all duration-200 p-4 sm:p-5 flex flex-col justify-between space-y-3">
-              <div className="space-y-2">
+            <div className="bg-white dark:bg-[#131922] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl hover:border-emerald-500/50 hover:-translate-y-[2px] transition-all duration-200 p-5 flex flex-col justify-between space-y-4">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#008744] text-[11px] font-bold border border-emerald-100">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
                       New
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-700 text-[11px] font-semibold">
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-[11px] font-semibold">
                       AI Project
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-emerald-800 flex items-center gap-1"><HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} /> Verified</span>
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} /> Verified</span>
                 </div>
 
-                <h3 className="text-base font-bold text-zinc-950">AI Model Image Labeling</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Model Image Labeling</h3>
 
-                <div className="flex items-center justify-between text-xs text-zinc-500 pt-0.5">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 pt-0.5">
                   <span className="flex items-center gap-1"><HugeiconsIcon icon={Clock01Icon} size={14} /> 18 mins</span>
-                  <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md">23 Earners Active</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">23 Earners Active</span>
                 </div>
               </div>
 
@@ -500,14 +502,14 @@ export default function HomePage() {
             </Link>
 
             {/* Right: Hire Dashboard Preview */}
-            <Link href="/hire/dashboard" className="block group">
-              <div className="bg-[#04090B] rounded-3xl p-5 sm:p-7 border border-zinc-800 shadow-2xl group-hover:border-purple-500/40 transition-all duration-200 flex flex-col justify-between space-y-4 h-full">
+            <Link href="/hirer/dashboard" className="block group">
+              <div className="bg-[#04090B] rounded-3xl p-5 sm:p-7 border border-zinc-800 shadow-2xl group-hover:border-emerald-500/40 transition-all duration-200 flex flex-col justify-between space-y-4 h-full">
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider">Hire Dashboard</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[11px] font-semibold border border-purple-500/20 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/20 group-hover:bg-[#008744] group-hover:text-white transition-colors">
                     Launch Hire Dashboard →
                   </span>
                 </div>
@@ -520,7 +522,7 @@ export default function HomePage() {
 
                   <div className="bg-zinc-900/90 p-3 rounded-2xl border border-zinc-800">
                     <span className="text-[10px] font-semibold text-zinc-400 block uppercase tracking-wider">Earners Active</span>
-                    <span className="text-lg sm:text-xl font-black text-purple-400 mt-0.5 block">1,420</span>
+                    <span className="text-lg sm:text-xl font-black text-emerald-400 mt-0.5 block">1,420</span>
                   </div>
 
                   <div className="bg-zinc-900/90 p-3 rounded-2xl border border-zinc-800">
@@ -532,13 +534,13 @@ export default function HomePage() {
                 <div className="bg-zinc-900/70 p-3 rounded-2xl border border-zinc-800 space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold">
                     <div className="flex items-center gap-1.5">
-                      <HugeiconsIcon icon={Chart01Icon} size={14} className="text-purple-400" />
+                      <HugeiconsIcon icon={Chart01Icon} size={14} className="text-emerald-400" />
                       <span className="text-zinc-300">Campaign Progress</span>
                     </div>
-                    <span className="text-purple-400 font-bold">85% Complete</span>
+                    <span className="text-emerald-400 font-bold">85% Complete</span>
                   </div>
                   <div className="w-full h-2.5 rounded-full bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-purple-600 to-indigo-400 rounded-full w-[85%]" />
+                    <div className="h-full bg-gradient-to-r from-[#008744] to-emerald-400 rounded-full w-[85%]" />
                   </div>
                 </div>
               </div>
@@ -562,7 +564,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             <div className="p-3.5 sm:p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1 text-center hover:border-zinc-300 hover:-translate-y-[2px] transition-all duration-200">
               <HugeiconsIcon icon={Shield01Icon} size={22} className="text-[#008744] mx-auto" />
-              <h4 className="text-xs sm:text-sm font-bold text-zinc-950">Verified Employers</h4>
+              <h4 className="text-xs sm:text-sm font-bold text-zinc-950">Verified Hirers</h4>
               <p className="text-[11px] text-zinc-500 leading-normal">Campaigns reviewed before publishing.</p>
             </div>
 
@@ -750,7 +752,7 @@ export default function HomePage() {
               <ul className="space-y-1.5 text-xs text-zinc-400">
                 <li><Link href="/tasks" className="hover:text-white transition-colors">Marketplace</Link></li>
                 <li><Link href="/earner/dashboard" className="hover:text-white transition-colors">Earn Dashboard</Link></li>
-                <li><Link href="/hire/dashboard" className="hover:text-white transition-colors">Hire Dashboard</Link></li>
+                <li><Link href="/hirer/dashboard" className="hover:text-white transition-colors">Hire Dashboard</Link></li>
                 <li><Link href="/wallet" className="hover:text-white transition-colors">Wallet</Link></li>
               </ul>
             </div>
@@ -772,7 +774,7 @@ export default function HomePage() {
               <ul className="space-y-1.5 text-xs text-zinc-400">
                 <li><Link href="/signup" className="hover:text-white transition-colors">Post a Task</Link></li>
                 <li><Link href="/signup" className="hover:text-white transition-colors">Hire Talent</Link></li>
-                <li><Link href="/hire/dashboard" className="hover:text-white transition-colors">Hire Dashboard</Link></li>
+                <li><Link href="/hirer/dashboard" className="hover:text-white transition-colors">Hire Dashboard</Link></li>
                 <li><Link href="/support" className="hover:text-white transition-colors">Help Center</Link></li>
               </ul>
             </div>
@@ -781,6 +783,7 @@ export default function HomePage() {
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-white tracking-wider uppercase">Account</h3>
               <ul className="space-y-1.5 text-xs text-zinc-400">
+                <li><Link href="/careers" className="hover:text-white transition-colors text-emerald-400 font-bold">Careers (We&apos;re Hiring!)</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Log In</Link></li>
                 <li><Link href="/signup" className="hover:text-white transition-colors">Sign Up</Link></li>
                 <li><Link href="/forgot-pin" className="hover:text-white transition-colors">Reset PIN</Link></li>

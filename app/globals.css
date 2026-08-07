@@ -6,9 +6,11 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
   --color-ring: var(--ring);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -16,9 +18,18 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-overlay: var(--overlay);
+  --color-elevated: var(--elevated);
+  --color-subtle: var(--subtle);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-topbar: var(--topbar);
@@ -193,5 +204,41 @@
 
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .surface-shell {
+    @apply bg-background text-foreground transition-colors duration-200;
+  }
+
+  .surface-panel {
+    @apply rounded-2xl border border-border bg-card text-card-foreground shadow-soft transition-all duration-200;
+  }
+
+  .surface-panel-lg {
+    @apply rounded-3xl border border-border bg-card text-card-foreground shadow-medium transition-all duration-200;
+  }
+
+  .surface-inset {
+    @apply rounded-xl border border-border bg-surface text-foreground shadow-soft transition-colors duration-200;
+  }
+
+  .surface-muted {
+    @apply rounded-xl border border-border bg-muted text-foreground transition-colors duration-200;
+  }
+
+  .interactive-surface {
+    @apply hover:border-primary/40 hover:bg-surface hover:-translate-y-[1px];
+  }
+
+  .primary-action {
+    @apply bg-primary text-primary-foreground shadow-md transition-all duration-200 hover:bg-primary-hover hover:-translate-y-[1px] disabled:opacity-50;
+  }
+
+  .secondary-action {
+    @apply border border-border bg-surface text-foreground transition-all duration-200 hover:border-primary/40 hover:bg-muted;
+  }
+
+  .muted-copy {
+    @apply text-muted-foreground;
   }
 }

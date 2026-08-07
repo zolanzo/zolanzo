@@ -23,11 +23,7 @@ export default function InviteFriendsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const referrals = [
-    { name: "Samuel K.", date: "Joined Yesterday", bonus: "₦1,000 Paid", status: "Active Earner" },
-    { name: "David O.", date: "Joined 3 days ago", bonus: "₦1,000 Paid", status: "Active Earner" },
-    { name: "Blessing E.", date: "Joined 5 days ago", bonus: "₦1,000 Pending", status: "Awaiting 1st Task" },
-  ];
+  const referrals: { name: string; date: string; bonus: string; status: string }[] = [];
 
   return (
     <AppShell userName="Grace" avatarUrl="/brand/lady1.png">
@@ -55,7 +51,7 @@ export default function InviteFriendsPage() {
               <span className="text-[10px] text-zinc-400 font-bold uppercase">Total Friends Invited</span>
               <HugeiconsIcon icon={UserGroupIcon} size={18} className="text-emerald-400" />
             </div>
-            <span className="text-3xl font-black text-white">12</span>
+            <span className="text-3xl font-black text-white">{referrals.length}</span>
             <span className="text-[11px] text-zinc-400 block">Registered Users</span>
           </div>
 

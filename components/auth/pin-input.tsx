@@ -34,13 +34,13 @@ export function PINInput({
   return (
     <div className="space-y-1.5 w-full text-left">
       <div>
-        <label htmlFor={id} className="text-xs font-semibold text-zinc-300">
+        <label htmlFor={id} className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
           {label}
         </label>
       </div>
 
       <div className="relative">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400 pointer-events-none">
           <HugeiconsIcon icon={CircleLock01Icon} size={18} />
         </div>
 
@@ -55,10 +55,10 @@ export function PINInput({
           onChange={handleChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full h-[48px] pl-10 pr-12 rounded-xl bg-zinc-900/90 border text-white text-base tracking-[0.2em] font-mono focus:outline-none transition-all duration-200 ${
+          className={`w-full h-[48px] pl-10 pr-12 rounded-xl bg-slate-100 dark:bg-[#181F29] border text-slate-900 dark:text-white text-base tracking-[0.2em] font-mono focus:outline-none transition-all duration-200 ${
             error
               ? "border-red-500/80 focus:border-red-500 focus:ring-1 focus:ring-red-500"
-              : "border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744]"
+              : "border-slate-300 dark:border-white/[0.08] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
           }`}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}

@@ -120,8 +120,8 @@ export function RegisterForm({
               onChange={(e) => setAccountType(e.target.value as "worker" | "employer")}
               className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500 min-h-[46px] cursor-pointer"
             >
-              <option value="worker">Micro-Worker (Complete Tasks & Earn)</option>
-              <option value="employer">Employer / Advertiser (Create Campaigns)</option>
+              <option value="worker">Earner (Complete Tasks & Earn)</option>
+              <option value="employer">Hirer / Campaign Manager (Create Campaigns)</option>
             </select>
           </div>
 

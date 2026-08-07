@@ -1,16 +1,33 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { OnboardingService } from "@/lib/auth/onboarding";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createSupabaseServerClient();
+    let authUserId: string | null = null;
+
+    if (supabase) {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user?.id) {
+        authUserId = data.user.id;
+      }
+    }
+
     const body = await request.json();
-    const { userId = "current_session_user", role, country, state, city, language, companyName, industry, website } = body;
+    const { userId: bodyUserId, role, country, state, city, language, companyName, industry, website } = body;
+
+    const targetUserId = authUserId || bodyUserId;
+
+    if (!targetUserId || targetUserId === "current_session_user") {
+      return NextResponse.json({ error: "Unauthorized: Invalid or missing authenticated user session." }, { status: 401 });
+    }
 
     if (!role || (role !== "worker" && role !== "employer")) {
       return NextResponse.json({ error: "Please select a valid account role." }, { status: 400 });
     }
 
-    const result = await OnboardingService.completeOnboarding(userId, {
+    const result = await OnboardingService.completeOnboarding(targetUserId, {
       role,
       country,
       state,

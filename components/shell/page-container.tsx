@@ -16,7 +16,7 @@ export function PageContainer({ children, maxWidth = "default" }: PageContainerP
       : "max-w-[1440px]";
 
   return (
-    <div className={`w-full mx-auto px-4 sm:px-8 py-6 lg:py-8 pb-20 lg:pb-12 ${maxWidthClass}`}>
+    <div className={`w-full mx-auto px-0 sm:px-8 py-0 lg:py-8 pb-20 lg:pb-12 ${maxWidthClass}`}>
       {children}
     </div>
   );

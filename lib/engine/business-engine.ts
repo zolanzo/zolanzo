@@ -46,46 +46,53 @@ class ZolanzoBusinessEngine {
   private escrows: Map<string, EscrowAccount> = new Map();
   private ledger: WalletLedgerEntry[] = [];
   private applications: Map<string, ApplicationRecord> = new Map();
-  private walletBalances: Map<string, { available: number; escrow: number; pending: number }> = new Map([
-    ["WORKER_100", { available: 283600, escrow: 0, pending: 8500 }],
-    ["EMPLOYER_100", { available: 450000, escrow: 312000, pending: 0 }],
-  ]);
+  private walletBalances: Map<string, { available: number; escrow: number; pending: number }> = new Map();
 
   constructor() {
-    // Seed initial escrow
-    this.escrows.set("opp_101", {
-      campaignId: "opp_101",
-      employerId: "EMPLOYER_100",
-      subtotalAmount: 722500,
-      platformFee: 72250,
-      totalLocked: 794750,
-      releasedAmount: 722500,
-      refundedAmount: 0,
-      status: "PARTIALLY_RELEASED",
-    });
-
-    // Seed initial applications
-    this.applications.set("app_201", {
-      id: "app_201",
-      workerId: "WORKER_100",
-      opportunityId: "opp_101",
-      opportunityTitle: "AI Model Image Dataset Annotation",
-      reward: "₦850",
-      rewardAmount: 850,
-      status: "AwaitingReview",
-      evidenceText: "Completed street view bounding box annotation.",
-      evidenceFileName: "bounding_boxes.png",
-      appliedAt: "Today • 10:00 AM",
-      submittedAt: "Today • 10:42 AM",
-    });
+    // Empty constructor - 100% database driven
   }
 
   // 1. ESCROW & WALLET ENGINE
+  public getPlatformAuditMetrics(): {
+    usersCount: number;
+    earnersCount: number;
+    hirersCount: number;
+    opportunitiesCount: number;
+    escrowLocked: number;
+    netRevenue: number;
+  } {
+    let escrowLocked = 0;
+    this.escrows.forEach((e) => {
+      if (e.status === "LOCKED" || e.status === "PARTIALLY_RELEASED") {
+        escrowLocked += e.totalLocked - e.releasedAmount;
+      }
+    });
+
+    return {
+      usersCount: 0,
+      earnersCount: 0,
+      hirersCount: 0,
+      opportunitiesCount: 0,
+      escrowLocked,
+      netRevenue: 0,
+    };
+  }
+
+  public getApplicationsForWorker(workerId: string): ApplicationRecord[] {
+    const results: ApplicationRecord[] = [];
+    this.applications.forEach((app) => {
+      if (app.workerId === workerId) {
+        results.push(app);
+      }
+    });
+    return results;
+  }
+
   public async getWalletBalance(userId: string): Promise<{ available: number; escrow: number; pending: number }> {
     if (isSupabaseConfigured()) {
       // Supabase Live Sync Enabled
     }
-    return this.walletBalances.get(userId) || { available: 100000, escrow: 0, pending: 0 };
+    return this.walletBalances.get(userId) || { available: 0, escrow: 0, pending: 0 };
   }
 
   public async fundWallet(userId: string, amount: number, reference: string): Promise<{ success: boolean; newBalance: number }> {

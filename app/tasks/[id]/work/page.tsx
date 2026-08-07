@@ -109,7 +109,7 @@ export default function WorkWorkspacePage({ params }: WorkPageProps) {
               Work in Progress Workspace
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-white">{task.title}</h1>
-            <p className="text-xs text-zinc-400">Employer: {task.employerName}</p>
+            <p className="text-xs text-zinc-400">Hirer: {task.employerName}</p>
           </div>
 
           <div className="bg-emerald-950/40 border border-emerald-500/30 px-4 py-2.5 rounded-2xl text-left sm:text-right shrink-0">

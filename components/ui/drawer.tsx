@@ -41,22 +41,23 @@ export function Drawer({
   const sideStyle = side === "right" ? "right-0" : "left-0";
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-black/80 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex animate-fadeIn bg-overlay backdrop-blur-sm">
       {/* Backdrop overlay */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Slide-over Drawer Panel */}
       <div
-        className={`fixed top-0 bottom-0 ${sideStyle} w-full max-w-md bg-[#0A0F12] border-l border-white/10 shadow-2xl p-6 flex flex-col justify-between text-white z-50 animate-slideIn`}
+        className={`fixed bottom-0 top-0 ${sideStyle} z-50 flex w-full max-w-md animate-slideIn flex-col justify-between border-l border-border bg-card p-6 text-foreground shadow-dialog`}
       >
         <div className="space-y-4 flex-1 overflow-y-auto">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-            <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">{title}</h3>
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+              className="focus-ring rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Close drawer"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={20} />
             </button>

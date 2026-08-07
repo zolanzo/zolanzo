@@ -1,4 +1,4 @@
--- ZOLANZO Onboarding & Access Control Schema Migration (Phase 3)
+-- ZOLANZO Onboarding & Access Control Schema Migration (Idempotent & Production-Compatible)
 
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Nigeria',
