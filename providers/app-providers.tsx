@@ -5,8 +5,9 @@ import { ThemeProvider } from "@/providers/theme-provider";
 
 type AppProvidersProps = {
   children: ReactNode;
+  nonce?: string;
 };
 
-export function AppProviders({ children }: AppProvidersProps) {
-  return <ThemeProvider>{children}</ThemeProvider>;
+export function AppProviders({ children, nonce }: AppProvidersProps) {
+  return <ThemeProvider nonce={nonce}>{children}</ThemeProvider>;
 }

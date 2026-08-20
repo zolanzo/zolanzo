@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { applySecurityHeaders } from "@/lib/security/headers";
+import {
+  applyCspToRequest,
+  applySecurityHeaders,
+} from "@/lib/security/headers";
 import { createSupabaseMiddlewareClient } from "@/lib/supabase/middleware";
 import {
   isAuthEntryPath,
@@ -89,6 +92,7 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(CORRELATION_HEADER, correlationId);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
+  applyCspToRequest(requestHeaders, nonce);
 
   const response = NextResponse.next({
     request: {
@@ -96,7 +100,6 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  response.headers.set("x-nonce", nonce);
   response.headers.set(CORRELATION_HEADER, correlationId);
   response.headers.set(REQUEST_ID_HEADER, requestId);
   applySecurityHeaders(response, nonce);

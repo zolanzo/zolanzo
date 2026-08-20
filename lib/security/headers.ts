@@ -1,8 +1,14 @@
 import type { NextResponse } from "next/server";
 
 /**
+ * Request header Next.js reads so it can stamp runtime and Flight
+ * scripts with the matching CSP nonce.
+ */
+export const NONCE_HEADER = "x-nonce";
+
+/**
  * Enterprise security headers for ZOLANZO.
- * Applied via middleware and next.config headers().
+ * Applied via proxy and next.config headers().
  */
 export const SECURITY_HEADERS: Record<string, string> = {
   "X-DNS-Prefetch-Control": "on",
@@ -51,6 +57,17 @@ export function buildContentSecurityPolicy(nonce?: string): string {
   return directives.join("; ");
 }
 
+/**
+ * Next.js extracts the nonce from the incoming request CSP header
+ * (`'nonce-{value}'`) and from `x-nonce`. Both must be set on the
+ * request that reaches the renderer, not only on the outgoing response.
+ */
+export function applyCspToRequest(requestHeaders: Headers, nonce: string): void {
+  const policy = buildContentSecurityPolicy(nonce);
+  requestHeaders.set(NONCE_HEADER, nonce);
+  requestHeaders.set("Content-Security-Policy", policy);
+}
+
 export function applySecurityHeaders(
   response: NextResponse,
   nonce?: string,
@@ -63,6 +80,10 @@ export function applySecurityHeaders(
     "Content-Security-Policy",
     buildContentSecurityPolicy(nonce),
   );
+
+  if (nonce) {
+    response.headers.set(NONCE_HEADER, nonce);
+  }
 
   return response;
 }
