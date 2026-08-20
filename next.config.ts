@@ -30,7 +30,12 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "motion"],
+    optimizePackageImports: [
+      "lucide-react",
+      "motion",
+      "@hugeicons/react",
+      "@hugeicons/core-free-icons",
+    ],
   },
 
   headers: async () => [

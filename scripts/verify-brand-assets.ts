@@ -6,7 +6,18 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 
-const REQUIRED = ["light-theme-logo.webp", "icon.webp"] as const;
+const REQUIRED = [
+  "light-theme-logo.webp",
+  "icon.webp",
+  "lady1-640.avif",
+  "lady1-640.webp",
+  "lady1-1280.avif",
+  "lady1-1280.webp",
+  "lady2-640.avif",
+  "lady2-640.webp",
+  "lady2-1280.avif",
+  "lady2-1280.webp",
+] as const;
 
 async function exists(filePath: string): Promise<boolean> {
   try {

@@ -4,6 +4,7 @@ import { createSupabaseMiddlewareClient } from "@/lib/supabase/middleware";
 import {
   isAuthEntryPath,
   resolveRouteAccess,
+  shouldRefreshAuthSession,
   type RouteAccessLevel,
 } from "@/lib/auth/route-policy";
 import { CSRF_CONFIG, generateCsrfToken } from "@/lib/security/csrf";
@@ -106,12 +107,13 @@ export async function proxy(request: NextRequest) {
     });
   }
 
+  const { pathname } = request.nextUrl;
   const supabase = createSupabaseMiddlewareClient(request, response);
   let authenticated = false;
   let userRole = "";
   let roles: string[] = [];
 
-  if (supabase) {
+  if (supabase && shouldRefreshAuthSession(pathname)) {
     const { data } = await supabase.auth.getUser();
     authenticated = Boolean(data.user);
     if (data.user) {
@@ -135,7 +137,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const { pathname } = request.nextUrl;
   const access = resolveRouteAccess(pathname);
 
   // 1. Unauthenticated users trying to access protected paths -> redirect to /login

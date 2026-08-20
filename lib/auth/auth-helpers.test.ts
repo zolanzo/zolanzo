@@ -8,7 +8,11 @@ import {
   slugifyHandle,
 } from "@/lib/auth/identity-helpers";
 import { signUpSchema } from "@/features/authentication/validators/auth";
-import { resolveRouteAccess } from "@/lib/auth/route-policy";
+import {
+  isPublicMarketingPath,
+  resolveRouteAccess,
+  shouldRefreshAuthSession,
+} from "@/lib/auth/route-policy";
 
 describe("organization switching", () => {
   it("allows switch only for active memberships", () => {
@@ -68,5 +72,15 @@ describe("route policy", () => {
     expect(resolveRouteAccess("/app/profile")).toBe("authenticated");
     expect(resolveRouteAccess("/admin")).toBe("admin");
     expect(resolveRouteAccess("/auth/sign-in")).toBe("public");
+  });
+
+  it("skips session refresh only on public marketing pages", () => {
+    expect(isPublicMarketingPath("/")).toBe(true);
+    expect(isPublicMarketingPath("/careers")).toBe(true);
+    expect(isPublicMarketingPath("/login")).toBe(false);
+    expect(shouldRefreshAuthSession("/")).toBe(false);
+    expect(shouldRefreshAuthSession("/login")).toBe(true);
+    expect(shouldRefreshAuthSession("/earner/dashboard")).toBe(true);
+    expect(shouldRefreshAuthSession("/auth/callback")).toBe(true);
   });
 });

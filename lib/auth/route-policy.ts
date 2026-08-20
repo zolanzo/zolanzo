@@ -29,6 +29,7 @@ export type RouteRule = {
 export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: "/lex/auth", access: "super_admin" },
   { prefix: "/lex/staff", access: "staff" },
+  { prefix: "/admin", access: "admin" },
   { prefix: "/developer", access: "developer" },
   { prefix: "/onboarding", access: "onboarding" },
   { prefix: "/dashboard", access: "authenticated" },
@@ -43,6 +44,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: "/support", access: "authenticated" },
   { prefix: "/earner", access: "authenticated" },
   { prefix: "/hirer", access: "authenticated" },
+  { prefix: "/app", access: "authenticated" },
   { prefix: "/api/webhooks", access: "public" },
   { prefix: "/api/v1", access: "public" },
   { prefix: "/api/auth", access: "public" },
@@ -80,6 +82,27 @@ export function isAuthEntryPath(pathname: string): boolean {
     pathname === "/auth/sign-in" ||
     pathname === "/auth/sign-up"
   );
+}
+
+const PUBLIC_MARKETING_PATHS = [
+  "/",
+  "/about",
+  "/careers",
+  "/faq",
+  "/pricing",
+  "/contact",
+] as const;
+
+export function isPublicMarketingPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return PUBLIC_MARKETING_PATHS.some(
+    (path) =>
+      path !== "/" && (pathname === path || pathname.startsWith(`${path}/`)),
+  );
+}
+
+export function shouldRefreshAuthSession(pathname: string): boolean {
+  return !isPublicMarketingPath(pathname);
 }
 
 export const ACTIVE_ORG_COOKIE = "zolanzo_active_org";
