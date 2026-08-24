@@ -2,6 +2,8 @@
  * Branded HTML Email Templates for ZOLANZO
  */
 
+import { APP_CONFIG } from "@/config/app";
+
 export function getEmailOtpTemplate(code: string, recipientName: string): string {
   return `
 <!DOCTYPE html>
@@ -59,7 +61,7 @@ export function getPinResetTemplate(code: string, recipientName: string): string
       <span style="font-family: monospace; font-size: 36px; font-weight: 900; letter-spacing: 0.3em; color: #10b981;">${code}</span>
     </div>
 
-    <p style="color: #6b7280; font-size: 12px;">If you did not request a PIN reset, please contact support immediately.</p>
+    <p style="color: #6b7280; font-size: 12px;">If you did not request a PIN reset, please contact support immediately on WhatsApp at ${APP_CONFIG.supportWhatsApp.display} (<a href="${APP_CONFIG.supportWhatsApp.href}" style="color: #10b981;">wa.me/2347045559401</a>).</p>
   </div>
 </body>
 </html>

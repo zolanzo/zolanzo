@@ -12,6 +12,12 @@ export {
   resendVerificationEmail,
 } from "./auth-service";
 export {
+  requestPhoneOtp,
+  confirmPhoneOtp,
+  isValidPhoneInput,
+  PHONE_OTP_USER_MESSAGES,
+} from "./phone-verification";
+export {
   listDevices,
   listSessions,
   revokeAllSessions,

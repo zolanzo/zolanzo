@@ -72,19 +72,19 @@ export function BrandIcon({
 
   switch (background) {
     case "white":
-      bgClasses = "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm";
+      bgClasses = "border border-border bg-card shadow-sm";
       break;
     case "soft":
-      bgClasses = "bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/50 dark:border-zinc-700/50";
+      bgClasses = "border border-border bg-muted";
       break;
     case "rounded":
-      bgClasses = "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 rounded-2xl";
+      bgClasses = "rounded-2xl border border-border bg-muted";
       break;
     case "circle":
-      bgClasses = "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-700/50 rounded-full";
+      bgClasses = "rounded-full border border-border bg-muted";
       break;
     case "glass":
-      bgClasses = "backdrop-blur-md bg-white/75 dark:bg-zinc-900/75 border border-white/40 dark:border-zinc-700/40 shadow-md";
+      bgClasses = "border border-border bg-elevated/75 shadow-md backdrop-blur-md";
       break;
     case "brand":
       if (brand === "instagram") {
@@ -124,7 +124,7 @@ export function BrandIcon({
       variantClasses = "brightness-90 dark:brightness-110";
       break;
     case "monochrome":
-      variantClasses = "text-zinc-900 dark:text-zinc-100";
+      variantClasses = "text-foreground";
       break;
     case "default":
     default:

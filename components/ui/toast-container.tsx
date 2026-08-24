@@ -19,7 +19,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 space-y-2 max-w-sm w-full pointer-events-none select-none">
+    <div className="fixed inset-x-4 bottom-20 z-50 max-w-sm space-y-2 pointer-events-none select-none sm:inset-x-auto sm:right-6 lg:bottom-6">
       {toasts.map((toast) => {
         const isSuccess = toast.type === "success";
         const isError = toast.type === "error";
@@ -27,31 +27,31 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
         return (
           <div
             key={toast.id}
-            className={`p-4 rounded-2xl border shadow-2xl backdrop-blur-md flex items-start gap-3 pointer-events-auto transition-all animate-fadeIn text-xs ${
+            className={`flex pointer-events-auto items-start gap-3 rounded-2xl border p-4 text-xs shadow-dialog backdrop-blur-md transition-all animate-fadeIn ${
               isSuccess
-                ? "bg-emerald-950/90 border-emerald-500/40 text-white"
+                ? "border-success/40 bg-success/15 text-foreground"
                 : isError
-                ? "bg-red-950/90 border-red-500/40 text-white"
-                : "bg-zinc-900/90 border-zinc-800 text-white"
+                  ? "border-danger/40 bg-danger/15 text-foreground"
+                  : "border-border bg-elevated text-foreground"
             }`}
           >
             <div className="shrink-0 mt-0.5">
               <HugeiconsIcon
                 icon={isSuccess ? CheckmarkCircle01Icon : isError ? AlertCircleIcon : InformationCircleIcon}
                 size={18}
-                className={isSuccess ? "text-emerald-400" : isError ? "text-red-400" : "text-blue-400"}
+                className={isSuccess ? "text-success" : isError ? "text-danger" : "text-info"}
               />
             </div>
 
             <div className="flex-1 space-y-0.5">
               <p className="font-bold">{toast.title}</p>
-              {toast.description && <p className="text-zinc-300 leading-snug">{toast.description}</p>}
+              {toast.description && <p className="leading-snug text-muted-foreground">{toast.description}</p>}
             </div>
 
             <button
               type="button"
               onClick={() => onDismiss(toast.id)}
-              className="text-zinc-400 hover:text-white p-0.5 rounded transition-colors"
+              className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={14} />
             </button>

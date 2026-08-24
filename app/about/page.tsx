@@ -3,12 +3,10 @@ import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-6 space-y-4 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center space-y-4 bg-background p-6 text-center text-foreground">
       <h1 className="text-2xl font-bold">About ZOLANZO</h1>
-      <p className="text-sm text-zinc-400 max-w-sm">
-        Placeholder for About page.
-      </p>
-      <Link href="/" className="text-sm text-emerald-400 hover:underline">
+      <p className="max-w-sm text-sm text-muted-foreground">Placeholder for About page.</p>
+      <Link href="/" className="text-sm font-semibold text-primary hover:underline">
         Back to Home
       </Link>
     </div>

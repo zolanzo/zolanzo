@@ -69,7 +69,9 @@ function payload(
 }
 
 describe("campaign lifecycle", () => {
-  it("allows draft → active and blocks archived → active", () => {
+  it("allows draft → pending_review → active and blocks archived → active", () => {
+    expect(canTransitionCampaign("draft", "pending_review")).toBe(true);
+    expect(canTransitionCampaign("pending_review", "active")).toBe(true);
     expect(canTransitionCampaign("draft", "active")).toBe(true);
     expect(canTransitionCampaign("archived", "active")).toBe(false);
     expect(isEditableCampaignStatus("draft")).toBe(true);
@@ -197,6 +199,25 @@ describe("publishing validation", () => {
     });
     expect(scheduled.ok).toBe(true);
     expect(scheduled.publishTarget).toBe("scheduled");
+  });
+
+  it("rejects zero reward and insufficient fixed budget at publish", () => {
+    const zeroReward = validatePublishCampaign({
+      payload: payload({ rewardPerUnitMinor: 0, targetQuantity: 5 }),
+      templateStatus: "published",
+    });
+    expect(zeroReward.ok).toBe(false);
+
+    const shortBudget = validatePublishCampaign({
+      payload: payload({
+        budgetKind: "fixed",
+        budgetMinor: 100,
+        targetQuantity: 10,
+        rewardPerUnitMinor: 1000,
+      }),
+      templateStatus: "published",
+    });
+    expect(shortBudget.ok).toBe(false);
   });
 
   it("validates timezone-aware schedule", () => {

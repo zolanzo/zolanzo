@@ -87,6 +87,27 @@ function toOpportunity(row: {
   };
 }
 
+export async function getWorkOpportunityByPublicId(
+  publicId: string,
+): Promise<ApiResponse<WorkOpportunity>> {
+  try {
+    const row = await prisma.taskInstance.findFirst({
+      where: { publicId },
+      include: { campaign: true, taskTemplate: true },
+    });
+    if (!row) {
+      throw new AppError("OPPORTUNITY_NOT_FOUND", "Opportunity not found", 404);
+    }
+    return apiSuccess(toOpportunity(row));
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    return apiError(
+      "OPPORTUNITY_LOOKUP_FAILED",
+      error instanceof Error ? error.message : "Could not load opportunity",
+    );
+  }
+}
+
 export async function browseWorkOpportunities(params: {
   input: unknown;
 }): Promise<ApiResponse<MarketplacePage>> {
@@ -102,6 +123,7 @@ export async function browseWorkOpportunities(params: {
         ...(parsed.campaignId ? { campaignId: parsed.campaignId } : {}),
         campaign: {
           status: "active",
+          visibility: { in: ["platform", "public"] },
           ...(parsed.category ? { category: parsed.category } : {}),
           ...(parsed.query
             ? {
@@ -208,7 +230,10 @@ export async function browseWorkOpportunities(params: {
       where: {
         status: "available",
         reserved: false,
-        campaign: { status: "active" },
+        campaign: {
+          status: "active",
+          visibility: { in: ["platform", "public"] },
+        },
       },
     });
 

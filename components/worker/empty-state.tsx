@@ -11,28 +11,23 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export function EmptyState({
-  title,
-  description,
-  actionLabel,
-  onAction,
-}: EmptyStateProps) {
+export function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <div className="w-full bg-[#0A0F12] border border-white/10 rounded-2xl p-8 text-center space-y-3 flex flex-col items-center justify-center">
-      <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-500 flex items-center justify-center">
+    <div className="flex w-full flex-col items-center justify-center space-y-3 rounded-2xl border border-border bg-card p-8 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted text-muted-foreground">
         <HugeiconsIcon icon={InformationCircleIcon} size={24} />
       </div>
 
-      <div className="space-y-1 max-w-xs">
-        <h4 className="text-sm font-bold text-white">{title}</h4>
-        <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
+      <div className="max-w-xs space-y-1">
+        <h4 className="text-sm font-bold text-foreground">{title}</h4>
+        <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
       </div>
 
       {actionLabel && (
         <button
           type="button"
           onClick={onAction}
-          className="mt-2 px-4 h-[38px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all cursor-pointer"
+          className="mt-2 h-[38px] cursor-pointer rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-all hover:bg-primary-hover"
         >
           {actionLabel}
         </button>

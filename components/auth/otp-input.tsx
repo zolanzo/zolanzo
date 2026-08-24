@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface OTPInputProps {
   length?: number;
@@ -20,7 +20,6 @@ export function OTPInput({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    // Auto-focus first input on mount
     inputRefs.current[0]?.focus();
   }, []);
 
@@ -38,12 +37,10 @@ export function OTPInput({
     newOtp[index] = digit;
     setOtp(newOtp);
 
-    // Auto-advance to next box
     if (digit && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Check completion
     const joined = newOtp.join("");
     if (joined.length === length && !newOtp.includes("")) {
       onComplete(joined);
@@ -84,8 +81,7 @@ export function OTPInput({
   };
 
   return (
-    <div className="space-y-6 w-full text-center">
-      {/* 6 Individual Box Inputs */}
+    <div className="w-full space-y-6 text-center">
       <div className="flex items-center justify-center gap-2 sm:gap-3">
         {otp.map((digit, idx) => (
           <input
@@ -101,19 +97,20 @@ export function OTPInput({
             onChange={(e) => handleChange(idx, e.target.value)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
             onPaste={handlePaste}
-            className="w-11 h-13 sm:w-13 sm:h-14 text-center text-xl sm:text-2xl font-black rounded-xl bg-zinc-900 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white focus:outline-none transition-all duration-200"
+            className="h-13 w-11 rounded-xl border border-border bg-input-background text-center text-xl font-black text-foreground transition-all duration-200 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary sm:h-14 sm:w-13 sm:text-2xl"
             aria-label={`Digit ${idx + 1} of verification code`}
           />
         ))}
       </div>
 
-      {/* Countdown & Resend Button */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 pt-2 border-t border-white/5">
+      <div className="flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
         <span>
           {timeLeft > 0 ? (
-            <span>Resend code in <strong className="text-emerald-400 font-mono">{timeLeft}s</strong></span>
+            <span>
+              Resend code in <strong className="font-mono text-primary">{timeLeft}s</strong>
+            </span>
           ) : (
-            <span className="text-zinc-500">Didn&apos;t receive code?</span>
+            <span className="text-muted-foreground">Didn&apos;t receive code?</span>
           )}
         </span>
 
@@ -123,8 +120,8 @@ export function OTPInput({
           onClick={handleResendClick}
           className={`font-semibold transition-colors ${
             timeLeft > 0
-              ? "text-zinc-600 cursor-not-allowed"
-              : "text-[#008744] hover:text-emerald-400 cursor-pointer underline underline-offset-4"
+              ? "cursor-not-allowed text-disabled"
+              : "cursor-pointer text-primary underline underline-offset-4 hover:text-primary-hover"
           }`}
         >
           Resend Code

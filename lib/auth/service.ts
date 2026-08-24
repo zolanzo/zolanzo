@@ -3,7 +3,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { formatStoredPin, verifyStoredPin } from "@/lib/security/hash";
 import { generateOtpCode, hashOtpCode, verifyOtpCode } from "@/lib/otp/generator";
 import { sendEmailOtp, sendPinResetEmail } from "@/lib/email/resend";
-import { sendSmsOtp } from "@/lib/sms/provider";
+import { APP_CONFIG } from "@/config/app";
+import { isBackendUnavailableError } from "@/lib/reliability/backend-unavailable";
 
 export interface SignupInput {
   role?: "worker" | "employer";
@@ -197,10 +198,12 @@ export class AuthService {
     return { success: true };
   }
 
-  static async sendPhoneOtp(userId: string, phone: string) {
-    const otp = generateOtpCode(6);
-    await sendSmsOtp({ to: phone, message: `Your ZOLANZO verification code is ${otp}` });
-    return { success: true, userId, phone };
+  /**
+   * Phone OTP is owned by features/authentication/services/phone-verification.ts
+   * (Sendchamp create/confirm). This method must not silently mark verified.
+   */
+  static async sendPhoneOtp(_userId: string, _phone: string): Promise<never> {
+    throw new Error("Unable to send verification code. Please try again.");
   }
 
   /**
@@ -213,14 +216,22 @@ export class AuthService {
     const dbClient = supabaseAdmin || supabase;
 
     if (dbClient) {
+      try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let { data: profile } = await (dbClient.from("profiles") as any)
+      const profileQuery = await (dbClient.from("profiles") as any)
         .select("*")
         .eq("email", input.email)
         .single();
+      let profile = profileQuery.data;
+      if (profileQuery.error && isBackendUnavailableError(profileQuery.error)) {
+        throw new Error("Authentication service is unreachable. Please try again shortly.");
+      }
 
       if (!profile) {
-        const { data: authData } = await dbClient.auth.admin.listUsers();
+        const { data: authData, error: listError } = await dbClient.auth.admin.listUsers();
+        if (listError && isBackendUnavailableError(listError)) {
+          throw new Error("Authentication service is unreachable. Please try again shortly.");
+        }
         const authUser = authData?.users?.find((u) => u.email?.toLowerCase() === input.email.toLowerCase());
         
         if (authUser) {
@@ -268,7 +279,9 @@ export class AuthService {
       }
 
       if (profile.status && profile.status !== "active") {
-        throw new Error("Your account is currently inactive or suspended. Please contact support.");
+        throw new Error(
+          `Your account is currently inactive or suspended. Please contact support on WhatsApp at ${APP_CONFIG.supportWhatsApp.display}.`,
+        );
       }
 
       if (!profile.email_verified) {
@@ -300,6 +313,12 @@ export class AuthService {
       await this.logAuditEvent(profile.id, "login", ipAddress, userAgent);
 
       return { success: true, profile, redirectUrl };
+      } catch (err) {
+        if (isBackendUnavailableError(err)) {
+          throw new Error("Authentication service is unreachable. Please try again shortly.");
+        }
+        throw err;
+      }
     }
 
     throw new Error("Database service client unavailable.");

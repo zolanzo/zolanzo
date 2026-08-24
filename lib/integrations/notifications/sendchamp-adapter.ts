@@ -14,6 +14,7 @@ import {
   getSendchampSenderId,
   getSendchampWhatsappSender,
   isSendchampLiveMode,
+  normalizeSendchampMsisdn,
   sendchampRequest,
   type SendchampSmsData,
   type SendchampWhatsappData,
@@ -32,9 +33,7 @@ const stub = createStubChannelAdapter({
 });
 
 function normalizePhone(to: string): string {
-  const digits = to.replace(/[^\d+]/g, "");
-  if (digits.startsWith("+")) return digits.slice(1);
-  return digits;
+  return normalizeSendchampMsisdn(to);
 }
 
 function providerRefFrom(

@@ -93,8 +93,7 @@ export const claimPolicyRuleSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
-export const createCampaignSchema = z
-  .object({
+const createCampaignObjectSchema = z.object({
     organizationId: z.string().min(1),
     clientUserId: z.string().min(1),
     taskTemplateId: z.string().min(1),
@@ -145,8 +144,10 @@ export const createCampaignSchema = z
     endAt: z.string().datetime().nullable().optional(),
     recurrenceRule: z.string().max(512).nullable().optional(),
     metadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  })
-  .superRefine((data, ctx) => {
+});
+
+export const createCampaignSchema = createCampaignObjectSchema.superRefine(
+  (data, ctx) => {
     if (data.budgetKind === "fixed" && (data.budgetMinor ?? 0) <= 0) {
       ctx.addIssue({
         code: "custom",
@@ -196,9 +197,10 @@ export const createCampaignSchema = z
         message: "refillBelow must be <= maintainAvailable",
       });
     }
-  });
+  },
+);
 
-export const updateCampaignSchema = createCampaignSchema
+export const updateCampaignSchema = createCampaignObjectSchema
   .omit({
     organizationId: true,
     clientUserId: true,

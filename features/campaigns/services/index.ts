@@ -33,6 +33,8 @@ export {
   resolveCampaignEligibility,
   resumeCampaign,
   submitCampaignForReview,
+  approveCampaignForMarketplace,
+  rejectCampaignReview,
   transitionCampaign,
   updateDraftCampaign,
 } from "./campaign-service";

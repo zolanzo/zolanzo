@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
+import { APP_CONFIG } from "@/config/app";
 import { cn } from "@/utils";
 
 export type AuthLayoutProps = {
@@ -11,7 +13,7 @@ export type AuthLayoutProps = {
 };
 
 /**
- * Centered authentication layout — monochrome mark on light surfaces.
+ * Centered authentication layout.
  */
 export function AuthLayout({
   children,
@@ -28,13 +30,14 @@ export function AuthLayout({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(22,198,198,0.12),_transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_color-mix(in_srgb,var(--primary)_12%,transparent),_transparent_55%)]"
       />
 
       <header className="relative z-10 flex items-center justify-between px-4 py-5 sm:px-6">
         <Link href="/" className="focus-ring rounded-lg" aria-label="ZOLANZO home">
           <BrandLogo asset="logo" width={140} height={36} priority />
         </Link>
+        <ThemeModeControl variant="compact" />
       </header>
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
@@ -55,6 +58,16 @@ export function AuthLayout({
           {children}
         </div>
       </main>
+      <footer className="relative z-10 px-4 py-5 text-center text-xs text-muted-foreground">
+        <a
+          href={APP_CONFIG.supportWhatsApp.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-primary hover:text-primary-hover hover:underline"
+        >
+          WhatsApp Support
+        </a>
+      </footer>
     </div>
   );
 }

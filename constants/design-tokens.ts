@@ -7,18 +7,18 @@ export const COLOR = {
   darkBackground: "#050608",
   darkSurface: "#0B0F14",
   darkCard: "#131922",
-  lightBackground: "#F6F8FB",
-  lightSurface: "#FBFDFF",
+  lightBackground: "#F8FAFC",
+  lightSurface: "#FFFFFF",
   lightCard: "#FFFFFF",
-  navy: "#071B34",
-  primary: "#00B35A",
-  primaryHover: "#00C864",
-  gold: "#D9B15B",
-  success: "#00B35A",
-  warning: "#F59E0B",
-  danger: "#FF5A5F",
+  navy: "#0F172A",
+  primary: "#059669",
+  primaryHover: "#047857",
+  gold: "#D97706",
+  success: "#059669",
+  warning: "#D97706",
+  danger: "#DC2626",
   borderDark: "#242D3D",
-  borderLight: "rgba(0,0,0,0.08)",
+  borderLight: "#E2E8F0",
 } as const;
 
 /** 8-point spacing scale (px) */
@@ -52,11 +52,11 @@ export const RADIUS = {
 } as const;
 
 export const SHADOW = {
-  soft: "0 1px 2px rgba(8,19,32,0.06), 0 1px 3px rgba(8,19,32,0.04)",
-  medium: "0 4px 12px rgba(8,19,32,0.08), 0 2px 4px rgba(8,19,32,0.04)",
-  floating: "0 12px 32px rgba(8,19,32,0.14), 0 4px 8px rgba(8,19,32,0.06)",
-  dialog: "0 24px 48px rgba(8,19,32,0.22), 0 8px 16px rgba(8,19,32,0.1)",
-  hero: "0 32px 64px rgba(8,19,32,0.28), 0 12px 24px rgba(22,198,198,0.08)",
+  soft: "0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02)",
+  medium: "0 4px 16px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03)",
+  floating: "0 12px 32px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04)",
+  dialog: "0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06)",
+  hero: "0 20px 40px rgba(5, 150, 105, 0.15)",
 } as const;
 
 export const TYPE = {

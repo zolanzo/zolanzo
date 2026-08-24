@@ -52,6 +52,7 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: "/login", access: "public" },
   { prefix: "/signup", access: "public" },
   { prefix: "/careers", access: "public" },
+  { prefix: "/faq", access: "public" },
   { prefix: "/forgot-password", access: "public" },
   { prefix: "/forgot-pin", access: "public" },
   { prefix: "/reset-pin", access: "public" },

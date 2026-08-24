@@ -63,11 +63,11 @@ export default function ForgotPinPage() {
 
           {/* Email Address */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="email" className="text-xs font-semibold text-zinc-300">
+            <label htmlFor="email" className="text-xs font-semibold text-foreground">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+              <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                 <HugeiconsIcon icon={Mail01Icon} size={18} />
               </div>
               <input
@@ -77,7 +77,7 @@ export default function ForgotPinPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 focus:border-[#008744] focus:ring-1 focus:ring-[#008744] text-white text-sm focus:outline-none transition-all duration-200"
+                className="h-[48px] w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground transition-all duration-200 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -86,10 +86,10 @@ export default function ForgotPinPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-[52px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-sm transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+            className="primary-action mt-2 flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold disabled:opacity-50"
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
             ) : (
               <>
                 <span>Send Reset Code</span>
@@ -99,11 +99,11 @@ export default function ForgotPinPage() {
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-white/5 text-center text-xs text-zinc-400">
+        <div className="mt-6 border-t border-border pt-4 text-center text-xs text-muted-foreground">
           <span>Remembered your PIN? </span>
           <Link
             href="/login"
-            className="text-[#008744] hover:text-emerald-400 font-bold transition-colors"
+            className="font-bold text-primary transition-colors hover:text-primary-hover"
           >
             Log In
           </Link>

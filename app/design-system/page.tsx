@@ -43,7 +43,7 @@ export default function DesignSystemPage() {
               <h3 className="text-h3 mb-3">Color</h3>
               <ul className="text-small text-muted-foreground space-y-1">
                 <li>
-                  Primary teal —{" "}
+                  Primary —{" "}
                   <span className="font-mono text-foreground">{COLOR.primary}</span>
                 </li>
                 <li>

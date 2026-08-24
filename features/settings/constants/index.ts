@@ -1,5 +1,72 @@
-/**
- * @module features/settings/constants
- * Architecture placeholder — no business logic in Step 3.
- */
-export {};
+export const NIGERIA_STATES = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "FCT",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+] as const;
+
+export const PREFERENCE_PLATFORMS = [
+  { key: "TikTok", label: "TikTok" },
+  { key: "Instagram", label: "Instagram" },
+  { key: "Facebook", label: "Facebook" },
+  { key: "YouTube", label: "YouTube" },
+  { key: "WhatsApp", label: "WhatsApp" },
+  { key: "Telegram", label: "Telegram" },
+  { key: "Threads", label: "Threads" },
+  { key: "X", label: "X" },
+  { key: "LinkedIn", label: "LinkedIn" },
+  { key: "Website", label: "Website" },
+  { key: "GooglePlay", label: "Google Play" },
+] as const;
+
+export const PREFERENCE_CATEGORIES = [
+  { key: "social_platforms", label: "Social Media" },
+  { key: "app_distribution", label: "App Downloads" },
+  { key: "signups_surveys", label: "Surveys & Signups" },
+  { key: "reviews_ratings", label: "Reviews" },
+  { key: "research", label: "Data Entry" },
+  { key: "community_growth", label: "Community" },
+  { key: "testing_qa", label: "Testing" },
+  { key: "ai_data", label: "AI Tasks" },
+] as const;
+
+export const AVAILABILITY_WINDOWS = [
+  "Morning",
+  "Afternoon",
+  "Evening",
+  "Weekends",
+  "Anytime",
+] as const;

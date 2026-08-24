@@ -1,7 +1,12 @@
 /**
  * Sendchamp webhook signature verification.
- * Prefer SENDCHAMP_WEBHOOK_SECRET; falls back to WEBHOOK_SIGNING_SECRET.
- * Accepts platform HMAC (timestamp.body) or raw body HMAC (x-sendchamp-signature).
+ *
+ * Official Sendchamp webhook docs (https://sendchamp.readme.io/reference/webhook)
+ * describe a dashboard URL + JSON body and do not document a signing scheme.
+ * Unsigned callbacks are rejected. When SENDCHAMP_WEBHOOK_SECRET (or
+ * WEBHOOK_SIGNING_SECRET) is set, Zolanzo verifies platform HMAC
+ * (`x-webhook-timestamp` + signature) or raw-body HMAC (`x-sendchamp-signature`).
+ * OTP confirmation does not use this webhook.
  */
 
 import { createHmac, timingSafeEqual as nodeTimingSafeEqual } from "node:crypto";

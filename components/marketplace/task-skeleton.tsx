@@ -8,17 +8,17 @@ export function TaskSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="h-[260px] rounded-2xl bg-zinc-900/80 border border-zinc-800 p-5 space-y-4"
+          className="h-[260px] rounded-2xl bg-card border border-border p-5 space-y-4"
         >
           <div className="flex justify-between">
-            <div className="h-5 bg-zinc-800 rounded-full w-24" />
-            <div className="h-8 bg-zinc-800 rounded-xl w-8" />
+            <div className="h-5 w-24 rounded-full bg-muted" />
+            <div className="h-8 w-8 rounded-xl bg-muted" />
           </div>
-          <div className="h-6 bg-zinc-800 rounded-lg w-3/4" />
-          <div className="h-10 bg-zinc-800/60 rounded-lg w-full" />
+          <div className="h-6 w-3/4 rounded-lg bg-muted" />
+          <div className="h-10 w-full rounded-lg bg-muted/60" />
           <div className="flex justify-between items-center pt-4">
-            <div className="h-8 bg-zinc-800 rounded-lg w-24" />
-            <div className="h-9 bg-zinc-800 rounded-xl w-24" />
+            <div className="h-8 w-24 rounded-lg bg-muted" />
+            <div className="h-9 w-24 rounded-xl bg-muted" />
           </div>
         </div>
       ))}

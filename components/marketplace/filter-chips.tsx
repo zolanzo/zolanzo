@@ -52,8 +52,8 @@ export function FilterChips({ selectedCategory, onSelect }: FilterChipsProps) {
             onClick={() => onSelect(cat)}
             className={`h-[38px] px-4 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 border ${
               isSelected
-                ? "bg-[#008744]/20 border-[#008744] text-white ring-1 ring-[#008744]/40"
-                : "bg-[#0D1218] border-white/[0.08] text-zinc-400 hover:border-emerald-500/40 hover:text-white"
+                ? "border-primary bg-primary/20 text-foreground ring-1 ring-primary/40"
+                : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
             }`}
           >
             {cat}

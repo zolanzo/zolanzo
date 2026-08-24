@@ -21,48 +21,46 @@ interface TaskPreviewCardProps {
 
 export function TaskPreviewCard({ task, onApply }: TaskPreviewCardProps) {
   return (
-    <div className="bg-[#0A0F12] rounded-2xl border border-white/10 p-4 sm:p-5 hover:border-zinc-700 hover:-translate-y-[2px] transition-all duration-200 flex flex-col justify-between space-y-4 shadow-sm">
+    <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-border bg-card p-4 shadow-soft transition-all duration-200 hover:-translate-y-[2px] hover:border-primary/40 sm:p-5">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             {task.badge && (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+              <span className="rounded-full border border-primary/20 bg-primary-subtle px-2 py-0.5 text-[10px] font-bold text-primary">
                 {task.badge}
               </span>
             )}
-            <span className="px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 text-[10px] font-semibold">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
               {task.category}
             </span>
           </div>
-          <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+          <span className="flex items-center gap-1 text-[11px] font-semibold text-primary">
             <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} /> Verified
           </span>
         </div>
 
-        <h4 className="text-sm font-bold text-white leading-snug">{task.title}</h4>
+        <h4 className="text-sm font-bold leading-snug text-foreground">{task.title}</h4>
 
-        <div className="flex items-center justify-between text-xs text-zinc-400 pt-0.5">
+        <div className="flex items-center justify-between pt-0.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <HugeiconsIcon icon={Clock01Icon} size={14} /> {task.estimatedTime}
           </span>
           {task.activeWorkers && (
-            <span className="text-emerald-400 font-semibold text-[11px]">
-              {task.activeWorkers} Workers Active
-            </span>
+            <span className="text-[11px] font-semibold text-primary">{task.activeWorkers} Workers Active</span>
           )}
         </div>
       </div>
 
-      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+      <div className="flex items-center justify-between border-t border-border pt-3">
         <div>
-          <span className="text-[10px] text-zinc-500 font-medium block uppercase tracking-wider">Reward</span>
-          <span className="text-lg font-black text-[#008744]">{task.reward}</span>
+          <span className="block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Reward</span>
+          <span className="text-lg font-black text-primary">{task.reward}</span>
         </div>
 
         <button
           type="button"
           onClick={() => onApply?.(task)}
-          className="h-[36px] px-3.5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+          className="flex h-[36px] cursor-pointer items-center gap-1 rounded-xl bg-primary px-3.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover"
         >
           <span>Apply</span>
           <HugeiconsIcon icon={ArrowRight01Icon} size={14} />

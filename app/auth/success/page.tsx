@@ -52,7 +52,7 @@ function AuthSuccessContent() {
 export default function AuthSuccessPage() {
   return (
     <AuthLayout>
-      <Suspense fallback={<div className="text-white text-sm">Loading success state...</div>}>
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading success state...</div>}>
         <AuthSuccessContent />
       </Suspense>
     </AuthLayout>

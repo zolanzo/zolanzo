@@ -96,14 +96,14 @@ export default function OnboardingPage() {
         
         {/* Progress Indicator (3 Steps) */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-semibold text-zinc-400">
-            <span className="text-emerald-400 uppercase tracking-wider">Step {step} of 3</span>
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+            <span className="uppercase tracking-wider text-primary">Step {step} of 3</span>
             <span>{Math.round((step / 3) * 100)}% Complete</span>
           </div>
 
-          <div className="w-full h-1.5 rounded-full bg-zinc-900 overflow-hidden border border-white/5">
+          <div className="h-1.5 w-full overflow-hidden rounded-full border border-border bg-muted">
             <div
-              className="h-full bg-gradient-to-r from-[#008744] to-emerald-400 rounded-full transition-all duration-300 ease-in-out"
+              className="h-full rounded-full bg-primary transition-all duration-300 ease-in-out"
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
@@ -115,15 +115,15 @@ export default function OnboardingPage() {
           {/* STEP 1: WELCOME */}
           {step === 1 && (
             <div className="text-center space-y-6 py-2">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-[#008744] mx-auto flex items-center justify-center shadow-lg shadow-emerald-950/40">
-                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={36} className="text-emerald-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary-subtle text-primary shadow-soft">
+                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={36} className="text-primary" />
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   Welcome to ZOLANZO
                 </h1>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-[380px] mx-auto">
+                <p className="mx-auto max-w-[380px] text-xs leading-relaxed text-muted-foreground sm:text-sm">
                   Let&apos;s get everything ready in just a minute.
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full h-[52px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-sm transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer"
+                  className="primary-action flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold"
                 >
                   <span>Continue</span>
                   <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
@@ -140,7 +140,7 @@ export default function OnboardingPage() {
 
                 <Link
                   href="/"
-                  className="w-full h-[48px] rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-300 font-semibold text-xs transition-all duration-200 flex items-center justify-center gap-2"
+                  className="secondary-action flex h-[48px] w-full items-center justify-center gap-2 rounded-xl text-xs font-semibold"
                 >
                   <span>Back Home</span>
                 </Link>
@@ -152,8 +152,8 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-4 py-1 text-left">
               <div className="text-center space-y-1 mb-4">
-                <h2 className="text-2xl font-bold text-white tracking-tight">Complete Profile</h2>
-                <p className="text-xs text-zinc-400">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">Complete Profile</h2>
+                <p className="text-xs text-muted-foreground">
                   {role === "worker" ? "Set your location & language preferences for Earn opportunities." : "Tell us about your organization for Hire campaigns."}
                 </p>
               </div>
@@ -161,15 +161,15 @@ export default function OnboardingPage() {
               {role === "worker" ? (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-zinc-300">Country</label>
+                    <label className="text-xs font-semibold text-foreground">Country</label>
                     <div className="relative">
-                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+                      <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                         <HugeiconsIcon icon={Globe02Icon} size={18} />
                       </div>
                       <select
                         value={country}
                         onChange={(e) => setCountry(e.target.value)}
-                        className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-sm text-foreground focus:border-primary focus:outline-none"
                       >
                         <option value="Nigeria">Nigeria 🇳🇬</option>
                         <option value="Ghana">Ghana 🇬🇭</option>
@@ -181,33 +181,33 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">State / Province</label>
+                      <label className="text-xs font-semibold text-foreground">State / Province</label>
                       <input
                         type="text"
                         value={stateProv}
                         onChange={(e) => setStateProv(e.target.value)}
                         placeholder="e.g. Lagos"
-                        className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">City</label>
+                      <label className="text-xs font-semibold text-foreground">City</label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="e.g. Ikeja"
-                        className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-zinc-300">Preferred Language</label>
+                    <label className="text-xs font-semibold text-foreground">Preferred Language</label>
                     <select
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                      className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground focus:border-primary focus:outline-none"
                     >
                       <option value="English">English</option>
                       <option value="French">French</option>
@@ -219,11 +219,11 @@ export default function OnboardingPage() {
                 <>
                   <div className="space-y-1.5">
                     <div className="flex justify-between">
-                      <label className="text-xs font-semibold text-zinc-300">Company Name</label>
-                      <span className="text-[10px] text-zinc-500 uppercase">Optional</span>
+                      <label className="text-xs font-semibold text-foreground">Company Name</label>
+                      <span className="text-[10px] uppercase text-muted-foreground">Optional</span>
                     </div>
                     <div className="relative">
-                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+                      <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                         <HugeiconsIcon icon={Building01Icon} size={18} />
                       </div>
                       <input
@@ -231,17 +231,17 @@ export default function OnboardingPage() {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="e.g. Stankings Technologies"
-                        className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-sm text-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-zinc-300">Industry</label>
+                    <label className="text-xs font-semibold text-foreground">Industry</label>
                     <select
                       value={industry}
                       onChange={(e) => setIndustry(e.target.value)}
-                      className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                      className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground focus:border-primary focus:outline-none"
                     >
                       <option value="Technology">Technology & Software</option>
                       <option value="AI & Data">AI Data & Machine Learning</option>
@@ -253,32 +253,32 @@ export default function OnboardingPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">Country</label>
+                      <label className="text-xs font-semibold text-foreground">Country</label>
                       <input
                         type="text"
                         value={country}
                         onChange={(e) => setCountry(e.target.value)}
-                        className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">City</label>
+                      <label className="text-xs font-semibold text-foreground">City</label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full h-[48px] px-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between">
-                      <label className="text-xs font-semibold text-zinc-300">Company Website</label>
-                      <span className="text-[10px] text-zinc-500 uppercase">Optional</span>
+                      <label className="text-xs font-semibold text-foreground">Company Website</label>
+                      <span className="text-[10px] uppercase text-muted-foreground">Optional</span>
                     </div>
                     <div className="relative">
-                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+                      <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                         <HugeiconsIcon icon={Location01Icon} size={18} />
                       </div>
                       <input
@@ -286,7 +286,7 @@ export default function OnboardingPage() {
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="https://example.com"
-                        className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-zinc-900/90 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#008744]"
+                        className="h-[48px] w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-sm text-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
@@ -298,7 +298,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     onClick={handlePrevStep}
-                    className="px-3.5 h-[48px] rounded-xl border border-zinc-800 text-zinc-400 hover:text-white text-xs font-semibold flex items-center gap-1.5"
+                    className="flex h-[48px] items-center gap-1.5 rounded-xl border border-border px-3.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={16} /> Back
                   </button>
@@ -306,7 +306,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     onClick={handleCompleteLater}
-                    className="px-3.5 h-[48px] rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 text-zinc-400 hover:text-white text-xs font-semibold"
+                    className="h-[48px] rounded-xl border border-border bg-muted px-3.5 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
                   >
                     Complete Later
                   </button>
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="px-6 h-[48px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+                  className="primary-action flex h-[48px] items-center gap-1.5 rounded-xl px-6 text-xs font-bold"
                 >
                   <span>Continue</span>
                   <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
@@ -327,15 +327,15 @@ export default function OnboardingPage() {
           {/* STEP 3: FINISH */}
           {step === 3 && (
             <div className="text-center space-y-6 py-2">
-              <div className="w-18 h-18 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-950/40">
-                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={40} className="text-emerald-400 animate-pulse" />
+              <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-full border border-primary/20 bg-primary-subtle text-primary shadow-soft">
+                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={40} className="animate-pulse text-primary" />
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   You&apos;re all set.
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-[360px] mx-auto">
+                <p className="mx-auto max-w-[360px] text-xs leading-relaxed text-muted-foreground sm:text-sm">
                   {role === "worker"
                     ? "Your Earn profile is ready. Start exploring verified tasks and generating income."
                     : "Your Hire workspace is ready. Launch campaigns and recruit top digital talent across Africa."}
@@ -347,10 +347,10 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleFinish}
                   disabled={loading}
-                  className="w-full h-[52px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-sm transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="primary-action flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold disabled:opacity-50"
                 >
                   {loading ? (
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                   ) : (
                     <>
                       <span>Go to Dashboard</span>

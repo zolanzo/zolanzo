@@ -14,5 +14,6 @@ export {
 export {
   browseWorkOpportunities,
   getMarketplaceAnalytics,
+  getWorkOpportunityByPublicId,
 } from "./marketplace-service";
 export { opportunityCategoryLabel } from "./opportunity-labels";

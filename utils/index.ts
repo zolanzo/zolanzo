@@ -1,9 +1,11 @@
+import { twMerge } from "tailwind-merge";
+
 /**
- * Lightweight className merger for Tailwind utilities.
- * No external dependency — keeps the foundation lean.
+ * ClassName merger that keeps the last conflicting Tailwind utility.
+ * Callers pass later theme/layout classes to override defaults.
  */
 export function cn(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(" ");
+  return twMerge(parts.filter(Boolean).join(" "));
 }
 
 /**

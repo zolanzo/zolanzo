@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local", override: true });
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -18,7 +19,14 @@ async function inspectDbRoles() {
   console.log("DATABASE PROFILE & AUTH USER AUDIT");
   console.log("==================================================\n");
 
-  const emails = ["ops@zolanzo.com", "hiretest@zolanzo.com", "usertest@zolanzo.com"];
+  const emails = [
+    "testadmin@zolanzo.com",
+    "testuser@zolanzo.com",
+    "hirertest@zolanzo.com",
+    "ops@zolanzo.com",
+    "hiretest@zolanzo.com",
+    "usertest@zolanzo.com",
+  ];
 
   for (const email of emails) {
     const { data: profile, error } = await admin

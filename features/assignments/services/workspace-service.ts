@@ -43,6 +43,19 @@ async function loadAssignmentOrThrow(publicId: string) {
   return assignment;
 }
 
+function assertAssignmentActor(
+  assignment: { workerUserId: string },
+  actorUserId: string,
+): void {
+  if (assignment.workerUserId !== actorUserId) {
+    throw new AppError(
+      "FORBIDDEN",
+      "Assignment belongs to another worker",
+      403,
+    );
+  }
+}
+
 async function refreshProgress(assignmentId: string): Promise<void> {
   const assignment = await assignmentRepository.findById(assignmentId);
   if (!assignment) return;
@@ -155,6 +168,7 @@ export async function startAssignment(params: {
   try {
     const parsed = startAssignmentSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     assertAssignmentTransition(assignment.status, "started");
 
     const updated = await assignmentRepository.updateStatus({
@@ -185,6 +199,7 @@ export async function pauseAssignment(params: {
   try {
     const parsed = pauseAssignmentSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     assertAssignmentTransition(assignment.status, "paused");
 
     const updated = await assignmentRepository.updateStatus({
@@ -214,6 +229,7 @@ export async function resumeAssignment(params: {
   try {
     const parsed = resumeAssignmentSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     assertAssignmentTransition(assignment.status, "in_progress");
 
     const updated = await assignmentRepository.updateStatus({
@@ -243,6 +259,7 @@ export async function transitionChecklistStep(params: {
   try {
     const parsed = transitionChecklistSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     const step = await assignmentRepository.findChecklistStep(
       parsed.assignmentStepId,
     );
@@ -362,6 +379,7 @@ export async function markReadyForSubmission(params: {
   try {
     const parsed = markReadyForSubmissionSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     const checklist = await assignmentRepository.listChecklist(assignment.id);
     const progress = calculateAssignmentProgress({
       steps: checklist.map((step) => ({
@@ -410,6 +428,7 @@ export async function addAssignmentNote(params: {
   try {
     const parsed = addAssignmentNoteSchema.parse(params.input);
     const assignment = await loadAssignmentOrThrow(parsed.assignmentPublicId);
+    assertAssignmentActor(assignment, params.actorUserId);
     const note = await assignmentRepository.createNote({
       assignmentId: assignment.id,
       authorUserId: params.actorUserId,

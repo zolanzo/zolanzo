@@ -4,7 +4,7 @@
  */
 
 const SENSITIVE_KEY =
-  /^(password|passwd|secret|token|authorization|api[_-]?key|private[_-]?key|csrf|cookie|set-cookie|pan|card[_-]?number|cvv|pin|otp|rawBody|webhookBody|database_url|direct_url|service_role)$/i;
+  /^(password|passwd|secret|token|authorization|api[_-]?key|private[_-]?key|csrf|cookie|set-cookie|pan|card[_-]?number|cvv|pin|otp|rawBody|webhookBody|database_url|direct_url|service_role|verification_reference|verification_code|business_uid)$/i;
 
 const SENSITIVE_SUBSTRING =
   /(password|secret|token|apikey|api_key|authorization|private_key|csrf|bearer)/i;

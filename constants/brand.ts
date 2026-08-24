@@ -1,7 +1,9 @@
 /**
  * ZOLANZO brand identity constants.
- * Single source of truth for logo and icon assets.
+ * Color values follow the live semantic tokens in constants/design-tokens.ts.
  */
+
+import { COLOR } from "@/constants/design-tokens";
 
 export const BRAND = {
   name: "ZOLANZO",
@@ -12,17 +14,18 @@ export const BRAND = {
 } as const;
 
 export const BRAND_COLORS = {
-  primaryNavy: "#071B34",
-  primaryTeal: "#16C6C6",
-  darkTeal: "#0FA5A5",
-  accentGold: "#F6B81A",
-  background: "#F8FAFC",
-  darkBackground: "#081320",
-  darkSurface: "#0F1E33",
-  darkCard: "#152540",
-  success: "#22C55E",
-  warning: "#F59E0B",
-  danger: "#EF4444",
+  primaryNavy: COLOR.navy,
+  primary: COLOR.primary,
+  primaryTeal: COLOR.primary,
+  darkTeal: COLOR.primaryHover,
+  accentGold: COLOR.gold,
+  background: COLOR.lightBackground,
+  darkBackground: COLOR.darkBackground,
+  darkSurface: COLOR.darkSurface,
+  darkCard: COLOR.darkCard,
+  success: COLOR.success,
+  warning: COLOR.warning,
+  danger: COLOR.danger,
 } as const;
 
 export const BRAND_ASSETS = {

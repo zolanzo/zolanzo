@@ -22,7 +22,7 @@ export function SegmentedControl<T extends string = string>({
   className = "",
 }: SegmentedControlProps<T>) {
   return (
-    <div className={`flex p-1 rounded-xl bg-zinc-900 border border-zinc-800 space-x-1 ${className}`}>
+    <div className={`flex space-x-1 rounded-xl border border-border bg-muted p-1 ${className}`}>
       {options.map((opt) => {
         const isSelected = value === opt.value;
         return (
@@ -30,17 +30,15 @@ export function SegmentedControl<T extends string = string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`flex-1 h-[38px] px-3 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex h-[38px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all duration-200 ${
               isSelected
-                ? "bg-[#008744]/20 border border-[#008744]/40 text-white shadow-sm"
-                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                ? "border border-primary/40 bg-primary-subtle text-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-hover hover:text-foreground"
             }`}
           >
             <span>{opt.label}</span>
             {opt.badge && (
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px]">
-                {opt.badge}
-              </span>
+              <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[9px] text-primary">{opt.badge}</span>
             )}
           </button>
         );

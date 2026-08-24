@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Icons, CategoryIconsRegistry } from "@/lib/icon-registry";
 import { ICON_SIZES, ICON_STROKE_WIDTH } from "@/lib/icons";
 import { BrandType, BrandVariant, BrandBackground } from "@/components/ui/brand-icons";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
 
 const BRANDS: BrandType[] = [
   "instagram",
@@ -25,20 +26,17 @@ const BRAND_BACKGROUNDS: BrandBackground[] = ["none", "white", "soft", "rounded"
 const BRAND_SIZES = [24, 32, 40, 48, 56, 64];
 
 export default function IconGalleryPage() {
-  const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSize, setSelectedSize] = useState<number>(48);
   const [selectedVariant, setSelectedVariant] = useState<BrandVariant>("default");
   const [selectedBackground, setSelectedBackground] = useState<BrandBackground>("soft");
   const [showTouchTargets, setShowTouchTargets] = useState(false);
 
-  const toggleTheme = () => setIsDark((prev) => !prev);
-
   const filterMatch = (text: string) =>
     searchQuery === "" || text.toLowerCase().includes(searchQuery.toLowerCase());
 
   return (
-    <div className={isDark ? "dark bg-zinc-950 text-zinc-100 min-h-screen" : "bg-zinc-50 text-zinc-900 min-h-screen"}>
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-colors duration-300">
         
         {/* Header Bar */}
@@ -74,13 +72,7 @@ export default function IconGalleryPage() {
               {showTouchTargets ? "Touch Targets: ON (44px)" : "Show Touch Targets"}
             </button>
 
-            <button
-              onClick={toggleTheme}
-              className="px-4 py-2.5 rounded-xl text-xs font-medium bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 shadow-sm hover:border-emerald-500 transition-all flex items-center gap-2"
-            >
-              {isDark ? <Icons.sparkles size={16} /> : <Icons.clock size={16} />}
-              {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            </button>
+            <ThemeModeControl variant="compact" />
           </div>
         </header>
 

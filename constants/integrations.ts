@@ -124,6 +124,7 @@ export const INTEGRATION_CATALOG: readonly IntegrationDefinition[] = [
     isDefault: true,
     envKeys: [
       "SENDCHAMP_API_KEY",
+      "SENDCHAMP_API_BASE_URL",
       "SENDCHAMP_SENDER_ID",
       "SENDCHAMP_WHATSAPP_SENDER",
       "SENDCHAMP_WEBHOOK_SECRET",

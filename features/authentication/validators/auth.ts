@@ -42,6 +42,7 @@ export const updatePublicProfileSchema = z.object({
 export const updatePrivateProfileSchema = z.object({
   legalName: z.string().trim().max(120).optional().nullable(),
   marketingOptIn: z.boolean().optional(),
+  addressJson: z.unknown().optional(),
 });
 
 export const inviteMemberSchema = z.object({

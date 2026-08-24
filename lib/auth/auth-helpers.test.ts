@@ -77,6 +77,7 @@ describe("route policy", () => {
   it("skips session refresh only on public marketing pages", () => {
     expect(isPublicMarketingPath("/")).toBe(true);
     expect(isPublicMarketingPath("/careers")).toBe(true);
+    expect(isPublicMarketingPath("/faq")).toBe(true);
     expect(isPublicMarketingPath("/login")).toBe(false);
     expect(shouldRefreshAuthSession("/")).toBe(false);
     expect(shouldRefreshAuthSession("/login")).toBe(true);

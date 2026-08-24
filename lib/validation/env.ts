@@ -71,6 +71,7 @@ export const envSchema = z.object({
   STANKINGS_PASSPORT_URL: optionalUrl,
   STANKINGS_PASSPORT_KEY: optionalNonEmpty,
   SENDCHAMP_API_KEY: optionalNonEmpty,
+  SENDCHAMP_API_BASE_URL: optionalUrl,
   SENDCHAMP_SENDER_ID: optionalNonEmpty,
   SENDCHAMP_WHATSAPP_SENDER: optionalNonEmpty,
   SENDCHAMP_WEBHOOK_SECRET: optionalNonEmpty,

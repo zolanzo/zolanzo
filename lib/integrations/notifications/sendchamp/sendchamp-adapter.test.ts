@@ -44,7 +44,9 @@ describe("sendchamp templates", () => {
         otpCode: "482913",
       },
     });
-    expect(rendered.bodyText).toContain("482913");
+    expect(rendered.bodyText).toBe(
+      "ZOLANZO: Your verification code is 482913. It expires in 20 minutes. Do not share this code with anyone.",
+    );
   });
 
   it("renders payment SMS", () => {
@@ -204,6 +206,31 @@ describe("sendchamp deliver", () => {
     });
     expect(result.status).toBe("delivered");
     expect(result.providerRef).toBe("sms_ref_1");
+  });
+
+  it("normalizes Nigerian 080 numbers on SMS send", async () => {
+    process.env.SENDCHAMP_API_KEY = "sc_test";
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { to?: string[] };
+      expect(body.to).toEqual(["2348012345678"]);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          status: 200,
+          data: { reference: "sms_ref_ng", status: "success" },
+        }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await sendchampNotificationAdapter.deliver({
+      channel: "sms",
+      to: "08012345678",
+      bodyText: "Hello",
+      idempotencyKey: "idem_sms_ng",
+    });
+    expect(result.status).toBe("delivered");
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("sends WhatsApp via API when live", async () => {

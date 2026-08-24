@@ -1,9 +1,16 @@
 /**
  * Sendchamp HTTP client — adapter-only. Domain must never import this.
- * Docs: https://sendchamp.readme.io / https://docs.sendchamp.com
+ * Docs: https://sendchamp.readme.io/reference/introduction
  */
 
 export const SENDCHAMP_API_BASE = "https://api.sendchamp.com/api/v1";
+
+export { normalizeSendchampMsisdn } from "@/lib/integrations/notifications/sendchamp/msisdn";
+
+export function getSendchampApiBaseUrl(): string {
+  const fromEnv = process.env.SENDCHAMP_API_BASE_URL?.trim().replace(/\/$/, "");
+  return fromEnv && fromEnv.length > 0 ? fromEnv : SENDCHAMP_API_BASE;
+}
 
 export type SendchampApiResult<T> =
   | { ok: true; data: T; status: number }
@@ -71,7 +78,8 @@ export async function sendchampRequest<T>(params: {
   }
 
   const fetchFn = params.fetchImpl ?? fetch;
-  const url = `${SENDCHAMP_API_BASE}${params.path.startsWith("/") ? params.path : `/${params.path}`}`;
+  const base = getSendchampApiBaseUrl();
+  const url = `${base}${params.path.startsWith("/") ? params.path : `/${params.path}`}`;
   const timeoutMs = params.timeoutMs ?? 12_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

@@ -6,7 +6,6 @@ type ThemeLogoProps = {
   height?: number;
   className?: string;
   priority?: boolean;
-  forceDark?: boolean;
 };
 
 export function ThemeLogo({
@@ -14,25 +13,11 @@ export function ThemeLogo({
   height = 40,
   className,
   priority = false,
-  forceDark = false,
 }: ThemeLogoProps) {
-  const imageClassName = cn("h-auto w-auto object-contain", className);
-
-  if (forceDark) {
-    return (
-      <Image
-        src="/brand/dark-theme-logo.webp"
-        alt="ZOLANZO Logo"
-        width={width}
-        height={height}
-        className={imageClassName}
-        priority={priority}
-      />
-    );
-  }
+  const imageClassName = cn("w-auto object-contain", className);
 
   return (
-    <>
+    <span className="relative inline-flex items-center">
       <Image
         src="/brand/light-theme-logo.webp"
         alt="ZOLANZO Logo"
@@ -49,6 +34,6 @@ export function ThemeLogo({
         className={cn(imageClassName, "hidden dark:block")}
         priority={priority}
       />
-    </>
+    </span>
   );
 }

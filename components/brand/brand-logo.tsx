@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
+import { ThemeLogo } from "@/components/brand/theme-logo";
+import { cn } from "@/utils";
 
 export function BrandLogo({
   asset,
@@ -16,18 +17,24 @@ export function BrandLogo({
   className?: string;
   priority?: boolean;
 }) {
-  const logoSrc = asset === "icon" ? "/brand/icon.webp" : "/brand/light-theme-logo.webp";
+  if (asset === "icon") {
+    return (
+      <span className={cn("relative inline-flex items-center", className)}>
+        <Image
+          src="/brand/icon.webp"
+          alt="ZOLANZO Brand Logo"
+          width={width}
+          height={height}
+          priority={priority}
+          className="h-auto w-auto object-contain"
+        />
+      </span>
+    );
+  }
 
   return (
-    <div className={`relative inline-flex items-center ${className}`}>
-      <Image
-        src={logoSrc}
-        alt="ZOLANZO Brand Logo"
-        width={width}
-        height={height}
-        priority={priority}
-        className="h-auto w-auto max-h-9 object-contain"
-      />
-    </div>
+    <span className={cn("relative inline-flex items-center", className)}>
+      <ThemeLogo width={width} height={height} priority={priority} />
+    </span>
   );
 }

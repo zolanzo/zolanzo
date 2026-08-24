@@ -26,27 +26,27 @@ export function WelcomeModal({ role = "worker" }: WelcomeModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-[400px] bg-[#0A0F12] border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-center text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-[400px] max-h-[min(90dvh,40rem)] overflow-y-auto rounded-3xl border border-border bg-elevated p-6 text-center text-foreground shadow-dialog">
         <button
           type="button"
           onClick={handleDismiss}
-          className="absolute right-4 top-4 text-zinc-400 hover:text-white p-1 rounded-lg transition-colors"
+          className="absolute right-3 top-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
         >
           <HugeiconsIcon icon={Cancel01Icon} size={20} />
         </button>
 
-        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center mb-4">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary-subtle text-primary">
           <HugeiconsIcon icon={CheckmarkCircle01Icon} size={36} />
         </div>
 
-        <h3 className="text-2xl font-bold tracking-tight mb-2">
+        <h3 className="mb-2 text-2xl font-bold tracking-tight">
           {role === "worker"
             ? "Welcome! You're ready to start earning."
             : "Welcome! You're ready to launch your first campaign."}
         </h3>
 
-        <p className="text-xs text-zinc-400 leading-relaxed mb-6">
+        <p className="mb-6 text-xs leading-relaxed text-muted-foreground">
           {role === "worker"
             ? "Explore available tasks, complete assignments, and receive instant payouts to your bank account."
             : "Post jobs, define budgets in escrow, and recruit verified digital talent across Africa."}
@@ -55,7 +55,7 @@ export function WelcomeModal({ role = "worker" }: WelcomeModalProps) {
         <button
           type="button"
           onClick={handleDismiss}
-          className="w-full h-[48px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+          className="primary-action flex h-[48px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-xs font-bold"
         >
           <span>Get Started</span>
           <HugeiconsIcon icon={ArrowRight01Icon} size={16} />

@@ -13,6 +13,9 @@ import {
 import { validateDraftCampaign, validatePublishCampaign } from "@/features/campaigns/services/publishing";
 import { mergeEligibilityRules } from "@/features/campaigns/services/eligibility";
 import { calculateCampaignBudget } from "@/features/campaigns/services/budget-engine";
+import { canPublishAfterModeration } from "@/features/campaigns/services/moderation";
+import { generateTaskInstances } from "@/features/tasks/services/task-instance-service";
+import { writeAuditLog } from "@/lib/audit/write";
 import {
   createCampaignSchema,
   updateCampaignSchema,
@@ -251,6 +254,14 @@ export async function publishCampaign(params: {
       throw new AppError("TEMPLATE_NOT_FOUND", "Task template not found", 404);
     }
 
+    if (!canPublishAfterModeration(existing.status)) {
+      throw new AppError(
+        "MODERATION_REQUIRED",
+        "Campaign must be pending_review before it can become available",
+        409,
+      );
+    }
+
     const payload = recordToPayload(existing);
     const check = validatePublishCampaign({
       payload,
@@ -285,6 +296,100 @@ export async function publishCampaign(params: {
     return apiError(
       "PUBLISH_CAMPAIGN_FAILED",
       error instanceof Error ? error.message : "Could not publish campaign",
+    );
+  }
+}
+
+export async function approveCampaignForMarketplace(params: {
+  id: string;
+  updatedByUserId: string;
+}): Promise<
+  ApiResponse<{
+    campaign: CampaignRecord;
+    inventoryCreated: number;
+  }>
+> {
+  const published = await publishCampaign({
+    id: params.id,
+    updatedByUserId: params.updatedByUserId,
+  });
+  if (!published.ok) return published;
+
+  let inventoryCreated = 0;
+  if (published.data.status === "active") {
+    const generated = await generateTaskInstances({
+      input: {
+        campaignId: published.data.id,
+        releaseToAvailable: true,
+      },
+    });
+    if (generated.ok) {
+      inventoryCreated = generated.data.created;
+    }
+  }
+
+  await writeAuditLog({
+    actorUserId: params.updatedByUserId,
+    actorType: "admin",
+    organizationId: published.data.organizationId,
+    action: "campaign.approve",
+    resourceType: "campaign",
+    resourceId: published.data.id,
+    metadata: {
+      publicId: published.data.publicId,
+      status: published.data.status,
+      inventoryCreated,
+    },
+  });
+
+  return apiSuccess({
+    campaign: published.data,
+    inventoryCreated,
+  });
+}
+
+export async function rejectCampaignReview(params: {
+  id: string;
+  updatedByUserId: string;
+  reason?: string | null;
+}): Promise<ApiResponse<CampaignRecord>> {
+  try {
+    const existing = await campaignRepository.findById(params.id);
+    if (!existing) {
+      throw new AppError("NOT_FOUND", "Campaign not found", 404);
+    }
+    if (existing.status !== "pending_review") {
+      throw new AppError(
+        "INVALID_TRANSITION",
+        `Cannot reject campaign in status ${existing.status}`,
+        409,
+      );
+    }
+    const record = await transitionCampaign({
+      id: params.id,
+      to: "draft",
+      updatedByUserId: params.updatedByUserId,
+    });
+    if (!record.ok) return record;
+
+    await writeAuditLog({
+      actorUserId: params.updatedByUserId,
+      actorType: "admin",
+      organizationId: record.data.organizationId,
+      action: "campaign.reject",
+      resourceType: "campaign",
+      resourceId: record.data.id,
+      metadata: {
+        publicId: record.data.publicId,
+        reason: params.reason ?? null,
+      },
+    });
+    return record;
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    return apiError(
+      "REJECT_CAMPAIGN_FAILED",
+      error instanceof Error ? error.message : "Could not reject campaign",
     );
   }
 }

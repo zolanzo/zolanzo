@@ -62,10 +62,10 @@ export function SocialIcon({
       alt={`${platform} official icon`}
       width={size}
       height={size}
-      className={`object-contain transition-transform duration-200 group-hover:scale-105 ${className}`}
+      className={`object-contain ${className}`}
     />
   ) : (
-    <div className="flex items-center justify-center font-black text-emerald-600 text-xs">
+    <div className="flex items-center justify-center text-xs font-black text-primary">
       {platform.slice(0, 2).toUpperCase()}
     </div>
   );
@@ -73,7 +73,7 @@ export function SocialIcon({
   if (withContainer) {
     return (
       <div
-        className={`${containerDimension} rounded-2xl bg-white border border-slate-200/80 shadow-soft flex items-center justify-center shrink-0 transition-all group-hover:shadow-medium group-hover:border-emerald-500/40`}
+        className={`${containerDimension} flex shrink-0 items-center justify-center rounded-2xl border border-border bg-card`}
       >
         {iconElement}
       </div>

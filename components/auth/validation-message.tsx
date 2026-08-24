@@ -16,10 +16,11 @@ export function ValidationMessage({ type = "error", message }: ValidationMessage
 
   return (
     <div
+      role={isError ? "alert" : "status"}
       className={`w-full p-3 rounded-xl text-xs font-semibold flex items-center gap-2.5 border ${
         isError
-          ? "bg-red-500/10 border-red-500/30 text-red-400"
-          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+          ? "border-danger/30 bg-danger/10 text-danger"
+          : "border-primary/30 bg-primary-subtle text-primary"
       }`}
     >
       <HugeiconsIcon

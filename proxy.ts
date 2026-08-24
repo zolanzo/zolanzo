@@ -4,12 +4,8 @@ import {
   applySecurityHeaders,
 } from "@/lib/security/headers";
 import { createSupabaseMiddlewareClient } from "@/lib/supabase/middleware";
-import {
-  isAuthEntryPath,
-  resolveRouteAccess,
-  shouldRefreshAuthSession,
-  type RouteAccessLevel,
-} from "@/lib/auth/route-policy";
+import { shouldRefreshAuthSession } from "@/lib/auth/route-policy";
+import { decideProxyAccess } from "@/lib/auth/proxy-access";
 import { CSRF_CONFIG, generateCsrfToken } from "@/lib/security/csrf";
 import {
   CORRELATION_HEADER,
@@ -18,62 +14,6 @@ import {
   isValidCorrelationId,
   resolveCorrelationId,
 } from "@/lib/observability/correlation";
-
-function hasRole(roles: unknown, required: string | string[]): boolean {
-  if (!Array.isArray(roles)) return false;
-  const needed = Array.isArray(required) ? required : [required];
-  return needed.some((r) => roles.includes(r));
-}
-
-function meetsAccess(
-  access: RouteAccessLevel,
-  opts: { authenticated: boolean; roles: unknown },
-): boolean {
-  switch (access) {
-    case "public":
-      return true;
-    case "authenticated":
-    case "onboarding":
-    case "organization":
-      return opts.authenticated;
-    case "staff":
-      return (
-        opts.authenticated && hasRole(opts.roles, ["staff", "admin", "super_admin"])
-      );
-    case "admin":
-    case "super_admin":
-      return (
-        opts.authenticated && hasRole(opts.roles, ["admin", "super_admin"])
-      );
-    case "developer":
-      return (
-        opts.authenticated &&
-        hasRole(opts.roles, ["developer", "admin", "super_admin"])
-      );
-    default:
-      return false;
-  }
-}
-
-function getRoleHomePath(role: string): string {
-  if (!role) {
-    return "/login?error=RoleUnresolved";
-  }
-  const normalized = role.toLowerCase();
-  if (normalized === "admin" || normalized === "super_admin") {
-    return "/lex/auth";
-  }
-  if (normalized === "staff") {
-    return "/lex/staff";
-  }
-  if (normalized === "employer" || normalized === "hirer") {
-    return "/hirer/dashboard";
-  }
-  if (normalized === "worker" || normalized === "earner") {
-    return "/earner/dashboard";
-  }
-  return "/login?error=InvalidRole";
-}
 
 /**
  * Next.js 16 Edge proxy: correlation IDs, security headers, CSRF cookie,
@@ -117,94 +57,55 @@ export async function proxy(request: NextRequest) {
   let roles: string[] = [];
 
   if (supabase && shouldRefreshAuthSession(pathname)) {
-    const { data } = await supabase.auth.getUser();
-    authenticated = Boolean(data.user);
-    if (data.user) {
-      const appRoles = data.user.app_metadata?.roles;
-      const userMetaRole = data.user.user_metadata?.role;
-      userRole = (Array.isArray(appRoles) && appRoles[0]) || userMetaRole || "";
+    try {
+      const { data } = await supabase.auth.getUser();
+      authenticated = Boolean(data.user);
+      if (data.user) {
+        const appRoles = data.user.app_metadata?.roles;
+        const userMetaRole = data.user.user_metadata?.role;
+        userRole = (Array.isArray(appRoles) && appRoles[0]) || userMetaRole || "";
 
-      // Fallback to database profiles table lookup if Auth metadata role is missing
-      if (!userRole && data.user.id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: prof } = await (supabase.from("profiles") as any)
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
-        if (prof?.role) {
-          userRole = prof.role;
+        if (!userRole && data.user.id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: prof } = await (supabase.from("profiles") as any)
+            .select("role")
+            .eq("id", data.user.id)
+            .single();
+          if (prof?.role) {
+            userRole = prof.role;
+          }
         }
+
+        roles = userRole ? [userRole] : [];
       }
-
-      roles = userRole ? [userRole] : [];
+    } catch {
+      authenticated = false;
+      userRole = "";
+      roles = [];
     }
   }
 
-  const access = resolveRouteAccess(pathname);
+  const decision = decideProxyAccess({
+    pathname,
+    authenticated,
+    roles,
+    userRole,
+    nodeEnv: process.env.NODE_ENV,
+  });
 
-  // 1. Unauthenticated users trying to access protected paths -> redirect to /login
-  if (!meetsAccess(access, { authenticated, roles })) {
+  if (decision.action === "redirect") {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
+    url.pathname = decision.pathname;
+    if (decision.next) {
+      url.searchParams.set("next", decision.next);
+    } else {
+      url.search = "";
+    }
     const redirect = NextResponse.redirect(url);
     applySecurityHeaders(redirect, nonce);
     redirect.headers.set(CORRELATION_HEADER, correlationId);
     redirect.headers.set(REQUEST_ID_HEADER, requestId);
     return redirect;
-  }
-
-  // 2. Authenticated users hitting /login or /signup -> redirect immediately to their role home
-  if (authenticated && isAuthEntryPath(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = getRoleHomePath(userRole);
-    url.search = "";
-    const redirect = NextResponse.redirect(url);
-    applySecurityHeaders(redirect, nonce);
-    redirect.headers.set(CORRELATION_HEADER, correlationId);
-    redirect.headers.set(REQUEST_ID_HEADER, requestId);
-    return redirect;
-  }
-
-  // 3. Staff/Admin trying to access /onboarding -> skip onboarding entirely to role home
-  if (authenticated && (pathname === "/onboarding" || pathname.startsWith("/onboarding/"))) {
-    const normRole = userRole.toLowerCase();
-    if (normRole === "admin" || normRole === "super_admin" || normRole === "staff") {
-      const url = request.nextUrl.clone();
-      url.pathname = getRoleHomePath(userRole);
-      const redirect = NextResponse.redirect(url);
-      applySecurityHeaders(redirect, nonce);
-      redirect.headers.set(CORRELATION_HEADER, correlationId);
-      redirect.headers.set(REQUEST_ID_HEADER, requestId);
-      return redirect;
-    }
-  }
-
-  // 4. Role Guards: Prevent cross-role workspace intrusion
-  const normRole = userRole.toLowerCase();
-  const isSuperOrAdmin = normRole === "admin" || normRole === "super_admin";
-
-  if (authenticated && !isSuperOrAdmin) {
-    if (pathname.startsWith("/earner") && normRole !== "worker" && normRole !== "earner") {
-      const url = request.nextUrl.clone();
-      url.pathname = getRoleHomePath(userRole);
-      return NextResponse.redirect(url);
-    }
-    if (pathname.startsWith("/hirer") && normRole !== "employer" && normRole !== "hirer") {
-      const url = request.nextUrl.clone();
-      url.pathname = getRoleHomePath(userRole);
-      return NextResponse.redirect(url);
-    }
-    if (pathname.startsWith("/lex/auth")) {
-      const url = request.nextUrl.clone();
-      url.pathname = getRoleHomePath(userRole);
-      return NextResponse.redirect(url);
-    }
-    if (pathname.startsWith("/lex/staff") && normRole !== "staff") {
-      const url = request.nextUrl.clone();
-      url.pathname = getRoleHomePath(userRole);
-      return NextResponse.redirect(url);
-    }
   }
 
   return response;

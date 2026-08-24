@@ -6,6 +6,10 @@ export const APP_CONFIG = {
   name: "ZOLANZO",
   version: "0.1.0",
   supportEmail: "support@zolanzo.com",
+  supportWhatsApp: {
+    display: "+234 704 555 9401",
+    href: "https://wa.me/2347045559401",
+  },
   defaultLocale: "en",
   defaultTimezone: "UTC",
   pagination: {

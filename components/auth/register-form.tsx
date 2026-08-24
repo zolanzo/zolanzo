@@ -34,7 +34,7 @@ export function RegisterForm({
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-4 sm:p-6 my-8">
+    <div className="my-8 flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground sm:p-6">
       <div className="w-full max-w-md space-y-6 text-center">
         
         {/* Brand Logo */}
@@ -45,7 +45,7 @@ export function RegisterForm({
         {/* Heading & Subtitle */}
         <div className="space-y-1">
           <h1 className="text-2xl font-extrabold tracking-tight">Create Account</h1>
-          <p className="text-xs text-zinc-400 font-medium">
+          <p className="text-xs font-medium text-muted-foreground">
             Join Africa&apos;s Premium Workforce Marketplace
           </p>
         </div>
@@ -55,70 +55,70 @@ export function RegisterForm({
           
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-300">First Name</label>
+              <label className="text-xs font-medium text-foreground">First Name</label>
               <input
                 type="text"
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Jane"
-                className="w-full px-3.5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+                className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-3.5 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-300">Last Name</label>
+              <label className="text-xs font-medium text-foreground">Last Name</label>
               <input
                 type="text"
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Doe"
-                className="w-full px-3.5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+                className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-3.5 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300">Username</label>
+            <label className="text-xs font-medium text-foreground">Username</label>
             <input
               type="text"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="janedoe"
-              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+              className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300">Email</label>
+            <label className="text-xs font-medium text-foreground">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+              className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300">Referral Username (Optional)</label>
+            <label className="text-xs font-medium text-foreground">Referral Username (Optional)</label>
             <input
               type="text"
               value={referralUsername}
               onChange={(e) => setReferralUsername(e.target.value)}
               placeholder="referrer_username"
-              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+              className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-300">Account Type</label>
+            <label className="text-xs font-medium text-foreground">Account Type</label>
             <select
               value={accountType}
               onChange={(e) => setAccountType(e.target.value as "worker" | "employer")}
-              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:border-emerald-500 min-h-[46px] cursor-pointer"
+              className="min-h-[46px] w-full cursor-pointer rounded-xl border border-border bg-input-background px-4 py-3 text-xs text-foreground focus:border-primary focus:outline-none"
             >
               <option value="worker">Earner (Complete Tasks & Earn)</option>
               <option value="employer">Hirer / Campaign Manager (Create Campaigns)</option>
@@ -127,42 +127,42 @@ export function RegisterForm({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-300">Password</label>
+              <label className="text-xs font-medium text-foreground">Password</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+                className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-3.5 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-300">Confirm Password</label>
+              <label className="text-xs font-medium text-foreground">Confirm Password</label>
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 min-h-[46px]"
+                className="min-h-[46px] w-full rounded-xl border border-border bg-input-background px-3.5 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
               />
             </div>
           </div>
 
           {/* Cloudflare Turnstile */}
-          <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs text-zinc-300">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-muted p-3.5 text-xs text-foreground">
             <div className="flex items-center gap-2.5">
-              <Icons.verified size={16} className="text-emerald-400" />
+              <Icons.verified size={16} className="text-primary" />
               <span className="font-semibold">Cloudflare Turnstile Verified</span>
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">Protected</span>
+            <span className="font-mono text-[10px] text-muted-foreground">Protected</span>
           </div>
 
           <button
             type="submit"
             disabled={isLoading || !turnstileVerified}
-            className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition-all shadow-md shadow-emerald-500/20 min-h-[48px] flex items-center justify-center gap-2 cursor-pointer mt-2"
+            className="primary-action mt-2 flex min-h-[48px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-xs font-bold"
           >
             {isLoading ? (
               <Icons.refresh className="animate-spin size-4" />
@@ -176,10 +176,10 @@ export function RegisterForm({
         {/* Divider */}
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-zinc-800" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-[11px] uppercase">
-            <span className="bg-zinc-950 px-3 text-zinc-500 font-semibold tracking-wider">
+            <span className="bg-background px-3 font-semibold tracking-wider text-muted-foreground">
               OR CONTINUE WITH
             </span>
           </div>
@@ -190,7 +190,7 @@ export function RegisterForm({
           
           <button
             type="button"
-            className="w-full py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800/80 text-xs font-bold text-zinc-200 transition-all flex items-center justify-center gap-3 min-h-[46px] cursor-pointer"
+            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
           >
             <BrandIcon brand="google" size={18} />
             <span>Continue with Google</span>
@@ -198,7 +198,7 @@ export function RegisterForm({
 
           <button
             type="button"
-            className="w-full py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800/80 text-xs font-bold text-zinc-200 transition-all flex items-center justify-center gap-3 min-h-[46px] cursor-pointer"
+            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
           >
             <BrandIcon brand="facebook" size={18} />
             <span>Continue with Facebook</span>
@@ -206,7 +206,7 @@ export function RegisterForm({
 
           <button
             type="button"
-            className="w-full py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800/80 text-xs font-bold text-zinc-200 transition-all flex items-center justify-center gap-3 min-h-[46px] cursor-pointer"
+            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
           >
             <BrandIcon brand="apple" size={18} />
             <span>Continue with Apple</span>
@@ -215,9 +215,9 @@ export function RegisterForm({
         </div>
 
         {/* Footer Link */}
-        <div className="pt-2 text-xs text-zinc-400">
+        <div className="pt-2 text-xs text-muted-foreground">
           Already have an account?{" "}
-          <Link href={loginRoute} className="font-bold text-emerald-400 hover:text-emerald-300">
+          <Link href={loginRoute} className="font-bold text-primary hover:text-primary-hover">
             Sign In
           </Link>
         </div>

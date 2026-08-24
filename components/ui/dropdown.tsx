@@ -177,7 +177,7 @@ export function Dropdown({
           tabIndex={-1}
           onKeyDown={handleMenuKeyDown}
           className={cn(
-            "absolute top-[calc(100%+0.25rem)] z-50 min-w-[12rem] rounded-lg border border-border bg-card py-1 shadow-floating outline-none",
+            "absolute top-[calc(100%+0.25rem)] z-50 min-w-[12rem] max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-card py-1 shadow-floating outline-none",
             align === "end" ? "right-0" : "left-0",
             menuClassName,
           )}
@@ -194,8 +194,8 @@ export function Dropdown({
               disabled={item.disabled}
               onClick={() => handleItemSelect(item, index)}
               className={cn(
-                "focus-ring flex w-full items-center px-3 py-2 text-left text-small text-foreground transition-colors hover:bg-foreground/5",
-                activeIndex === index && "bg-foreground/5",
+                "focus-ring flex w-full items-center px-3 py-2 text-left text-small text-foreground transition-colors hover:bg-hover",
+                activeIndex === index && "bg-hover",
                 item.destructive && "text-danger hover:bg-danger/10",
                 item.disabled && "cursor-not-allowed opacity-50",
               )}

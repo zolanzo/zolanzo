@@ -20,10 +20,14 @@ import {
   resolveCampaignEligibility,
   resumeCampaign,
   submitCampaignForReview,
+  approveCampaignForMarketplace,
+  rejectCampaignReview,
   transitionCampaign,
   updateDraftCampaign,
 } from "@/features/campaigns/services/campaign-service";
 import { campaignRepository } from "@/features/campaigns/repositories";
+import { requirePlatformRoles } from "@/lib/rbac/guards";
+import { canModerateMarketplaceCampaign } from "@/features/campaigns/services/moderation";
 
 async function requireCampaignAccess(campaignId: string) {
   const ctx = await requireAuthContext();
@@ -70,8 +74,60 @@ export async function publishCampaignAction(
   id: string,
 ): Promise<ApiResponse<CampaignRecord>> {
   try {
-    const { ctx } = await requireCampaignAccess(id);
+    const ctx = await requirePlatformRoles(
+      "admin",
+      "super_admin",
+      "operations",
+      "moderator",
+    );
+    await requireCampaignAccess(id);
     return publishCampaign({ id, updatedByUserId: ctx.user.id });
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    throw error;
+  }
+}
+
+export async function approveCampaignAction(
+  id: string,
+): Promise<
+  ApiResponse<{ campaign: CampaignRecord; inventoryCreated: number }>
+> {
+  try {
+    const ctx = await requirePlatformRoles(
+      "admin",
+      "super_admin",
+      "operations",
+      "moderator",
+    );
+    await requireCampaignAccess(id);
+    return approveCampaignForMarketplace({
+      id,
+      updatedByUserId: ctx.user.id,
+    });
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    throw error;
+  }
+}
+
+export async function rejectCampaignAction(
+  id: string,
+  reason?: string,
+): Promise<ApiResponse<CampaignRecord>> {
+  try {
+    const ctx = await requirePlatformRoles(
+      "admin",
+      "super_admin",
+      "operations",
+      "moderator",
+    );
+    await requireCampaignAccess(id);
+    return rejectCampaignReview({
+      id,
+      updatedByUserId: ctx.user.id,
+      reason: reason ?? null,
+    });
   } catch (error) {
     if (error instanceof AppError) return error.toApiError();
     throw error;
@@ -131,7 +187,19 @@ export async function transitionCampaignAction(params: {
   to: CampaignStatus;
 }): Promise<ApiResponse<CampaignRecord>> {
   try {
-    const { ctx } = await requireCampaignAccess(params.id);
+    const { ctx, campaign } = await requireCampaignAccess(params.id);
+    if (
+      (params.to === "active" || params.to === "scheduled") &&
+      (campaign.status === "draft" || campaign.status === "pending_review")
+    ) {
+      if (!canModerateMarketplaceCampaign(ctx.user.platformRoles)) {
+        throw new AppError(
+          "MODERATION_REQUIRED",
+          "Staff approval is required before a campaign can become available",
+          403,
+        );
+      }
+    }
     return transitionCampaign({
       id: params.id,
       to: params.to,

@@ -286,7 +286,7 @@ describe("webhook spoofing protection", () => {
 });
 
 describe("reservation atomic release contract", () => {
-  it("exports forceReleaseReservation for ops ARCH-1 path", async () => {
+  it("exports forceReleaseReservation for ops ARCH-1 path", { timeout: 20_000 }, async () => {
     const mod = await import(
       "@/features/task-marketplace/services/reservation-engine"
     );

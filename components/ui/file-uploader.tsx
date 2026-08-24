@@ -2,11 +2,7 @@
 
 import React, { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Upload01Icon,
-  Cancel01Icon,
-  File01Icon,
-} from "@hugeicons/core-free-icons";
+import { Upload01Icon, Cancel01Icon, File01Icon } from "@hugeicons/core-free-icons";
 
 interface FileUploaderProps {
   label?: string;
@@ -68,22 +64,25 @@ export function FileUploader({
   };
 
   return (
-    <div className="space-y-2 text-left w-full">
-      {label && <label className="text-xs font-bold text-white uppercase tracking-wider block">{label}</label>}
+    <div className="w-full space-y-2 text-left">
+      {label && (
+        <label className="block text-xs font-bold uppercase tracking-wider text-foreground">{label}</label>
+      )}
 
-      {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
+      {error && <p className="text-xs font-medium text-danger">{error}</p>}
 
       {selectedFile ? (
-        <div className="p-4 rounded-2xl bg-zinc-900 border border-emerald-500/40 space-y-3">
+        <div className="space-y-3 rounded-2xl border border-primary/40 bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-subtle font-bold text-primary">
                 <HugeiconsIcon icon={File01Icon} size={20} />
               </div>
               <div>
-                <p className="text-xs font-bold text-white max-w-[240px] truncate">{selectedFile.name}</p>
-                <p className="text-[10px] text-zinc-400">
-                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {uploading ? `Uploading ${progress}%` : "Upload Complete"}
+                <p className="max-w-[240px] truncate text-xs font-bold text-foreground">{selectedFile.name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB •{" "}
+                  {uploading ? `Uploading ${progress}%` : "Upload Complete"}
                 </p>
               </div>
             </div>
@@ -93,7 +92,7 @@ export function FileUploader({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-danger/10 hover:text-danger"
                   title="Remove File"
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={18} />
@@ -103,9 +102,9 @@ export function FileUploader({
           </div>
 
           {uploading && (
-            <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-200"
+                className="h-full rounded-full bg-primary transition-all duration-200"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -115,20 +114,22 @@ export function FileUploader({
         <div
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className="relative border-2 border-dashed border-zinc-800 hover:border-emerald-500/50 rounded-2xl p-8 text-center transition-colors bg-zinc-900/40 cursor-pointer group"
+          className="group relative cursor-pointer rounded-2xl border-2 border-dashed border-border bg-muted p-8 text-center transition-colors hover:border-primary/50"
         >
           <input
             type="file"
             accept={accept}
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
           <div className="flex flex-col items-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-subtle text-primary transition-transform group-hover:scale-105">
               <HugeiconsIcon icon={Upload01Icon} size={24} />
             </div>
-            <p className="text-xs font-bold text-white">Click or drag files here to upload</p>
-            <p className="text-[10px] text-zinc-500">Supports PNG, JPG, PDF, ZIP (Max {maxSizeMB}MB)</p>
+            <p className="text-xs font-bold text-foreground">Click or drag files here to upload</p>
+            <p className="text-[10px] text-muted-foreground">
+              Supports PNG, JPG, PDF, ZIP (Max {maxSizeMB}MB)
+            </p>
           </div>
         </div>
       )}

@@ -1,13 +1,19 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { ThemeMode } from "@/lib/theme/constants";
 import { ThemeProvider } from "@/providers/theme-provider";
 
 type AppProvidersProps = {
   children: ReactNode;
-  nonce?: string;
+  ssrPreference?: ThemeMode | null;
 };
 
-export function AppProviders({ children, nonce }: AppProvidersProps) {
-  return <ThemeProvider nonce={nonce}>{children}</ThemeProvider>;
+export function AppProviders({
+  children,
+  ssrPreference,
+}: AppProvidersProps) {
+  return (
+    <ThemeProvider ssrPreference={ssrPreference}>{children}</ThemeProvider>
+  );
 }

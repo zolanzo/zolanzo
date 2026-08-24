@@ -4,6 +4,7 @@
 
 import type { NotificationChannel } from "@/constants/notification";
 import type { NotificationHubEvent } from "@/constants/notification";
+import { APP_CONFIG } from "@/config/app";
 
 export type NotificationTemplateDefinition = {
   key: string;
@@ -608,7 +609,7 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
     ),
     smsTemplate(
       "auth.otp",
-      "ZOLANZO code: {{otpCode}}. Do not share this code.",
+      "ZOLANZO: Your verification code is {{otpCode}}. It expires in 20 minutes. Do not share this code with anyone.",
       ["otpCode"],
     ),
     whatsappTemplate(
@@ -675,11 +676,11 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
     ),
     smsTemplate(
       "security.password_changed",
-      "ZOLANZO: Your password was changed. Contact support if unexpected.",
+      `ZOLANZO: Your password was changed. WhatsApp ${APP_CONFIG.supportWhatsApp.display} if unexpected.`,
     ),
     whatsappTemplate(
       "security.password_changed",
-      "Your Zolanzo password was changed. Contact support if unexpected.",
+      `Your Zolanzo password was changed. WhatsApp ${APP_CONFIG.supportWhatsApp.display} if unexpected.`,
     ),
 
     emailTemplate(

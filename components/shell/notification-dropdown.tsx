@@ -1,87 +1,50 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Notification01Icon, CheckmarkBadge01Icon } from "@hugeicons/core-free-icons";
+import { notificationService } from "@/lib/notifications/service";
 
 interface NotificationDropdownProps {
-  unreadCount?: number;
-  onClose?: () => void;
+  onClose: () => void;
 }
 
-export function NotificationDropdown({ unreadCount = 3 }: NotificationDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
+  const items = notificationService.getNotifications().slice(0, 6);
+  const unreadCount = notificationService.getUnreadCount();
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white transition-colors relative cursor-pointer"
-        aria-label="View notifications"
-      >
-        <HugeiconsIcon icon={Notification01Icon} size={18} />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-black text-[10px] font-extrabold flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
-      </button>
+    <div
+      role="dialog"
+      aria-label="Notifications"
+      className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-elevated p-3 shadow-medium"
+    >
+      <div className="flex items-center justify-between border-b border-border pb-2">
+        <p className="text-sm font-bold text-foreground">Notifications</p>
+        {unreadCount > 0 ? (
+          <span className="text-[11px] font-bold text-primary">{unreadCount} unread</span>
+        ) : null}
+      </div>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-[#131922] border border-white/[0.08] rounded-2xl shadow-2xl p-4 text-xs z-50 animate-fadeIn space-y-3">
-          <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
-            <span className="font-bold text-white text-sm">Notifications</span>
-            <span className="text-[10px] text-emerald-400 font-semibold">{unreadCount} unread</span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="p-2.5 rounded-xl bg-[#0D1218] border border-white/[0.08] space-y-1">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} />
-                <span>Task Payout Approved</span>
-              </div>
-              <p className="text-[11px] text-zinc-400 leading-snug">
-                AI Image Annotation (+₦850) cleared directly into your wallet.
-              </p>
-              <span className="text-[9px] text-zinc-500 block pt-0.5">10 mins ago</span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-[#0D1218] border border-white/[0.08] space-y-1">
-              <div className="flex items-center gap-1.5 text-blue-400 font-bold">
-                <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} />
-                <span>Withdrawal Processed</span>
-              </div>
-              <p className="text-[11px] text-zinc-400 leading-snug">
-                ₦18,400 successfully disbursed to GTBank account.
-              </p>
-              <span className="text-[9px] text-zinc-500 block pt-0.5">1 hour ago</span>
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800 pt-2 text-center">
-            <Link
-              href="/notifications"
-              onClick={() => setIsOpen(false)}
-              className="text-[11px] text-emerald-400 font-bold hover:underline"
-            >
-              View All Notifications →
-            </Link>
-          </div>
-        </div>
+      {items.length === 0 ? (
+        <p className="py-5 text-center text-xs text-muted-foreground">No notifications yet.</p>
+      ) : (
+        <ul className="divide-y divide-border py-1">
+          {items.map((item) => (
+            <li key={item.id} className="py-2">
+              <p className="text-xs font-bold text-foreground">{item.title}</p>
+              <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{item.body}</p>
+            </li>
+          ))}
+        </ul>
       )}
+
+      <Link
+        href="/notifications"
+        onClick={onClose}
+        className="block border-t border-border pt-2 text-center text-[11px] font-bold text-primary"
+      >
+        View all
+      </Link>
     </div>
   );
 }

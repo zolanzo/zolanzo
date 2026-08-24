@@ -210,40 +210,40 @@ export default function CareersPublicPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050608] text-white selection:bg-[#008744] selection:text-white">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#008744] text-white px-5 py-3.5 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2 border border-emerald-400/40 animate-fadeIn">
+        <div className="fixed inset-x-4 top-4 z-50 flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary px-4 py-3.5 text-xs font-bold text-primary-foreground shadow-floating animate-fadeIn sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-md sm:px-5">
           <HugeiconsIcon icon={Tick02Icon} size={18} />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Hero Header */}
-      <section className="relative pt-24 pb-16 px-4 sm:px-6 lg:px-8 border-b border-white/[0.08] bg-gradient-to-b from-[#080C10] to-[#050608] overflow-hidden">
+      <section className="relative overflow-hidden border-b border-border bg-background px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-subtle px-3.5 py-1.5 text-xs font-bold text-primary">
             <HugeiconsIcon icon={Briefcase01Icon} size={15} />
             <span>Join the ZOLANZO Core Team</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">
+          <h1 className="mx-auto max-w-3xl text-4xl font-black leading-tight tracking-tight text-foreground sm:text-6xl">
             Build the Infrastructure Empowering Africa&apos;s Digital Workforce
           </h1>
 
-          <p className="text-zinc-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             We are engineering high-throughput micro-tasking, automated financial escrow, and instant digital payout systems. Help us scale across Africa.
           </p>
 
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-zinc-400 font-semibold">
-            <span className="flex items-center gap-1.5 text-zinc-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span> 100% Competitive USD Compensation
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs font-semibold text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="h-2 w-2 rounded-full bg-primary"></span> 100% Competitive USD Compensation
             </span>
-            <span className="flex items-center gap-1.5 text-zinc-300">
-              <span className="w-2 h-2 rounded-full bg-blue-400"></span> Remote & Hybrid Culture
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="h-2 w-2 rounded-full bg-info"></span> Remote & Hybrid Culture
             </span>
-            <span className="flex items-center gap-1.5 text-zinc-300">
-              <span className="w-2 h-2 rounded-full bg-amber-400"></span> Full Family Health Benefits
+            <span className="flex items-center gap-1.5 text-foreground">
+              <span className="h-2 w-2 rounded-full bg-warning"></span> Full Family Health Benefits
             </span>
           </div>
         </div>
@@ -251,23 +251,23 @@ export default function CareersPublicPage() {
 
       {/* Filter & Search Controls */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-[#0D1218] border border-white/[0.08]">
+        <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 md:flex-row">
           <div className="relative w-full md:w-80">
-            <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <HugeiconsIcon icon={Search01Icon} size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search positions, technologies, locations..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl bg-[#131922] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none placeholder-zinc-500"
+              className="h-10 w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="h-10 px-3 rounded-xl bg-[#131922] border border-white/[0.08] text-white text-xs focus:outline-none"
+              className="h-10 rounded-xl border border-border bg-input-background px-3 text-xs text-foreground focus:outline-none"
             >
               {DEPARTMENTS.map((dept) => (
                 <option key={dept} value={dept}>
@@ -279,7 +279,7 @@ export default function CareersPublicPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="h-10 px-3 rounded-xl bg-[#131922] border border-white/[0.08] text-white text-xs focus:outline-none"
+              className="h-10 rounded-xl border border-border bg-input-background px-3 text-xs text-foreground focus:outline-none"
             >
               <option value="All">Type: All Types</option>
               <option value="Full-time">Full-time</option>
@@ -293,38 +293,38 @@ export default function CareersPublicPage() {
         {/* Job Listings Grid */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
               <span>Open Opportunities</span>
-              <span className="px-2.5 py-0.5 text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+              <span className="rounded-full border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-xs font-black text-primary">
                 {filteredJobs.length} Positions
               </span>
             </h2>
           </div>
 
           {filteredJobs.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl bg-[#0D1218] border border-white/[0.08] space-y-3">
-              <HugeiconsIcon icon={Briefcase01Icon} size={32} className="mx-auto text-zinc-600" />
-              <div className="text-sm font-bold text-zinc-300">No positions matched your criteria</div>
-              <p className="text-xs text-zinc-500">Try adjusting your department or employment type filters.</p>
+            <div className="space-y-3 rounded-2xl border border-border bg-card p-12 text-center">
+              <HugeiconsIcon icon={Briefcase01Icon} size={32} className="mx-auto text-muted-foreground" />
+              <div className="text-sm font-bold text-foreground">No positions matched your criteria</div>
+              <p className="text-xs text-muted-foreground">Try adjusting your department or employment type filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {filteredJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="p-6 rounded-2xl bg-[#0D1218] border border-white/[0.08] hover:border-emerald-500/40 transition-all duration-200 space-y-4 group"
+                  className="group space-y-4 rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/40"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="px-2.5 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md">
+                        <span className="rounded-md border border-info/20 bg-info/10 px-2.5 py-0.5 text-[10px] font-bold text-info">
                           {job.department}
                         </span>
-                        <span className="px-2.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+                        <span className="rounded-md border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-[10px] font-bold text-primary">
                           {job.employmentType}
                         </span>
                       </div>
-                      <h3 className="text-lg font-black text-white group-hover:text-emerald-400 transition-colors">
+                      <h3 className="text-lg font-black text-foreground transition-colors group-hover:text-primary">
                         {job.title}
                       </h3>
                     </div>
@@ -336,7 +336,7 @@ export default function CareersPublicPage() {
                           setSelectedJob(job);
                           setShowApplyModal(true);
                         }}
-                        className="px-5 py-2.5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                        className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-lg transition-all hover:bg-primary-hover"
                       >
                         <span>Apply Now</span>
                         <HugeiconsIcon icon={ArrowRight01Icon} size={15} />
@@ -344,19 +344,19 @@ export default function CareersPublicPage() {
                     </div>
                   </div>
 
-                  <p className="text-xs text-zinc-400 leading-relaxed">{job.description}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{job.description}</p>
 
-                  <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/[0.06] text-xs text-zinc-400 font-medium">
-                    <span className="flex items-center gap-1.5 text-zinc-300">
-                      <HugeiconsIcon icon={Location01Icon} size={14} className="text-zinc-500" />
+                  <div className="flex flex-wrap items-center gap-4 border-t border-border pt-2 text-xs font-medium text-muted-foreground">
+                    <span className="flex items-center gap-1.5 text-foreground">
+                      <HugeiconsIcon icon={Location01Icon} size={14} className="text-muted-foreground" />
                       {job.location}
                     </span>
-                    <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                    <span className="flex items-center gap-1.5 font-bold text-primary">
                       <HugeiconsIcon icon={Coins01Icon} size={14} />
                       {job.salary}
                     </span>
-                    <span className="flex items-center gap-1.5 text-zinc-400 ml-auto text-[11px]">
-                      <HugeiconsIcon icon={Calendar01Icon} size={14} className="text-zinc-500" />
+                    <span className="ml-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <HugeiconsIcon icon={Calendar01Icon} size={14} className="text-muted-foreground" />
                       Closing: {job.closingDate}
                     </span>
                   </div>
@@ -369,19 +369,19 @@ export default function CareersPublicPage() {
 
       {/* APPLY MODAL */}
       {showApplyModal && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-2xl bg-[#131922] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative text-white max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-md animate-fadeIn">
+          <div className="relative max-h-[90vh] w-full max-w-2xl space-y-6 overflow-y-auto rounded-3xl border border-border bg-elevated p-6 text-foreground shadow-dialog sm:p-8">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
-                <span className="px-2.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+                <span className="rounded-md border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-[10px] font-bold text-primary">
                   {selectedJob.department} • {selectedJob.employmentType}
                 </span>
-                <h3 className="text-xl font-black text-white mt-1">{selectedJob.title}</h3>
+                <h3 className="mt-1 text-xl font-black text-foreground">{selectedJob.title}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowApplyModal(false)}
-                className="text-zinc-400 hover:text-white p-1"
+                className="p-1 text-muted-foreground hover:text-foreground"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
@@ -390,8 +390,8 @@ export default function CareersPublicPage() {
             <form onSubmit={handleApplySubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                    <HugeiconsIcon icon={UserGroupIcon} size={14} className="text-zinc-500" />
+                  <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                    <HugeiconsIcon icon={UserGroupIcon} size={14} className="text-muted-foreground" />
                     First Name *
                   </label>
                   <input
@@ -400,13 +400,13 @@ export default function CareersPublicPage() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="e.g. David"
-                    className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none"
+                    className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                    <HugeiconsIcon icon={UserGroupIcon} size={14} className="text-zinc-500" />
+                  <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                    <HugeiconsIcon icon={UserGroupIcon} size={14} className="text-muted-foreground" />
                     Last Name *
                   </label>
                   <input
@@ -415,15 +415,15 @@ export default function CareersPublicPage() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="e.g. Okafor"
-                    className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none"
+                    className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                    <HugeiconsIcon icon={Mail01Icon} size={14} className="text-zinc-500" />
+                  <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                    <HugeiconsIcon icon={Mail01Icon} size={14} className="text-muted-foreground" />
                     Email Address *
                   </label>
                   <input
@@ -432,13 +432,13 @@ export default function CareersPublicPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="david.okafor@example.com"
-                    className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none"
+                    className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                    <HugeiconsIcon icon={CallIcon} size={14} className="text-zinc-500" />
+                  <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                    <HugeiconsIcon icon={CallIcon} size={14} className="text-muted-foreground" />
                     Phone Number
                   </label>
                   <input
@@ -446,14 +446,14 @@ export default function CareersPublicPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+234 803 123 4567"
-                    className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none"
+                    className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                  <HugeiconsIcon icon={FileUploadIcon} size={14} className="text-zinc-500" />
+                <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                  <HugeiconsIcon icon={FileUploadIcon} size={14} className="text-muted-foreground" />
                   Resume / CV URL * (PDF Link, Google Drive, Dropbox)
                 </label>
                 <input
@@ -462,13 +462,13 @@ export default function CareersPublicPage() {
                   value={resumeUrl}
                   onChange={(e) => setResumeUrl(e.target.value)}
                   placeholder="https://drive.google.com/file/d/your-resume-pdf"
-                  className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none font-mono"
+                  className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 font-mono text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1 flex items-center gap-1.5">
-                  <HugeiconsIcon icon={Link01Icon} size={14} className="text-zinc-500" />
+                <label className="mb-1 flex items-center gap-1.5 font-bold text-foreground">
+                  <HugeiconsIcon icon={Link01Icon} size={14} className="text-muted-foreground" />
                   Portfolio / GitHub / LinkedIn URL (Optional)
                 </label>
                 <input
@@ -476,33 +476,33 @@ export default function CareersPublicPage() {
                   value={portfolioUrl}
                   onChange={(e) => setPortfolioUrl(e.target.value)}
                   placeholder="https://github.com/yourhandle or https://linkedin.com/in/yourprofile"
-                  className="w-full h-10 px-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none font-mono"
+                  className="h-10 w-full rounded-xl border border-border bg-input-background px-3.5 font-mono text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Cover Letter & Key Achievements</label>
+                <label className="mb-1 block font-bold text-foreground">Cover Letter & Key Achievements</label>
                 <textarea
                   rows={4}
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
                   placeholder="Tell us about your background and why you are excited to join ZOLANZO..."
-                  className="w-full p-3.5 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white focus:outline-none leading-relaxed"
+                  className="w-full rounded-xl border border-border bg-input-background p-3.5 leading-relaxed text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-between border-t border-white/[0.08]">
+              <div className="flex items-center justify-between border-t border-border pt-3">
                 <button
                   type="button"
                   onClick={() => setShowApplyModal(false)}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold transition-colors cursor-pointer"
+                  className="cursor-pointer rounded-xl bg-muted px-4 py-2.5 font-bold text-foreground transition-colors hover:bg-hover"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold transition-all shadow-lg cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  className="flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-6 py-2.5 font-bold text-primary-foreground shadow-lg transition-all hover:bg-primary-hover disabled:opacity-50"
                 >
                   {isSubmitting ? "Submitting Application..." : "Submit Application"}
                   <HugeiconsIcon icon={ArrowRight01Icon} size={16} />

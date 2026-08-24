@@ -11,14 +11,14 @@ interface EmptyMarketplaceProps {
 
 export function EmptyMarketplace({ searchQuery, onReset }: EmptyMarketplaceProps) {
   return (
-    <div className="w-full bg-[#0A0F12] border border-white/10 rounded-2xl p-10 text-center space-y-4 flex flex-col items-center justify-center my-6">
-      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+    <div className="my-6 flex w-full flex-col items-center justify-center space-y-4 rounded-2xl border border-border bg-card p-10 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary-subtle text-primary">
         <HugeiconsIcon icon={Search01Icon} size={28} />
       </div>
 
-      <div className="space-y-1 max-w-sm">
-        <h3 className="text-lg font-bold text-white">No tasks found</h3>
-        <p className="text-xs text-zinc-400 leading-relaxed">
+      <div className="max-w-sm space-y-1">
+        <h3 className="text-lg font-bold text-foreground">No tasks found</h3>
+        <p className="text-xs leading-relaxed text-muted-foreground">
           {searchQuery
             ? `No opportunities matched "${searchQuery}". Try adjusting your filters or search terms.`
             : "No opportunities match the selected category filters at this moment."}
@@ -28,7 +28,7 @@ export function EmptyMarketplace({ searchQuery, onReset }: EmptyMarketplaceProps
       <button
         type="button"
         onClick={onReset}
-        className="h-[42px] px-5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+        className="h-[42px] cursor-pointer rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground shadow-md transition-all hover:bg-primary-hover"
       >
         Clear All Filters
       </button>

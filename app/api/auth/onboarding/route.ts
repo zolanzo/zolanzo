@@ -17,11 +17,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId: bodyUserId, role, country, state, city, language, companyName, industry, website } = body;
 
-    const targetUserId = authUserId || bodyUserId;
-
-    if (!targetUserId || targetUserId === "current_session_user") {
-      return NextResponse.json({ error: "Unauthorized: Invalid or missing authenticated user session." }, { status: 401 });
+    if (!authUserId) {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid or missing authenticated user session." },
+        { status: 401 },
+      );
     }
+
+    if (typeof bodyUserId === "string" && bodyUserId.length > 0 && bodyUserId !== authUserId) {
+      return NextResponse.json(
+        { error: "Unauthorized: Session user does not match the requested account." },
+        { status: 401 },
+      );
+    }
+
+    const targetUserId = authUserId;
 
     if (!role || (role !== "worker" && role !== "employer")) {
       return NextResponse.json({ error: "Please select a valid account role." }, { status: 400 });

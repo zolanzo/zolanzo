@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { evaluateWorkerEligibility } from "@/features/task-marketplace/services/eligibility-evaluate";
 import { evaluateClaimPolicies } from "@/features/task-marketplace/services/claim-policies";
 import { opportunityCategoryLabel } from "@/features/task-marketplace/services/opportunity-labels";
+import { isMarketplaceVisibleCampaign } from "@/features/task-marketplace/services/marketplace-visibility";
 import {
   DEFAULT_RESERVATION_TIMEOUT_SECONDS,
   validateClaimPolicyRules,
@@ -198,5 +199,42 @@ describe("assignment public ids", () => {
     const id = formatRandomPublicId("assignment", "24H7QK");
     expect(id).toBe("ASN-24H7QK");
     expect(isValidPublicId("assignment", id)).toBe(true);
+  });
+});
+
+describe("marketplace visibility", () => {
+  it("only shows active platform or public campaigns", () => {
+    expect(
+      isMarketplaceVisibleCampaign({ status: "active", visibility: "platform" }),
+    ).toBe(true);
+    expect(
+      isMarketplaceVisibleCampaign({ status: "active", visibility: "public" }),
+    ).toBe(true);
+    expect(
+      isMarketplaceVisibleCampaign({
+        status: "active",
+        visibility: "organization",
+      }),
+    ).toBe(false);
+    expect(
+      isMarketplaceVisibleCampaign({
+        status: "pending_review",
+        visibility: "platform",
+      }),
+    ).toBe(false);
+    expect(
+      isMarketplaceVisibleCampaign({ status: "draft", visibility: "public" }),
+    ).toBe(false);
+  });
+});
+
+describe("worker eligibility for discovery", () => {
+  it("hides tasks the worker cannot start", () => {
+    const ineligible = evaluateWorkerEligibility({
+      constraints: [],
+      worker: { ...worker, countryCode: "KE" },
+      countryScope: ["NG"],
+    });
+    expect(ineligible.eligible).toBe(false);
   });
 });

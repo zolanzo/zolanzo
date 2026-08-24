@@ -26,7 +26,7 @@ export interface LifecycleStep {
   status: ApplicationStatus;
   title: string;
   explanation: string;
-  timestamp: string;
+  timestamp?: string;
   isCompleted: boolean;
   isCurrent: boolean;
 }
@@ -41,48 +41,48 @@ interface ApplicationTimelineProps {
 
 export function ApplicationTimeline({
   currentStatus,
-  appliedAt = "Today • 10:42 AM",
-  submittedAt = "Today • 11:15 AM",
-  approvedAt = "Today • 2:30 PM",
-  paidAt = "Today • 2:31 PM",
+  appliedAt,
+  submittedAt,
+  approvedAt,
+  paidAt,
 }: ApplicationTimelineProps) {
   const steps: LifecycleStep[] = [
     {
       status: "Applied",
-      title: "Application Received",
-      explanation: "Opportunity slot reserved in platform queue.",
+      title: "Applied",
+      explanation: "The assignment was claimed.",
       timestamp: appliedAt,
       isCompleted: true,
       isCurrent: currentStatus === "Applied",
     },
     {
       status: "In Progress",
-      title: "Work in Progress",
-      explanation: "Workspace active. Instructions being completed.",
+      title: "In progress",
+      explanation: "Work has started.",
       timestamp: appliedAt,
       isCompleted: ["In Progress", "Submitted", "Awaiting Review", "Approved", "Paid"].includes(currentStatus),
       isCurrent: currentStatus === "In Progress",
     },
     {
       status: "Submitted",
-      title: "Evidence Submitted",
-      explanation: "Proof uploaded and locked in escrow.",
+      title: "Submitted",
+      explanation: "Proof was submitted for review.",
       timestamp: submittedAt,
       isCompleted: ["Submitted", "Awaiting Review", "Approved", "Paid"].includes(currentStatus),
       isCurrent: currentStatus === "Submitted" || currentStatus === "Awaiting Review",
     },
     {
       status: "Approved",
-      title: "Hirer Approved",
-      explanation: "Quality score verified by hirer.",
+      title: "Approved",
+      explanation: "The hirer approved the submission.",
       timestamp: approvedAt,
       isCompleted: ["Approved", "Paid"].includes(currentStatus),
       isCurrent: currentStatus === "Approved",
     },
     {
       status: "Paid",
-      title: "Wallet Credited",
-      explanation: "Escrow funds disbursed directly to wallet.",
+      title: "Paid",
+      explanation: "The reward was credited to the wallet.",
       timestamp: paidAt,
       isCompleted: currentStatus === "Paid",
       isCurrent: currentStatus === "Paid",
@@ -102,40 +102,40 @@ export function ApplicationTimeline({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-white/10 pb-3">
-        <h4 className="text-xs font-bold text-white uppercase tracking-wider">Application State Machine</h4>
-        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-          Status: {currentStatus}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Status</h4>
+        <span className="px-2.5 py-0.5 rounded-full bg-primary-subtle text-primary text-[10px] font-bold border border-primary/25">
+          {currentStatus}
         </span>
       </div>
 
-      <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-800">
-        {steps.map((step, idx) => {
+      <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+        {steps.map((step) => {
           const Icon = getStatusIcon(step.status);
           return (
-            <div key={idx} className="relative flex items-start gap-3.5 group">
-              {/* Timeline Bullet */}
+            <div key={step.status} className="relative flex items-start gap-3">
               <div
-                className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border transition-all ${
+                className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center border ${
                   step.isCurrent
-                    ? "bg-[#008744] text-white border-emerald-400 ring-4 ring-[#008744]/20 animate-pulse"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : step.isCompleted
-                    ? "bg-emerald-950 text-emerald-400 border-emerald-500/40"
-                    : "bg-zinc-900 text-zinc-600 border-zinc-800"
+                      ? "bg-primary-subtle text-primary border-primary/25"
+                      : "bg-card text-muted-foreground border-border"
                 }`}
               >
                 <HugeiconsIcon icon={Icon} size={12} />
               </div>
-
-              <div className="flex-1 space-y-0.5">
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold ${step.isCurrent ? "text-emerald-400" : step.isCompleted ? "text-white" : "text-zinc-500"}`}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-bold ${step.isCurrent || step.isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
                     {step.title}
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-mono">{step.timestamp}</span>
+                  {step.timestamp ? (
+                    <span className="text-[10px] text-muted-foreground shrink-0">{step.timestamp}</span>
+                  ) : null}
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">{step.explanation}</p>
+                <p className="text-[11px] text-foreground leading-snug">{step.explanation}</p>
               </div>
             </div>
           );

@@ -20,55 +20,56 @@ export function WalletCard({
   onHistory,
 }: WalletCardProps) {
   return (
-    <div className="w-full bg-[#0A0F12] border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-emerald-950/20 relative overflow-hidden space-y-6">
-      {/* Soft Ambient Radial Glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative w-full space-y-6 overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-floating sm:p-7">
+      <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
+      <div className="flex items-center justify-between border-b border-border pb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-primary/20 bg-primary-subtle text-primary">
             <HugeiconsIcon icon={Wallet01Icon} size={18} />
           </div>
-          <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Wallet Balance</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Wallet Balance</span>
         </div>
-        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
+        <span className="rounded-full border border-primary/20 bg-primary-subtle px-2.5 py-0.5 text-[11px] font-semibold text-primary">
           ● Live Status
         </span>
       </div>
 
-      {/* Main Available Balance (Visual Focus) */}
       <div>
-        <span className="text-xs font-semibold text-zinc-400 block uppercase tracking-wider mb-1">Available Balance</span>
+        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Available Balance
+        </span>
         <div className="flex items-baseline gap-3">
-          <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-none">
+          <span className="text-3xl font-black leading-none tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             {availableBalance}
           </span>
-          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+          <span className="rounded-md border border-primary/20 bg-primary-subtle px-2 py-0.5 text-xs font-bold text-primary">
             Instant Payout
           </span>
         </div>
       </div>
 
-      {/* Metrics Row: Today & Pending */}
       <div className="grid grid-cols-2 gap-3 pt-2">
-        <div className="bg-zinc-900/90 border border-zinc-800 p-3.5 rounded-2xl">
-          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Today&apos;s Earnings</span>
-          <span className="text-xl sm:text-2xl font-black text-emerald-400 mt-1 block">{todayEarnings}</span>
+        <div className="rounded-2xl border border-border bg-muted p-3.5">
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Today&apos;s Earnings
+          </span>
+          <span className="mt-1 block text-xl font-black text-primary sm:text-2xl">{todayEarnings}</span>
         </div>
 
-        <div className="bg-zinc-900/90 border border-zinc-800 p-3.5 rounded-2xl">
-          <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block">Pending Earnings</span>
-          <span className="text-xl sm:text-2xl font-black text-white mt-1 block">{pendingEarnings}</span>
+        <div className="rounded-2xl border border-border bg-muted p-3.5">
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Pending Earnings
+          </span>
+          <span className="mt-1 block text-xl font-black text-foreground sm:text-2xl">{pendingEarnings}</span>
         </div>
       </div>
 
-      {/* Quick Action Buttons */}
       <div className="flex items-center gap-3 pt-1">
         <button
           type="button"
           onClick={onWithdraw}
-          className="flex-1 h-[48px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer"
+          className="primary-action flex h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl text-xs font-bold"
         >
           <span>Withdraw</span>
           <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
@@ -77,7 +78,7 @@ export function WalletCard({
         <button
           type="button"
           onClick={onHistory}
-          className="flex-1 h-[48px] rounded-xl border border-zinc-800 hover:border-zinc-700 bg-zinc-900/80 hover:bg-zinc-900 text-zinc-300 font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+          className="secondary-action flex h-[48px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl text-xs font-bold"
         >
           <HugeiconsIcon icon={Clock01Icon} size={16} />
           <span>History</span>

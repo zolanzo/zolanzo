@@ -23,6 +23,39 @@ export interface CapabilityItem {
   reason: string;
 }
 
+const OPEN_ACCESS_PLATFORMS = new Set(["Website", "GooglePlay"]);
+
+export function isOpenAccessPlatform(platform: string): boolean {
+  return OPEN_ACCESS_PLATFORMS.has(platform);
+}
+
+/** Device-local connection copy. Never claims server-side verification. */
+export function connectionCopy(
+  platform: Pick<PlatformCapability, "platform" | "status" | "statusText">,
+): {
+  statusLabel: string;
+  actionLabel: string;
+} {
+  switch (platform.status) {
+    case "pending":
+      return { statusLabel: "Pending review", actionLabel: "View status" };
+    case "rejected":
+      return { statusLabel: "Failed", actionLabel: "Reconnect" };
+    case "disabled":
+      return { statusLabel: "Unavailable", actionLabel: "View status" };
+    case "ready":
+      if (
+        isOpenAccessPlatform(platform.platform) ||
+        platform.statusText === "Open access"
+      ) {
+        return { statusLabel: "Open access", actionLabel: "Ready" };
+      }
+      return { statusLabel: "Pending review", actionLabel: "View status" };
+    default:
+      return { statusLabel: "Not connected", actionLabel: "Connect" };
+  }
+}
+
 export interface TaskReadinessResult {
   isAccessible: boolean;
   badgeText: string;
@@ -44,29 +77,77 @@ interface CapabilityContextType {
   getReadinessByPlatform: (platform: string) => TaskReadinessResult;
 }
 
+function disconnected(platform: string, name = platform): PlatformCapability {
+  return {
+    platform,
+    name,
+    status: "unavailable",
+    statusText: "Not connected",
+    reason: `Connect ${name} to unlock matching tasks`,
+    actionLabel: "Connect",
+  };
+}
+
 const DEFAULT_PLATFORMS: Record<string, PlatformCapability> = {
-  Instagram: { platform: "Instagram", name: "Instagram", status: "ready", statusText: "✓ Verified", reason: "Connected & Verified", handle: "@graceofficial", actionLabel: "Manage" },
-  TikTok: { platform: "TikTok", name: "TikTok", status: "ready", statusText: "✓ Verified", reason: "Connected & Verified", handle: "@grace_tiktok", actionLabel: "Manage" },
-  Facebook: { platform: "Facebook", name: "Facebook", status: "ready", statusText: "✓ Verified", reason: "Connected & Verified", handle: "grace.okafor", actionLabel: "Manage" },
-  LinkedIn: { platform: "LinkedIn", name: "LinkedIn", status: "pending", statusText: "Pending Verification", reason: "Connect LinkedIn first to complete tasks", handle: "grace.linkedin", actionLabel: "View Status" },
-  Telegram: { platform: "Telegram", name: "Telegram", status: "unavailable", statusText: "Connect Telegram", reason: "Connect Telegram account to unlock tasks", actionLabel: "Connect Telegram" },
-  WhatsApp: { platform: "WhatsApp", name: "WhatsApp", status: "ready", statusText: "✓ Verified", reason: "Connected & Verified", handle: "+234 812 *** 4920", actionLabel: "Manage" },
-  YouTube: { platform: "YouTube", name: "YouTube", status: "pending", statusText: "Pending Verification", reason: "Account verification in progress", handle: "@grace_yt", actionLabel: "View Status" },
-  Threads: { platform: "Threads", name: "Threads", status: "ready", statusText: "✓ Verified", reason: "Connected & Verified", handle: "@grace_threads", actionLabel: "Manage" },
-  X: { platform: "X", name: "X (Twitter)", status: "unavailable", statusText: "Connect X", reason: "Connect X to unlock tasks", actionLabel: "Connect X" },
-  Website: { platform: "Website", name: "Website", status: "ready", statusText: "Open Access", reason: "Open Access", handle: "Web Browser", actionLabel: "Active" },
-  GooglePlay: { platform: "GooglePlay", name: "Google Play", status: "ready", statusText: "Open Access", reason: "Open Access", handle: "Android Ready", actionLabel: "Active" },
+  Instagram: disconnected("Instagram"),
+  TikTok: disconnected("TikTok"),
+  Facebook: disconnected("Facebook"),
+  LinkedIn: disconnected("LinkedIn"),
+  Telegram: disconnected("Telegram"),
+  WhatsApp: disconnected("WhatsApp"),
+  YouTube: disconnected("YouTube"),
+  Threads: disconnected("Threads"),
+  X: disconnected("X", "X"),
+  Website: {
+    platform: "Website",
+    name: "Website",
+    status: "ready",
+    statusText: "Open access",
+    reason: "No account connection required",
+    actionLabel: "Ready",
+  },
+  GooglePlay: {
+    platform: "GooglePlay",
+    name: "Google Play",
+    status: "ready",
+    statusText: "Open access",
+    reason: "No account connection required",
+    actionLabel: "Ready",
+  },
 };
+
+
+function normalizePlatforms(
+  input: Record<string, PlatformCapability>,
+): Record<string, PlatformCapability> {
+  const next: Record<string, PlatformCapability> = {};
+  for (const [key, value] of Object.entries(input)) {
+    const openAccess =
+      isOpenAccessPlatform(value.platform) || value.statusText === "Open access";
+    if (value.status === "ready" && !openAccess) {
+      next[key] = {
+        ...value,
+        status: "pending",
+        statusText: "Pending review",
+        reason: "Submitted on this device. Not verified by Zolanzo.",
+        actionLabel: "View status",
+      };
+    } else {
+      next[key] = value;
+    }
+  }
+  return next;
+}
 
 const CapabilityContext = createContext<CapabilityContextType | undefined>(undefined);
 
 export function CapabilityProvider({ children }: { children: React.ReactNode }) {
   const [platforms, setPlatforms] = useState<Record<string, PlatformCapability>>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("zolanzo_user_capabilities");
+      const saved = localStorage.getItem("zolanzo_capabilities_v2");
       if (saved) {
         try {
-          return JSON.parse(saved);
+          return normalizePlatforms(JSON.parse(saved) as Record<string, PlatformCapability>);
         } catch {
           // fallback
         }
@@ -77,7 +158,7 @@ export function CapabilityProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("zolanzo_user_capabilities", JSON.stringify(platforms));
+      localStorage.setItem("zolanzo_capabilities_v2", JSON.stringify(platforms));
     }
   }, [platforms]);
 
@@ -97,11 +178,11 @@ export function CapabilityProvider({ children }: { children: React.ReactNode }) 
         ...existing,
         platform,
         name: existing.name || platform,
-        status: "ready",
-        statusText: "✓ Verified",
-        reason: "Connected & Verified",
+        status: "pending",
+        statusText: "Submitted",
+        reason: "Submitted on this device. Not verified by Zolanzo.",
         handle: handle.startsWith("@") ? handle : `@${handle}`,
-        actionLabel: "Manage",
+        actionLabel: "View status",
       };
 
       return {
@@ -112,20 +193,17 @@ export function CapabilityProvider({ children }: { children: React.ReactNode }) 
   };
 
   const capabilities = useMemo<CapabilityItem[]>(() => {
-    return [
-      { id: "fb", label: "Facebook Tasks", platform: "Facebook", status: platforms.Facebook?.status || "ready", symbol: platforms.Facebook?.status === "ready" ? "✓" : platforms.Facebook?.status === "pending" ? "⏳" : "❌", reason: platforms.Facebook?.reason || "" },
-      { id: "ig", label: "Instagram Tasks", platform: "Instagram", status: platforms.Instagram?.status || "ready", symbol: platforms.Instagram?.status === "ready" ? "✓" : platforms.Instagram?.status === "pending" ? "⏳" : "❌", reason: platforms.Instagram?.reason || "" },
-      { id: "tt", label: "TikTok Tasks", platform: "TikTok", status: platforms.TikTok?.status || "ready", symbol: platforms.TikTok?.status === "ready" ? "✓" : platforms.TikTok?.status === "pending" ? "⏳" : "❌", reason: platforms.TikTok?.reason || "" },
-      { id: "li", label: "LinkedIn Tasks", platform: "LinkedIn", status: platforms.LinkedIn?.status || "pending", symbol: platforms.LinkedIn?.status === "ready" ? "✓" : platforms.LinkedIn?.status === "pending" ? "⏳" : "❌", reason: platforms.LinkedIn?.reason || "" },
-      { id: "tg", label: "Telegram Tasks", platform: "Telegram", status: platforms.Telegram?.status || "unavailable", symbol: platforms.Telegram?.status === "ready" ? "✓" : platforms.Telegram?.status === "pending" ? "⏳" : "❌", reason: platforms.Telegram?.reason || "" },
-      { id: "web", label: "Website Tasks", platform: "Website", status: "ready", symbol: "✓", reason: "Open Access" },
-      { id: "play", label: "Google Play Tasks", platform: "GooglePlay", status: "ready", symbol: "✓", reason: "Open Access" },
-      { id: "downloads", label: "App Downloads", platform: "GooglePlay", status: "ready", symbol: "✓", reason: "Android Ready" },
-      { id: "reviews", label: "Reviews & Ratings", platform: "Website", status: "ready", symbol: "✓", reason: "Trust Score Qualified" },
-      { id: "surveys", label: "Surveys & Feedback", platform: "Website", status: "ready", symbol: "✓", reason: "Profile Qualified" },
-      { id: "data", label: "Data Entry", platform: "Website", status: "ready", symbol: "✓", reason: "Basic Skills Verified" },
-      { id: "ai", label: "AI Tasks (Future)", platform: "Website", status: "pending", symbol: "⏳", reason: "Unlocks at Level 5" },
-    ];
+    return Object.values(platforms).map((platform) => {
+      const copy = connectionCopy(platform);
+      return {
+        id: platform.platform,
+        label: platform.name,
+        platform: platform.platform,
+        status: platform.status,
+        symbol: copy.statusLabel,
+        reason: platform.reason,
+      };
+    });
   }, [platforms]);
 
   const readinessPercentage = useMemo(() => {
@@ -146,36 +224,36 @@ export function CapabilityProvider({ children }: { children: React.ReactNode }) 
         platform,
         platformName: pName,
         actionLabel: "Start",
-        badgeColorClass: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
-        buttonColorClass: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs",
+        badgeColorClass: "bg-primary-subtle text-primary border-primary/30",
+        buttonColorClass: "bg-primary hover:bg-primary-hover text-primary-foreground shadow-xs",
       };
     }
 
     if (platformCap.status === "pending") {
       return {
         isAccessible: false,
-        badgeText: "Pending Verification",
+        badgeText: "Pending review",
         status: "pending",
-        reason: `${pName} verification is pending review`,
+        reason: `${pName} was submitted on this device. It is not verified yet.`,
         platform,
         platformName: pName,
-        actionLabel: "Pending",
-        badgeColorClass: "bg-amber-50 text-amber-700 border-amber-200/60",
-        buttonColorClass: "bg-amber-500 hover:bg-amber-600 text-white shadow-xs",
+        actionLabel: "View status",
+        badgeColorClass: "bg-warning/10 text-warning border-warning/25",
+        buttonColorClass: "bg-warning hover:bg-warning/90 text-warning-foreground shadow-xs",
       };
     }
 
     if (platformCap.status === "rejected") {
       return {
         isAccessible: false,
-        badgeText: "Verification Rejected",
+        badgeText: "Failed",
         status: "rejected",
-        reason: `${pName} proof was rejected. Re-connect account`,
+        reason: `${pName} connection failed. You can reconnect from Account Center.`,
         platform,
         platformName: pName,
-        actionLabel: `Re-connect ${pName}`,
-        badgeColorClass: "bg-red-50 text-red-700 border-red-200/60",
-        buttonColorClass: "bg-red-600 hover:bg-red-700 text-white shadow-xs",
+        actionLabel: "Reconnect",
+        badgeColorClass: "bg-danger/10 text-danger border-danger/25",
+        buttonColorClass: "bg-danger hover:bg-danger/90 text-danger-foreground shadow-xs",
       };
     }
 
@@ -188,22 +266,22 @@ export function CapabilityProvider({ children }: { children: React.ReactNode }) 
         platform,
         platformName: pName,
         actionLabel: "Unavailable",
-        badgeColorClass: "bg-slate-100 text-slate-500 border-slate-200",
-        buttonColorClass: "bg-slate-200 text-slate-400 cursor-not-allowed",
+        badgeColorClass: "border-border bg-muted text-muted-foreground",
+        buttonColorClass: "cursor-not-allowed bg-muted text-disabled",
       };
     }
 
     // Default: unavailable / Requires Connection
     return {
       isAccessible: false,
-      badgeText: `Connect ${pName}`,
+      badgeText: "Connection required",
       status: "unavailable",
-      reason: `Connect ${pName} first`,
+      reason: `A ${pName} account is required to start this task.`,
       platform,
       platformName: pName,
-      actionLabel: `Connect ${pName}`,
-      badgeColorClass: "bg-slate-100 text-slate-700 border-slate-200",
-      buttonColorClass: "bg-slate-900 hover:bg-slate-800 text-white shadow-xs",
+      actionLabel: "Connect",
+      badgeColorClass: "border-border bg-muted text-foreground",
+      buttonColorClass: "bg-foreground hover:bg-foreground/90 text-background shadow-xs",
     };
   };
 

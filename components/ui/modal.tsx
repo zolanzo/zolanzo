@@ -109,7 +109,7 @@ export function Modal({
             exit={reduceMotion ? undefined : { opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: MOTION.base }}
             className={cn(
-              "relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card p-6 text-foreground shadow-dialog",
+              "relative z-10 max-h-[min(90dvh,40rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-4 text-foreground shadow-dialog sm:p-6",
               className,
             )}
           >
@@ -131,7 +131,7 @@ export function Modal({
                   ) : null}
                 </div>
                 {showClose ? (
-                  <IconButton label="Close dialog" size="sm" onClick={onClose}>
+                  <IconButton label="Close dialog" size="md" onClick={onClose}>
                     <X className="size-4" aria-hidden />
                   </IconButton>
                 ) : null}

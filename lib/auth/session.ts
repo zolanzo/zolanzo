@@ -10,6 +10,7 @@ import type { Role } from "@/constants/roles";
 import type { OrgRole } from "@/constants/org-roles";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/route-policy";
 import { isDatabaseConfigured } from "@/lib/validation/env";
+import { isBackendUnavailableError } from "@/lib/reliability/backend-unavailable";
 
 export type SessionUser = {
   id: string;
@@ -44,6 +45,11 @@ export type AuthContext = {
   actor: ActorContext;
   activeOrgRole: OrgRole | null;
 };
+
+export type AuthContextResult =
+  | { status: "authenticated"; ctx: AuthContext }
+  | { status: "unauthenticated" }
+  | { status: "unavailable"; service: "auth" | "database" };
 
 function asUserId(id: string): UserId {
   return id as UserId;
@@ -136,30 +142,79 @@ async function loadSessionUser(
   };
 }
 
+async function resolveAuthenticatedContext(
+  supabaseUserId: string,
+): Promise<AuthContextResult> {
+  if (!isDatabaseConfigured()) {
+    return { status: "unavailable", service: "database" };
+  }
+
+  try {
+    const sessionUser = await loadSessionUser(supabaseUserId);
+    if (!sessionUser) return { status: "unauthenticated" };
+
+    const actor = buildActorContext(sessionUser);
+    const membership = sessionUser.memberships.find(
+      (m) => m.organizationId === sessionUser.activeOrganizationId,
+    );
+
+    return {
+      status: "authenticated",
+      ctx: {
+        supabaseUserId,
+        user: sessionUser,
+        actor,
+        activeOrgRole: (membership?.orgRole as OrgRole | undefined) ?? null,
+      },
+    };
+  } catch (error) {
+    if (isBackendUnavailableError(error)) {
+      return { status: "unavailable", service: "database" };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Distinguishes missing session from unreachable auth/database.
+ */
+export async function resolveAuthContext(): Promise<AuthContextResult> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    if (!supabase) return { status: "unauthenticated" };
+
+    let data;
+    let error;
+    try {
+      ({ data, error } = await supabase.auth.getUser());
+    } catch (caught) {
+      if (isBackendUnavailableError(caught)) {
+        return { status: "unavailable", service: "auth" };
+      }
+      throw caught;
+    }
+
+    if (error || !data.user) {
+      if (error && isBackendUnavailableError(error)) {
+        return { status: "unavailable", service: "auth" };
+      }
+      return { status: "unauthenticated" };
+    }
+    return resolveAuthenticatedContext(data.user.id);
+  } catch (error) {
+    if (isBackendUnavailableError(error)) {
+      return { status: "unavailable", service: "auth" };
+    }
+    throw error;
+  }
+}
+
 /**
  * Returns auth context when signed in and provisioned; otherwise null.
  */
 export async function getAuthContext(): Promise<AuthContext | null> {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) return null;
-
-  const sessionUser = await loadSessionUser(data.user.id);
-  if (!sessionUser) return null;
-
-  const actor = buildActorContext(sessionUser);
-  const membership = sessionUser.memberships.find(
-    (m) => m.organizationId === sessionUser.activeOrganizationId,
-  );
-
-  return {
-    supabaseUserId: data.user.id,
-    user: sessionUser,
-    actor,
-    activeOrgRole: (membership?.orgRole as OrgRole | undefined) ?? null,
-  };
+  const result = await resolveAuthContext();
+  return result.status === "authenticated" ? result.ctx : null;
 }
 
 export async function requireAuthContext(): Promise<AuthContext> {

@@ -39,10 +39,12 @@ describe("loadEnv", () => {
       STANKINGS_PASSPORT_KEY: "test-key",
       SENDCHAMP_API_KEY: "sms-key",
       SENDCHAMP_SENDER_ID: "ZOLANZO",
+      SENDCHAMP_API_BASE_URL: "https://api.sendchamp.com/api/v1",
     });
 
     expect(env.STANKINGS_PASSPORT_URL).toBe("https://passport.example.com");
     expect(env.SENDCHAMP_SENDER_ID).toBe("ZOLANZO");
+    expect(env.SENDCHAMP_API_BASE_URL).toBe("https://api.sendchamp.com/api/v1");
     expect(isSupabaseConfigured(env)).toBe(false);
   });
 });

@@ -11,7 +11,7 @@ export default function SubmissionsRedirect() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-[#04090B] text-white flex items-center justify-center text-sm font-semibold">
+    <div className="flex min-h-screen items-center justify-center bg-background text-sm font-semibold text-foreground">
       Redirecting to Applications...
     </div>
   );

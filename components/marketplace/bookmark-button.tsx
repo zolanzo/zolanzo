@@ -23,12 +23,12 @@ export function BookmarkButton({ taskId: _taskId, initialBookmarked = false }: B
       onClick={toggleBookmark}
       className={`p-2 rounded-xl border transition-all cursor-pointer ${
         isBookmarked
-          ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
-          : "bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+          ? "bg-warning/15 border-warning/40 text-warning"
+          : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-border-strong"
       }`}
       aria-label="Bookmark Task"
     >
-      <HugeiconsIcon icon={BookmarkIcon} size={16} className={isBookmarked ? "fill-amber-400" : ""} />
+      <HugeiconsIcon icon={BookmarkIcon} size={16} className={isBookmarked ? "fill-warning" : ""} />
     </button>
   );
 }

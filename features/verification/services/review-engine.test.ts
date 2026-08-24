@@ -52,6 +52,7 @@ describe("review queue lifecycle", () => {
     expect(mapOutcomeToSubmissionStatus("approved_with_warning")).toBe(
       "approved",
     );
+    expect(mapOutcomeToSubmissionStatus("rejected")).toBe("rejected");
     expect(mapOutcomeToSubmissionStatus("revision_requested")).toBe(
       "revision_requested",
     );

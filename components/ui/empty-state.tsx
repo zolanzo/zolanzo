@@ -26,33 +26,31 @@ export function EmptyState({
   className = "",
 }: EmptyStateProps) {
   return (
-    <div className={`flex flex-col items-center justify-center text-center p-8 sm:p-10 rounded-[20px] bg-white border border-slate-200/80 shadow-soft space-y-4 my-3 ${className}`}>
-      {/* Brand Custom Illustration */}
-      <CustomBrandIllustration type={type} className="w-24 h-24 mb-1" />
-
-      <div className="space-y-1 max-w-sm">
-        <h3 className="text-base font-bold text-slate-900 tracking-tight">{title}</h3>
-        <p className="text-xs text-slate-600 leading-relaxed">{description}</p>
+    <div
+      className={`flex flex-col items-center justify-center space-y-2.5 rounded-2xl border border-border bg-card p-5 text-center ${className}`}
+    >
+      <CustomBrandIllustration type={type} className="h-12 w-12" />
+      <div className="max-w-sm space-y-1">
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+        <p className="text-xs leading-snug text-muted-foreground">{description}</p>
       </div>
-
-      {actionLabel && actionHref && (
+      {actionLabel && actionHref ? (
         <Link
           href={actionHref}
-          className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-1"
+          className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
         >
           {actionLabel}
         </Link>
-      )}
-
-      {actionLabel && !actionHref && onAction && (
+      ) : null}
+      {actionLabel && !actionHref && onAction ? (
         <button
           type="button"
           onClick={onAction}
-          className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-1"
+          className="h-10 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
         >
           {actionLabel}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

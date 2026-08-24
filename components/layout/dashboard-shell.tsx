@@ -20,6 +20,7 @@ import { Sidebar, type SidebarNavItem } from "@/components/navigation/sidebar";
 import { Topbar } from "@/components/navigation/topbar";
 import { FloatingActionButton } from "@/components/navigation/floating-action-button";
 import { Drawer } from "@/components/ui/drawer";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
 
 type DashboardShellContextValue = {
   sidebarCollapsed: boolean;
@@ -126,12 +127,15 @@ export function DashboardShell({
           title="Navigation"
           side="left"
         >
-          <Sidebar
-            items={navItems}
-            activePath={activePath}
-            collapsed={false}
-            className="h-full w-full border-0"
-          />
+          <div className="flex flex-col gap-4">
+            <Sidebar
+              items={navItems}
+              activePath={activePath}
+              collapsed={false}
+              className="h-full w-full border-0"
+            />
+            <ThemeModeControl variant="menu" />
+          </div>
         </Drawer>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -139,6 +143,9 @@ export function DashboardShell({
             title={title}
             onSidebarToggle={() => setMobileOpen(true)}
             showSidebarToggle
+            themeToggle={
+              <ThemeModeControl variant="compact" className="hidden md:flex" />
+            }
           />
           <main
             id="main-content"

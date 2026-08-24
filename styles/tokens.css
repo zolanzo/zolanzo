@@ -1,92 +1,115 @@
-/* ZOLANZO Design System 4.0 — Logo-Derived Brand Identity (Moniepoint/Stripe/Linear/Apple Quality)
-   Color Breakdown:
-   - 80% Neutrals: Background #F8FAFC, Cards #FFFFFF, Navy Text #0F172A, Secondary Text #475569
-   - 15% Brand Emerald (#059669 / #0B8F4D): Primary buttons, success states, active navigation
-   - 5% Accent Colors: 
-     * Brand Teal (#0D9488): Secondary highlights, hover states
-     * Brand Blue (#2563EB): Info, selection indicators, links
-     * Brand Gold (#D97706 / #F59E0B): Wallet earnings, high-paying task rewards, bonuses
+/* ZOLANZO Design System — semantic light/dark tokens
+   Brand primitives stay constant:
+   - Primary emerald #059669
+   - Secondary teal #0D9488
+   - Gold #D97706 / #F59E0B
+   Light and dark semantic layers are fully defined. Dark does not copy light.
 */
 
 :root {
-  /* Logo-Derived Brand Primitives */
+  color-scheme: light;
+
+  /* Brand primitives */
   --z-emerald: #059669;
   --z-emerald-hover: #047857;
-  --z-emerald-subtle: #ECFDF5;
+  --z-emerald-subtle: #ecfdf5;
   --z-emerald-border: rgba(5, 150, 105, 0.25);
-  
-  --z-teal: #0D9488;
-  --z-teal-hover: #0F766E;
-  --z-teal-subtle: #F0FDFA;
 
-  --z-blue: #2563EB;
-  --z-blue-hover: #1D4ED8;
-  --z-blue-subtle: #EFF6FF;
+  --z-teal: #0d9488;
+  --z-teal-hover: #0f766e;
+  --z-teal-subtle: #f0fdfa;
 
-  --z-gold: #D97706;
-  --z-gold-bright: #F59E0B;
-  --z-gold-subtle: #FEF3C7;
+  --z-blue: #2563eb;
+  --z-blue-hover: #1d4ed8;
+  --z-blue-subtle: #eff6ff;
+
+  --z-gold: #d97706;
+  --z-gold-bright: #f59e0b;
+  --z-gold-subtle: #fef3c7;
   --z-gold-border: rgba(217, 119, 6, 0.3);
 
-  --z-red: #DC2626;
-  --z-red-subtle: #FEE2E2;
+  --z-red: #dc2626;
+  --z-red-subtle: #fee2e2;
 
-  --z-navy-text: #0F172A;
+  --z-navy-text: #0f172a;
   --z-slate-text: #475569;
-  --z-gray-bg: #F8FAFC;
-  --z-gray-card: #FFFFFF;
-  --z-gray-border: #E2E8F0;
-  --z-gray-subtle: #F1F5F9;
+  --z-gray-bg: #f8fafc;
+  --z-gray-card: #ffffff;
+  --z-gray-border: #e2e8f0;
+  --z-gray-subtle: #f1f5f9;
 
-  /* Semantic System Mapping */
-  --background: var(--z-gray-bg);
-  --foreground: var(--z-navy-text);
-  --surface: #FFFFFF;
-  --card: #FFFFFF;
-  --card-foreground: var(--z-navy-text);
-  --muted: var(--z-gray-subtle);
-  --muted-foreground: var(--z-slate-text);
-  --border: var(--z-gray-border);
-  --input: var(--z-gray-border);
-  --ring: var(--z-emerald);
-  
-  --primary: var(--z-emerald);
-  --primary-foreground: #FFFFFF;
-  --primary-hover: var(--z-emerald-hover);
-  
-  --accent: var(--z-teal);
-  --accent-foreground: #FFFFFF;
+  /* Aliases for @theme brand utilities */
+  --z-navy: var(--z-navy-text);
+  --z-primary: var(--z-emerald);
+  --z-primary-hover: var(--z-emerald-hover);
+  --z-light-bg: #f8fafc;
+  --z-dark-bg: #050608;
+  --z-success: var(--z-emerald);
+  --z-warning: var(--z-gold);
+  --z-danger: var(--z-red);
 
-  --info: var(--z-blue);
-  --info-foreground: #FFFFFF;
-  
-  --success: var(--z-emerald);
-  --success-foreground: #FFFFFF;
-  
-  --warning: var(--z-gold);
-  --warning-foreground: #FFFFFF;
-  
-  --danger: var(--z-red);
-  --danger-foreground: #FFFFFF;
-  
-  --overlay: rgba(15, 23, 42, 0.6);
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: var(--z-navy-text);
+  /* Semantic — light */
+  --background: #f8fafc;
+  --background-secondary: #f1f5f9;
+  --foreground: #0f172a;
+  --foreground-secondary: #475569;
+  --foreground-disabled: #94a3b8;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --disabled: #94a3b8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --input: #e2e8f0;
+  --input-background: #ffffff;
+  --ring: #059669;
+  --header: rgba(255, 255, 255, 0.96);
+  --footer: #f8fafc;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
   --topbar: rgba(255, 255, 255, 0.96);
-  --elevated: #FFFFFF;
-  --subtle: var(--z-gray-subtle);
 
-  /* Radius Scale */
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --primary-hover: #047857;
+  --primary-subtle: #ecfdf5;
+  --button-background: #059669;
+  --button-foreground: #ffffff;
+  --button-hover: #047857;
+
+  --accent: #0d9488;
+  --accent-foreground: #ffffff;
+  --accent-hover: #0f766e;
+  --accent-subtle: #f0fdfa;
+
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --danger: #dc2626;
+  --danger-foreground: #ffffff;
+
+  --hover: #f1f5f9;
+  --selected: #ecfdf5;
+  --overlay: rgba(15, 23, 42, 0.6);
+  --subtle: #f1f5f9;
+
+  /* Radius */
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --radius-2xl: 1.25rem; /* 20px Premium Card Radius */
+  --radius-2xl: 1.25rem;
   --radius-3xl: 1.5rem;
   --radius-pill: 9999px;
 
-  /* Premium Depth Shadows (Moniepoint/Stripe Quality) */
+  /* Light elevation */
   --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-soft: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
   --shadow-medium: 0 4px 16px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
@@ -94,25 +117,84 @@
   --shadow-dialog: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.06);
   --shadow-hero: 0 20px 40px rgba(5, 150, 105, 0.15);
 
-  /* Typography Scale */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Plus Jakarta Sans', var(--font-sans);
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-heading: "Plus Jakarta Sans", var(--font-sans);
+  --text-display: 3.5rem;
+  --text-h1: 2.5rem;
+  --text-h2: 2rem;
+  --text-h3: 1.5rem;
+  --text-body-lg: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
 }
 
 .dark {
-  --background: var(--z-gray-bg);
-  --foreground: var(--z-navy-text);
-  --surface: #FFFFFF;
-  --card: #FFFFFF;
-  --card-foreground: var(--z-navy-text);
-  --muted: var(--z-gray-subtle);
-  --muted-foreground: var(--z-slate-text);
-  --border: var(--z-gray-border);
-  --input: var(--z-gray-border);
-  --primary-foreground: #FFFFFF;
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: var(--z-navy-text);
-  --topbar: rgba(255, 255, 255, 0.96);
-  --elevated: #FFFFFF;
-  --subtle: var(--z-gray-subtle);
+  color-scheme: dark;
+
+  --z-emerald-subtle: rgba(5, 150, 105, 0.16);
+  --z-emerald-border: rgba(5, 150, 105, 0.4);
+  --z-teal-subtle: rgba(13, 148, 136, 0.16);
+  --z-blue-subtle: rgba(37, 99, 235, 0.18);
+  --z-gold-subtle: rgba(217, 119, 6, 0.18);
+  --z-gold-border: rgba(217, 119, 6, 0.42);
+  --z-red-subtle: rgba(220, 38, 38, 0.18);
+
+  --background: #050608;
+  --background-secondary: #0b0f14;
+  --foreground: #f1f5f9;
+  --foreground-secondary: #94a3b8;
+  --foreground-disabled: #64748b;
+  --surface: #0b0f14;
+  --elevated: #131922;
+  --card: #131922;
+  --card-foreground: #f1f5f9;
+  --muted: #101419;
+  --muted-foreground: #94a3b8;
+  --disabled: #64748b;
+  --border: #242d3d;
+  --border-strong: #334155;
+  --input: #242d3d;
+  --input-background: #0b0f14;
+  --ring: #059669;
+  --header: rgba(5, 6, 8, 0.96);
+  --footer: #050608;
+  --sidebar: #0b0f14;
+  --sidebar-foreground: #f1f5f9;
+  --topbar: rgba(5, 6, 8, 0.96);
+
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --primary-hover: #047857;
+  --primary-subtle: rgba(5, 150, 105, 0.16);
+  --button-background: #059669;
+  --button-foreground: #ffffff;
+  --button-hover: #047857;
+
+  --accent: #0d9488;
+  --accent-foreground: #ffffff;
+  --accent-hover: #0f766e;
+  --accent-subtle: rgba(13, 148, 136, 0.16);
+
+  --info: #2563eb;
+  --info-foreground: #ffffff;
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --danger: #dc2626;
+  --danger-foreground: #ffffff;
+
+  --hover: #181f29;
+  --selected: rgba(5, 150, 105, 0.16);
+  --overlay: rgba(0, 0, 0, 0.72);
+  --subtle: #101419;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.35);
+  --shadow-dialog: 0 24px 48px rgba(0, 0, 0, 0.58), 0 8px 16px rgba(0, 0, 0, 0.4);
+  --shadow-hero: 0 20px 40px rgba(5, 150, 105, 0.18);
 }

@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { cn } from "@/utils";
 
 /**
@@ -78,49 +75,32 @@ export function ThemedHeroImage({
   height = 620,
   priority = true,
 }: ThemedHeroImageProps) {
-  const [showLight, setShowLight] = useState(false);
   const imageClassName = cn(
     "h-auto w-full select-none object-contain object-bottom transition-all duration-300 [mask-image:linear-gradient(to_bottom,black_76%,transparent_98%)]",
     className,
   );
 
-  useEffect(() => {
-    const sync = () => {
-      setShowLight(!document.documentElement.classList.contains("dark"));
-    };
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <div className="group relative flex items-center justify-center">
       <div className="pointer-events-none absolute inset-0 scale-90 rounded-full bg-primary/12 blur-3xl" />
-      {showLight ? (
-        <HeroPicture
-          {...LIGHT_SOURCES}
-          alt={alt}
-          width={width}
-          height={height}
-          priority={false}
-          pictureClassName="block"
-          className={cn(imageClassName, "drop-shadow-2xl")}
-        />
-      ) : (
-        <HeroPicture
-          {...DARK_SOURCES}
-          alt={alt}
-          width={width}
-          height={height}
-          priority={priority}
-          pictureClassName="block"
-          className={cn(imageClassName, "drop-shadow-2xl")}
-        />
-      )}
+      <HeroPicture
+        {...LIGHT_SOURCES}
+        alt={alt}
+        width={width}
+        height={height}
+        priority={priority}
+        pictureClassName="block dark:hidden"
+        className={cn(imageClassName, "drop-shadow-2xl")}
+      />
+      <HeroPicture
+        {...DARK_SOURCES}
+        alt={alt}
+        width={width}
+        height={height}
+        priority={priority}
+        pictureClassName="hidden dark:block"
+        className={cn(imageClassName, "drop-shadow-2xl")}
+      />
     </div>
   );
 }

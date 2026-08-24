@@ -94,16 +94,21 @@ export default function LoginPage() {
           title="Welcome back"
         />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          method="post"
+          action="/login"
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <ValidationMessage message={error} />
 
           {/* Email Field */}
           <div className="space-y-1.5 text-left">
-            <label htmlFor="email" className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+            <label htmlFor="email" className="text-xs font-semibold text-foreground">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400 pointer-events-none">
+              <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
                 <HugeiconsIcon icon={Mail01Icon} size={18} />
               </div>
               <input
@@ -113,7 +118,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder=""
-                className="w-full h-[48px] pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-[#181F29] border border-slate-300 dark:border-white/[0.12] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm focus:outline-none transition-all duration-200"
+                className="h-[48px] w-full rounded-xl border border-border bg-input-background pl-10 pr-4 text-sm text-foreground transition-all duration-200 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -129,19 +134,19 @@ export default function LoginPage() {
 
           {/* Remember Me & Forgot PIN */}
           <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-zinc-100 cursor-pointer select-none">
+            <label className="flex min-h-11 cursor-pointer select-none items-center gap-2 text-muted-foreground hover:text-foreground">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded bg-zinc-900 border-zinc-800 text-[#008744] focus:ring-0 cursor-pointer"
+                className="h-4 w-4 cursor-pointer rounded border-border bg-input-background text-primary focus:ring-0"
               />
               <span>Remember me</span>
             </label>
 
             <Link
               href="/forgot-pin"
-              className="text-[#008744] hover:text-emerald-400 font-semibold transition-colors"
+              className="font-semibold text-primary transition-colors hover:text-primary-hover"
             >
               Forgot PIN?
             </Link>
@@ -151,10 +156,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-[52px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-sm transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+            className="primary-action mt-2 flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold disabled:opacity-50"
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
             ) : (
               <>
                 <span>Log In</span>
@@ -167,9 +172,9 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="relative my-6 text-center">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200 dark:border-white/[0.08]" />
+            <div className="w-full border-t border-border" />
           </div>
-          <span className="relative px-3 bg-white dark:bg-[#101419] text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+          <span className="relative bg-card px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             OR
           </span>
         </div>
@@ -178,11 +183,11 @@ export default function LoginPage() {
         <SocialLoginButtons />
 
         {/* Bottom Switch to Sign Up */}
-        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-600 dark:text-zinc-400">
+        <div className="mt-6 border-t border-border pt-4 text-center text-xs text-muted-foreground">
           <span>Don&apos;t have an account? </span>
           <Link
             href="/signup"
-            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-extrabold transition-colors"
+            className="font-extrabold text-primary transition-colors hover:text-primary-hover"
           >
             Create Account
           </Link>

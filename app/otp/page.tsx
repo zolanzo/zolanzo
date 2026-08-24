@@ -18,10 +18,10 @@ export default function OtpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
       <div className="w-full max-w-md space-y-6 text-center text-xs">
         <h1 className="text-xl font-bold tracking-tight">Enter Verification Code</h1>
-        <p className="text-zinc-400">Type the 6-digit verification code sent to your device.</p>
+        <p className="text-muted-foreground">Type the 6-digit verification code sent to your device.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex items-center justify-center gap-2">
@@ -32,14 +32,14 @@ export default function OtpPage() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(idx, e.target.value)}
-                className="w-11 h-12 text-center text-lg font-bold rounded-xl border border-zinc-800 bg-zinc-900 text-white focus:border-emerald-500 focus:outline-none"
+                className="h-12 w-11 rounded-xl border border-border bg-input-background text-center text-lg font-bold text-foreground focus:border-primary focus:outline-none"
               />
             ))}
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-emerald-500 text-zinc-950 font-bold text-xs hover:bg-emerald-400 transition-all min-h-[44px]"
+            className="primary-action min-h-[44px] w-full rounded-xl py-3 text-xs font-bold"
           >
             Verify & Continue
           </button>

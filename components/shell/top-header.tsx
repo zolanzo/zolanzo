@@ -1,36 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Search01Icon,
-  Notification01Icon,
-} from "@hugeicons/core-free-icons";
+import { Notification01Icon } from "@hugeicons/core-free-icons";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
 import { NotificationDropdown } from "@/components/shell/notification-dropdown";
 import { ProfileDropdown } from "@/components/shell/profile-dropdown";
-import { GlobalSearchModal } from "@/components/shell/global-search-modal";
+import { UserAvatar } from "@/components/identity/user-avatar";
 import { useRealtimeChannel } from "@/lib/realtime/subscriptions";
 import { notificationService } from "@/lib/notifications/service";
+import { headerWalletHref } from "@/lib/workspace/shell-nav";
 
 interface TopHeaderProps {
   userName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
+  availableBalance?: string;
 }
 
-export function TopHeader({ userName = "ZOLANZO Member", avatarUrl = "/brand/lady1.png" }: TopHeaderProps) {
+export function TopHeader({
+  userName = "Account",
+  avatarUrl = null,
+  availableBalance,
+}: TopHeaderProps) {
+  const pathname = usePathname();
+  const walletHref = headerWalletHref(pathname);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  const [availableBalance, setAvailableBalance] = useState("₦0");
+  const [balanceLabel, setBalanceLabel] = useState(availableBalance);
   const [unreadCount, setUnreadCount] = useState(() => notificationService.getUnreadCount());
+  const menusRef = useRef<HTMLDivElement>(null);
 
-  // Realtime Subscriptions
   useRealtimeChannel("wallet", (evt) => {
+    if (availableBalance == null) return;
     if (evt.data && typeof evt.data.available === "number") {
-      setAvailableBalance(`₦${(evt.data.available as number).toLocaleString()}`);
+      setBalanceLabel(`₦${(evt.data.available as number).toLocaleString()}`);
     }
   });
 
@@ -38,88 +43,97 @@ export function TopHeader({ userName = "ZOLANZO Member", avatarUrl = "/brand/lad
     setUnreadCount(notificationService.getUnreadCount());
   });
 
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      if (menusRef.current && !menusRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+        setProfileOpen(false);
+      }
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setNotificationsOpen(false);
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
   return (
-    <header className="sticky top-0 z-30 hidden h-14 select-none items-center justify-between border-b border-border bg-topbar px-4 text-foreground backdrop-blur-md lg:flex sm:px-8">
-      
-      {/* Search Modal Trigger */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setSearchOpen(true)}
-          className="focus-ring flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40"
-        >
-          <HugeiconsIcon icon={Search01Icon} size={15} className="text-muted-foreground" />
-          <span className="hidden sm:inline">Search...</span>
-          <kbd className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
+    <header className="sticky top-0 z-30 flex h-12 select-none items-center justify-end border-b border-border bg-topbar px-2 text-foreground sm:px-6">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2" ref={menusRef}>
+        <ThemeModeControl variant="compact" className="hidden md:block" />
+        {walletHref ? (
+          balanceLabel ? (
+            <Link
+              href={walletHref}
+              className="focus-ring flex h-9 max-w-[28vw] items-center truncate rounded-xl border border-primary/25 bg-primary-subtle px-2.5 text-xs font-extrabold text-primary hover:bg-primary/15 sm:max-w-[34vw] sm:px-3"
+            >
+              {balanceLabel}
+            </Link>
+          ) : (
+            <Link
+              href={walletHref}
+              className="focus-ring flex h-9 items-center rounded-xl border border-border bg-surface px-3 text-xs font-bold text-foreground hover:bg-hover"
+            >
+              Wallet
+            </Link>
+          )
+        ) : null}
 
-      <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-
-      {/* Right Actions: Clean Balance, Notifications, User Profile */}
-      <div className="flex items-center gap-3">
-        
-        {/* Balance Chip */}
-        <Link
-          href="/wallet"
-          className="flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-extrabold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-        >
-          <span>{availableBalance}</span>
-        </Link>
-
-        {/* Notifications Icon Button */}
         <div className="relative">
           <button
             type="button"
             onClick={() => {
-              setNotificationsOpen(!notificationsOpen);
+              setNotificationsOpen((open) => !open);
               setProfileOpen(false);
             }}
-            className="focus-ring relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground transition-colors hover:text-foreground"
+            className="focus-ring relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface text-foreground hover:bg-hover"
+            aria-label="Notifications"
+            aria-expanded={notificationsOpen}
+            aria-haspopup="dialog"
           >
             <HugeiconsIcon icon={Notification01Icon} size={18} />
-            {unreadCount > 0 && (
-              <>
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 animate-ping rounded-full bg-primary" />
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-              </>
-            )}
+            {unreadCount > 0 ? (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
+            ) : null}
           </button>
-
-          {notificationsOpen && (
+          {notificationsOpen ? (
             <NotificationDropdown onClose={() => setNotificationsOpen(false)} />
-          )}
+          ) : null}
         </div>
 
-        {/* User Profile Avatar */}
         <div className="relative">
           <button
             type="button"
             onClick={() => {
-              setProfileOpen(!profileOpen);
+              setProfileOpen((open) => !open);
               setNotificationsOpen(false);
             }}
-            className="focus-ring flex cursor-pointer items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-muted"
+            className="focus-ring flex h-9 items-center gap-2 rounded-xl px-1 hover:bg-hover"
+            aria-label="Account menu"
+            aria-expanded={profileOpen}
+            aria-haspopup="menu"
           >
-            <Image
+            <UserAvatar
+              name={userName}
               src={avatarUrl}
-              alt={userName}
-              width={34}
-              height={34}
-              className="h-8 w-8 rounded-lg border border-primary/30 object-cover"
+              size={32}
+              className="h-8 w-8 rounded-lg border border-border"
             />
-            <span className="hidden text-xs font-bold text-foreground md:inline-block">
+            <span className="hidden pr-1 text-xs font-bold text-foreground md:inline-block">
               {userName.split(" ")[0]}
             </span>
           </button>
-
-          {profileOpen && (
+          {profileOpen ? (
             <ProfileDropdown userName={userName} onClose={() => setProfileOpen(false)} />
-          )}
+          ) : null}
         </div>
-
       </div>
     </header>
   );

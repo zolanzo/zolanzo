@@ -5,20 +5,37 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-disabled: var(--foreground-disabled);
   --color-surface: var(--surface);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-disabled: var(--disabled);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
+  --color-input-background: var(--input-background);
   --color-ring: var(--ring);
+  --color-header: var(--header);
+  --color-footer: var(--footer);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-gold: var(--z-gold);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-button: var(--button-background);
+  --color-button-foreground: var(--button-foreground);
+  --color-button-hover: var(--button-hover);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -37,14 +54,8 @@
   --color-topbar: var(--topbar);
 
   --color-brand-navy: var(--z-navy);
-  --color-brand-teal: var(--z-primary);
-  --color-brand-teal-dark: var(--z-primary-hover);
+  --color-brand-primary: var(--z-primary);
   --color-brand-gold: var(--z-gold);
-  --color-brand-background: var(--z-light-bg);
-  --color-brand-dark-background: var(--z-dark-bg);
-  --color-brand-success: var(--z-success);
-  --color-brand-warning: var(--z-warning);
-  --color-brand-danger: var(--z-danger);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -61,15 +72,6 @@
 
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
-
-  --text-display: var(--text-display);
-  --text-h1: var(--text-h1);
-  --text-h2: var(--text-h2);
-  --text-h3: var(--text-h3);
-  --text-body-lg: var(--text-body-lg);
-  --text-body: var(--text-body);
-  --text-small: var(--text-small);
-  --text-caption: var(--text-caption);
 }
 
 @layer base {
@@ -118,7 +120,7 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--z-primary) 35%, transparent);
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
   }
 }
 

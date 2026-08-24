@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma/client";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { AppError, apiError, apiSuccess, type ApiResponse } from "@/lib/api/response";
 import {
   updatePrivateProfileSchema,
@@ -104,7 +105,12 @@ export async function updatePrivateProfile(
       where: { userId },
       data: {
         legalName: input.legalName ?? null,
-        marketingOptIn: input.marketingOptIn,
+        ...(input.marketingOptIn !== undefined
+          ? { marketingOptIn: input.marketingOptIn }
+          : {}),
+        ...(input.addressJson !== undefined
+          ? { addressJson: input.addressJson as Prisma.InputJsonValue }
+          : {}),
       },
     });
 

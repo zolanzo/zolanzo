@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Icons, CategoryIconsRegistry } from "@/lib/icon-registry";
 import { ICON_SIZES, ICON_STROKE_WIDTH } from "@/lib/icons";
 import { BrandIcon, BrandType } from "@/components/ui/brand-icons";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
 
 type ScreenTab =
   | "landing"
@@ -20,14 +21,11 @@ type ScreenTab =
 type ViewportMode = "desktop" | "mobile";
 
 export default function ProductPreviewPage() {
-  const [isDark, setIsDark] = useState(false);
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
   const [activeTab, setActiveTab] = useState<ScreenTab>("landing");
 
-  const toggleTheme = () => setIsDark((prev) => !prev);
-
   return (
-    <div className={isDark ? "dark bg-zinc-950 text-zinc-100 min-h-screen" : "bg-zinc-50 text-zinc-900 min-h-screen"}>
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       
       {/* Top Prototype Control Bar */}
       <header className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-xs">
@@ -77,14 +75,7 @@ export default function ProductPreviewPage() {
               </button>
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
-              title="Toggle Light / Dark Theme"
-            >
-              {isDark ? <Icons.sparkles size={18} /> : <Icons.clock size={18} />}
-            </button>
+            <ThemeModeControl variant="compact" />
 
           </div>
         </div>

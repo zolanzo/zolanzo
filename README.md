@@ -7,7 +7,7 @@ Premium workforce marketplace — enterprise foundation.
 ## Stack
 
 - Next.js 16 (App Router) · React 19 · TypeScript (strict)
-- Tailwind CSS 4 · Motion · Lucide · next-themes
+- Tailwind CSS 4 · Motion · Lucide · custom theme store (`zolanzo-theme`)
 - Supabase · Postgres · Prisma 7
 - React Query · Zod · React Hook Form
 - Sharp (WebP/AVIF) · PWA-ready
@@ -106,12 +106,11 @@ Health: `/health` · `/readiness` · `/version`
 
 | Token | Value |
 | --- | --- |
-| Primary Navy | `#071B34` |
-| Primary Teal | `#16C6C6` |
-| Dark Teal | `#0FA5A5` |
-| Accent Gold | `#F6B81A` |
+| Primary | `#059669` |
+| Navy text | `#0F172A` |
+| Accent Gold | `#D97706` |
 | Background | `#F8FAFC` |
-| Dark Background | `#081320` |
+| Dark Background | `#050608` |
 
 Typography: **Plus Jakarta Sans** (headings) · **Inter** (body)
 

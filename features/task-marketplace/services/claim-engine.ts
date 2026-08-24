@@ -68,6 +68,14 @@ async function assertCanClaim(params: {
     );
   }
 
+  if (campaign.visibility !== "platform" && campaign.visibility !== "public") {
+    throw new AppError(
+      "CAMPAIGN_NOT_PUBLIC",
+      "Campaign is not available on the marketplace",
+      403,
+    );
+  }
+
   const merged = mergeEligibilityRules({
     templateConstraints: template.constraints as TemplateConstraint[],
     campaignConstraints: campaign.audienceConstraints as TemplateConstraint[],

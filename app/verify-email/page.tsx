@@ -85,10 +85,10 @@ function VerifyEmailForm() {
           type="button"
           onClick={() => handleVerify(otpCode)}
           disabled={loading || otpCode.length !== 6}
-          className="w-full h-[52px] rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-sm transition-all duration-200 shadow-md hover:-translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          className="primary-action flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-sm font-bold disabled:opacity-50"
         >
           {loading ? (
-            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
           ) : (
             <>
               <span>Verify Email</span>
@@ -104,7 +104,7 @@ function VerifyEmailForm() {
 export default function VerifyEmailPage() {
   return (
     <AuthLayout showBackLink backLinkHref="/signup" backLinkLabel="Back">
-      <Suspense fallback={<div className="text-white text-sm">Loading verification...</div>}>
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading verification...</div>}>
         <VerifyEmailForm />
       </Suspense>
     </AuthLayout>

@@ -297,22 +297,22 @@ export function AdminCareersManager() {
     <div className="space-y-8 text-xs font-sans">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-[#008744] text-white px-5 py-3 rounded-2xl shadow-2xl font-bold flex items-center gap-2 border border-emerald-400/40 animate-fadeIn">
+        <div className="fixed inset-x-4 top-4 z-50 flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary px-4 py-3 font-bold text-primary-foreground shadow-2xl animate-fadeIn sm:inset-x-auto sm:right-6 sm:top-6 sm:max-w-md sm:px-5">
           <HugeiconsIcon icon={Tick02Icon} size={18} />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="p-6 rounded-2xl bg-[#0D1218] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-card border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-black text-white">Careers & Automated Applicant ATS</h2>
-            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+            <h2 className="text-lg font-black text-foreground">Careers & Automated Applicant ATS</h2>
+            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-primary-subtle text-primary border border-primary/20 rounded-full">
               Automated Staff Provisioning
             </span>
           </div>
-          <p className="text-zinc-400 text-xs mt-1">
+          <p className="text-muted-foreground text-xs mt-1">
             Manage job postings, review applicant pipeline, and hire candidates directly into ZOLANZO Staff.
           </p>
         </div>
@@ -320,7 +320,7 @@ export function AdminCareersManager() {
         <button
           type="button"
           onClick={() => setShowCreateJobModal(true)}
-          className="px-4 py-2.5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold transition-all shadow-lg flex items-center gap-2 cursor-pointer"
         >
           <HugeiconsIcon icon={Add01Icon} size={16} />
           <span>Create New Job Posting</span>
@@ -329,61 +329,61 @@ export function AdminCareersManager() {
 
       {/* SECTION 1: JOB POSTINGS MANAGEMENT */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <HugeiconsIcon icon={Briefcase01Icon} size={18} className="text-emerald-400" />
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <HugeiconsIcon icon={Briefcase01Icon} size={18} className="text-primary" />
           <span>Active Job Postings ({jobs.length})</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {jobs.map((job) => (
-            <div key={job.id} className="p-5 rounded-2xl bg-[#0D1218] border border-white/[0.08] space-y-3">
+            <div key={job.id} className="p-5 rounded-2xl bg-card border border-border space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-info/10 text-info border border-info/20 rounded-md">
                       {job.department}
                     </span>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-primary-subtle text-primary border border-primary/20 rounded-md">
                       {job.employmentType}
                     </span>
                     <span
                       className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${
                         job.status === "Active"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          ? "bg-primary-subtle text-primary border-primary/20"
                           : job.status === "Closed"
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                          : "bg-red-500/10 text-red-400 border-red-500/20"
+                          ? "bg-warning/10 text-warning border-warning/20"
+                          : "bg-danger/10 text-danger border-danger/20"
                       }`}
                     >
                       {job.status}
                     </span>
                   </div>
-                  <h4 className="font-bold text-white text-sm mt-1">{job.title}</h4>
+                  <h4 className="font-bold text-foreground text-sm mt-1">{job.title}</h4>
                 </div>
               </div>
 
-              <div className="text-zinc-400 text-xs line-clamp-2">{job.description}</div>
+              <div className="text-muted-foreground text-xs line-clamp-2">{job.description}</div>
 
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-400 font-medium">
-                <span className="flex items-center gap-1 text-zinc-300">
-                  <HugeiconsIcon icon={Location01Icon} size={13} className="text-zinc-500" />
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground font-medium">
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <HugeiconsIcon icon={Location01Icon} size={13} className="text-muted-foreground" />
                   {job.location}
                 </span>
-                <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                <span className="flex items-center gap-1 text-primary font-bold">
                   <HugeiconsIcon icon={Coins01Icon} size={13} />
                   {job.salary}
                 </span>
-                <span className="flex items-center gap-1 text-zinc-400 ml-auto">
-                  <HugeiconsIcon icon={UserCheck01Icon} size={13} className="text-blue-400" />
+                <span className="flex items-center gap-1 text-muted-foreground ml-auto">
+                  <HugeiconsIcon icon={UserCheck01Icon} size={13} className="text-info" />
                   {applicants.filter((a) => a.jobId === job.id).length} Applicants
                 </span>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-white/[0.06]">
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-border">
                 <button
                   type="button"
                   onClick={() => handleDuplicateJob(job)}
-                  className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-lg bg-muted hover:bg-hover text-muted-foreground text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <HugeiconsIcon icon={Copy01Icon} size={12} />
                   <span>Duplicate</span>
@@ -393,7 +393,7 @@ export function AdminCareersManager() {
                   <button
                     type="button"
                     onClick={() => handleCloseJob(job.id)}
-                    className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30 text-[10px] font-bold transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-warning/15 border border-warning/30 text-warning hover:bg-warning/25 text-[10px] font-bold transition-colors cursor-pointer"
                   >
                     Close Job
                   </button>
@@ -402,7 +402,7 @@ export function AdminCareersManager() {
                 <button
                   type="button"
                   onClick={() => handleArchiveJob(job.id)}
-                  className="px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-lg bg-danger/15 border border-danger/30 text-danger hover:bg-danger/25 text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <HugeiconsIcon icon={ArchiveIcon} size={12} />
                   <span>Archive</span>
@@ -414,10 +414,10 @@ export function AdminCareersManager() {
       </div>
 
       {/* SECTION 2: APPLICANT TRACKING SYSTEM (ATS) PIPELINE */}
-      <div className="space-y-4 pt-4 border-t border-white/[0.08]">
+      <div className="space-y-4 pt-4 border-t border-border">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <HugeiconsIcon icon={UserCheck01Icon} size={18} className="text-blue-400" />
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+            <HugeiconsIcon icon={UserCheck01Icon} size={18} className="text-info" />
             <span>Applicant Pipeline & Automated Hiring ({filteredApplicants.length})</span>
           </h3>
 
@@ -425,7 +425,7 @@ export function AdminCareersManager() {
             <select
               value={selectedJobIdFilter}
               onChange={(e) => setSelectedJobIdFilter(e.target.value)}
-              className="h-9 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] text-white text-xs focus:outline-none"
+              className="h-9 px-3 rounded-xl bg-card border border-border text-foreground text-xs focus:outline-none"
             >
               <option value="All">All Job Postings</option>
               {jobs.map((j) => (
@@ -438,7 +438,7 @@ export function AdminCareersManager() {
             <select
               value={selectedStageFilter}
               onChange={(e) => setSelectedStageFilter(e.target.value)}
-              className="h-9 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] text-white text-xs focus:outline-none"
+              className="h-9 px-3 rounded-xl bg-card border border-border text-foreground text-xs focus:outline-none"
             >
               <option value="All">All Pipeline Stages</option>
               {STAGES.map((s) => (
@@ -451,11 +451,11 @@ export function AdminCareersManager() {
         </div>
 
         {/* Applicants Roster */}
-        <div className="bg-[#0D1218] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/[0.08] bg-[#131922] text-zinc-400 font-bold text-[11px]">
+                <tr className="border-b border-border bg-elevated text-muted-foreground font-bold text-[11px]">
                   <th className="p-4">Candidate</th>
                   <th className="p-4">Applied Job Position</th>
                   <th className="p-4">Resume & Cover Letter</th>
@@ -463,22 +463,22 @@ export function AdminCareersManager() {
                   <th className="p-4 text-right">Automated Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-border">
                 {filteredApplicants.map((app) => (
-                  <tr key={app.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={app.id} className="transition-colors hover:bg-hover">
                     <td className="p-4">
-                      <div className="font-bold text-white text-xs">
+                      <div className="font-bold text-foreground text-xs">
                         {app.firstName} {app.lastName}
                       </div>
-                      <div className="text-[11px] text-zinc-400">{app.email}</div>
-                      <div className="text-[10px] text-zinc-500">{app.phone || "No phone provided"}</div>
+                      <div className="text-[11px] text-muted-foreground">{app.email}</div>
+                      <div className="text-[10px] text-muted-foreground">{app.phone || "No phone provided"}</div>
                     </td>
 
                     <td className="p-4 max-w-xs">
-                      <div className="font-semibold text-emerald-400 text-xs line-clamp-1">
+                      <div className="font-semibold text-primary text-xs line-clamp-1">
                         {app.jobTitle}
                       </div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5">Applied: {app.appliedAt}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">Applied: {app.appliedAt}</div>
                     </td>
 
                     <td className="p-4">
@@ -486,12 +486,12 @@ export function AdminCareersManager() {
                         href={app.resumeUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs font-bold text-blue-400 hover:underline flex items-center gap-1"
+                        className="text-xs font-bold text-info hover:underline flex items-center gap-1"
                       >
                         <span>View Resume PDF</span>
                       </a>
                       {app.coverLetter && (
-                        <div className="text-[11px] text-zinc-400 line-clamp-1 italic max-w-xs mt-0.5">
+                        <div className="text-[11px] text-muted-foreground line-clamp-1 italic max-w-xs mt-0.5">
                           &ldquo;{app.coverLetter}&rdquo;
                         </div>
                       )}
@@ -501,14 +501,14 @@ export function AdminCareersManager() {
                       <span
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                           app.status === "Hired"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            ? "bg-primary-subtle text-primary border-primary/20"
                             : app.status === "Offer"
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                            ? "bg-info/10 text-info border-info/20"
                             : app.status === "Interview"
-                            ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                            ? "bg-accent-subtle text-accent border-accent/20"
                             : app.status === "Rejected"
-                            ? "bg-red-500/10 text-red-400 border-red-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            ? "bg-danger/10 text-danger border-danger/20"
+                            : "bg-warning/10 text-warning border-warning/20"
                         }`}
                       >
                         {app.status}
@@ -524,7 +524,7 @@ export function AdminCareersManager() {
                               onChange={(e) =>
                                 handleMoveStage(app.id, e.target.value as ApplicationPipelineStatus)
                               }
-                              className="h-8 px-2 rounded-lg bg-zinc-800 text-white text-[11px] font-semibold border border-white/[0.08] focus:outline-none cursor-pointer"
+                              className="h-8 px-2 rounded-lg bg-muted text-foreground text-[11px] font-semibold border border-border focus:outline-none cursor-pointer"
                             >
                               {STAGES.map((s) => (
                                 <option key={s} value={s}>
@@ -536,7 +536,7 @@ export function AdminCareersManager() {
                             <button
                               type="button"
                               onClick={() => handleHireApplicant(app)}
-                              className="px-3 py-1.5 rounded-lg bg-[#008744] hover:bg-[#00753b] text-white text-[11px] font-black transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-primary-foreground text-[11px] font-black transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                             >
                               <HugeiconsIcon icon={UserAdd01Icon} size={14} />
                               <span>Hire Applicant</span>
@@ -546,7 +546,7 @@ export function AdminCareersManager() {
 
                         {app.status === "Hired" && (
                           <div className="text-right">
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px]">
+                            <span className="px-2.5 py-1 rounded-lg bg-primary-subtle text-primary font-extrabold text-[10px]">
                               ✓ Converted to Staff Automatically
                             </span>
                           </div>
@@ -563,17 +563,17 @@ export function AdminCareersManager() {
 
       {/* CREATE JOB MODAL */}
       {showCreateJobModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-xl bg-[#131922] border border-white/[0.08] rounded-3xl p-6 shadow-2xl space-y-4 relative text-white max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <HugeiconsIcon icon={Briefcase01Icon} size={18} className="text-emerald-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-xl bg-elevated border border-border rounded-3xl p-6 shadow-2xl space-y-4 relative text-foreground max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+                <HugeiconsIcon icon={Briefcase01Icon} size={18} className="text-primary" />
                 Create Career Job Posting
               </h3>
               <button
                 type="button"
                 onClick={() => setShowCreateJobModal(false)}
-                className="text-zinc-400 hover:text-white p-1"
+                className="text-muted-foreground hover:text-foreground p-1"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
@@ -581,24 +581,24 @@ export function AdminCareersManager() {
 
             <form onSubmit={handleCreateJob} className="space-y-3">
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Job Title *</label>
+                <label className="text-muted-foreground font-bold block mb-1">Job Title *</label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Senior Frontend Engineer"
-                  className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                  className="w-full h-10 px-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1">Department</label>
+                  <label className="text-muted-foreground font-bold block mb-1">Department</label>
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value as StaffDepartment)}
-                    className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] text-white text-xs focus:outline-none"
+                    className="w-full h-10 px-3 rounded-xl bg-card border border-border text-foreground text-xs focus:outline-none"
                   >
                     {DEPARTMENTS.map((d) => (
                       <option key={d} value={d}>
@@ -609,11 +609,11 @@ export function AdminCareersManager() {
                 </div>
 
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1">Employment Type</label>
+                  <label className="text-muted-foreground font-bold block mb-1">Employment Type</label>
                   <select
                     value={employmentType}
                     onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
-                    className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] text-white text-xs focus:outline-none"
+                    className="w-full h-10 px-3 rounded-xl bg-card border border-border text-foreground text-xs focus:outline-none"
                   >
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
@@ -625,69 +625,69 @@ export function AdminCareersManager() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1">Location</label>
+                  <label className="text-muted-foreground font-bold block mb-1">Location</label>
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="Lagos, Nigeria (Hybrid)"
-                    className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                    className="w-full h-10 px-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-zinc-300 font-bold block mb-1">Salary Range</label>
+                  <label className="text-muted-foreground font-bold block mb-1">Salary Range</label>
                   <input
                     type="text"
                     value={salary}
                     onChange={(e) => setSalary(e.target.value)}
                     placeholder="₦1,500,000 - ₦2,000,000"
-                    className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                    className="w-full h-10 px-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Job Description *</label>
+                <label className="text-muted-foreground font-bold block mb-1">Job Description *</label>
                 <textarea
                   rows={3}
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Outline key responsibilities and mission..."
-                  className="w-full p-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                  className="w-full p-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Requirements (One per line)</label>
+                <label className="text-muted-foreground font-bold block mb-1">Requirements (One per line)</label>
                 <textarea
                   rows={3}
                   value={requirementsText}
                   onChange={(e) => setRequirementsText(e.target.value)}
                   placeholder="5+ years experience&#10;TypeScript expertise&#10;PostgreSQL knowledge"
-                  className="w-full p-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                  className="w-full p-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Benefits (One per line)</label>
+                <label className="text-muted-foreground font-bold block mb-1">Benefits (One per line)</label>
                 <textarea
                   rows={2}
                   value={benefitsText}
                   onChange={(e) => setBenefitsText(e.target.value)}
                   placeholder="Health Insurance&#10;USD Salary Option&#10;Remote Work"
-                  className="w-full p-3 rounded-xl bg-[#0D1218] border border-white/[0.08] focus:border-[#008744] text-white text-xs focus:outline-none"
+                  className="w-full p-3 rounded-xl bg-card border border-border focus:border-primary text-foreground text-xs focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-zinc-300 font-bold block mb-1">Closing Date</label>
+                <label className="text-muted-foreground font-bold block mb-1">Closing Date</label>
                 <input
                   type="date"
                   value={closingDate}
                   onChange={(e) => setClosingDate(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl bg-[#0D1218] border border-white/[0.08] text-white text-xs focus:outline-none"
+                  className="w-full h-10 px-3 rounded-xl bg-card border border-border text-foreground text-xs focus:outline-none"
                 />
               </div>
 
@@ -695,13 +695,13 @@ export function AdminCareersManager() {
                 <button
                   type="button"
                   onClick={() => setShowCreateJobModal(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-muted hover:bg-hover text-muted-foreground font-bold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs transition-colors cursor-pointer shadow-lg"
+                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs transition-colors cursor-pointer shadow-lg"
                 >
                   Publish Posting
                 </button>
@@ -713,46 +713,46 @@ export function AdminCareersManager() {
 
       {/* AUTOMATED HIRE SUCCESS MODAL */}
       {showHireSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-lg bg-[#131922] border border-emerald-500/40 rounded-3xl p-6 shadow-2xl space-y-4 relative text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-lg bg-elevated border border-primary/40 rounded-3xl p-6 shadow-2xl space-y-4 relative text-foreground">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+              <div className="w-10 h-10 rounded-2xl bg-primary-subtle text-primary flex items-center justify-center border border-primary/30">
                 <HugeiconsIcon icon={Tick02Icon} size={24} />
               </div>
               <div>
-                <h3 className="text-base font-black text-white">Applicant Hired & Provisioned!</h3>
-                <p className="text-xs text-emerald-400 font-semibold">
+                <h3 className="text-base font-black text-foreground">Applicant Hired & Provisioned!</h3>
+                <p className="text-xs text-primary font-semibold">
                   Staff record created automatically with zero manual steps.
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#0D1218] border border-white/[0.08] space-y-2 text-xs">
+            <div className="p-4 rounded-2xl bg-card border border-border space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-zinc-400">Employee Name:</span>
-                <span className="font-bold text-white">
+                <span className="text-muted-foreground">Employee Name:</span>
+                <span className="font-bold text-foreground">
                   {showHireSuccessModal.applicant.firstName} {showHireSuccessModal.applicant.lastName}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Work Email:</span>
-                <span className="font-mono text-zinc-200">{showHireSuccessModal.applicant.email}</span>
+                <span className="text-muted-foreground">Work Email:</span>
+                <span className="font-mono text-foreground">{showHireSuccessModal.applicant.email}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Temporary PIN Issued:</span>
-                <span className="font-mono text-emerald-400 font-bold flex items-center gap-1">
+                <span className="text-muted-foreground">Temporary PIN Issued:</span>
+                <span className="font-mono text-primary font-bold flex items-center gap-1">
                   <HugeiconsIcon icon={LockKeyIcon} size={14} />
                   {showHireSuccessModal.staffPin}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-zinc-400">Staff Portal Target:</span>
-                <span className="font-bold text-blue-400">/lex/staff</span>
+                <span className="text-muted-foreground">Staff Portal Target:</span>
+                <span className="font-bold text-info">/lex/staff</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-zinc-300 space-y-1">
-              <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+            <div className="p-3 rounded-xl bg-primary-subtle border border-primary/20 text-[11px] text-muted-foreground space-y-1">
+              <div className="font-bold text-primary flex items-center gap-1.5">
                 <HugeiconsIcon icon={Mail01Icon} size={14} />
                 <span>Automated Welcome Email Dispatched</span>
               </div>
@@ -765,7 +765,7 @@ export function AdminCareersManager() {
               <button
                 type="button"
                 onClick={() => setShowHireSuccessModal(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#008744] hover:bg-[#00753b] text-white font-bold text-xs transition-colors cursor-pointer shadow-lg"
+                className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs transition-colors cursor-pointer shadow-lg"
               >
                 Close & Return to Pipeline
               </button>

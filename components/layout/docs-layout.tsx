@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { ThemeModeControl } from "@/components/theme/theme-toggle";
 import { cn } from "@/utils";
 
 export type DocsLayoutProps = {
@@ -30,6 +31,7 @@ export function DocsLayout({
         <Link href="/" className="focus-ring rounded-lg" aria-label="ZOLANZO home">
           <BrandLogo asset="logo" width={120} height={32} priority />
         </Link>
+        <ThemeModeControl variant="compact" />
       </header>
 
       <div className="mx-auto flex w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:px-8">
