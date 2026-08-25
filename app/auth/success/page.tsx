@@ -10,10 +10,12 @@ function AuthSuccessContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type") || "email-verified";
 
+  const email = searchParams.get("email") || "";
+
   let title = "Email Verified!";
-  let message = "Your email address has been successfully verified. You can now explore tasks and campaigns on ZOLANZO.";
-  let buttonLabel = "Browse Platform";
-  let buttonHref = "/";
+  let message = "Your email address has been successfully verified. Log in with your PIN to continue.";
+  let buttonLabel = "Log In Now";
+  let buttonHref = email ? `/login?email=${encodeURIComponent(email)}&verified=1` : "/login?verified=1";
 
   if (type === "account-created") {
     title = "Account Created!";

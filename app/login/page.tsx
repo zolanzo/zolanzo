@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Mail01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { AuthLayout } from "@/components/auth/auth-layout";
@@ -12,13 +12,15 @@ import { PINInput } from "@/components/auth/pin-input";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import { ValidationMessage } from "@/components/auth/validation-message";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [pin, setPin] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const verifiedNotice = searchParams.get("verified") === "1";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +103,11 @@ export default function LoginPage() {
           className="space-y-4"
         >
           <ValidationMessage message={error} />
+          {verifiedNotice ? (
+            <p className="text-sm font-medium text-primary">
+              Email verified. Log in with your PIN to continue.
+            </p>
+          ) : null}
 
           {/* Email Field */}
           <div className="space-y-1.5 text-left">
@@ -194,5 +201,13 @@ export default function LoginPage() {
         </div>
       </AuthCard>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-sm text-muted-foreground">Loading login…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

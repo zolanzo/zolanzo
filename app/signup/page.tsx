@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -29,9 +29,11 @@ export default function SignupPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
     setError("");
 
     if (!fullName.trim()) {
@@ -67,6 +69,7 @@ export default function SignupPage() {
       return;
     }
 
+    submitting.current = true;
     setLoading(true);
 
     try {
@@ -78,15 +81,17 @@ export default function SignupPage() {
 
       const data = await res.json();
       setLoading(false);
+      submitting.current = false;
 
       if (!res.ok) {
         setError(data.error || "Registration failed. Please try again.");
         return;
       }
 
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      router.push(`/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
     } catch {
       setLoading(false);
+      submitting.current = false;
       setError("An unexpected network error occurred. Please try again.");
     }
   };

@@ -17,6 +17,8 @@ import {
   allocateWorkerPublicId,
 } from "@/lib/public-id/generator";
 import { safeEmitDomainNotification } from "@/features/notifications/services/safe-emit";
+import { BRAND } from "@/constants/brand";
+import type { NotificationChannel } from "@/constants/notification";
 
 export type ProvisionInput = {
   authSubject: string;
@@ -24,7 +26,44 @@ export type ProvisionInput = {
   displayName: string;
   emailVerified?: boolean;
   ip?: string | null;
+  /** When true, Prisma user/profile ids match auth.users.id (PIN signup). */
+  useAuthSubjectAsId?: boolean;
+  skipWelcome?: boolean;
+  participation?: "worker" | "client" | "both";
+  roleKeys?: string[];
 };
+
+export async function emitAuthWelcome(params: {
+  userId: string;
+  organizationId: string;
+  email: string;
+  displayName: string;
+  channels?: NotificationChannel[];
+  dispatchNow?: boolean;
+}): Promise<void> {
+  await safeEmitDomainNotification({
+    event: "auth.welcome",
+    organizationId: params.organizationId,
+    actorUserId: params.userId,
+    recipients: [
+      {
+        role: "client",
+        userId: params.userId,
+        email: params.email.toLowerCase(),
+        displayName: params.displayName.trim() || "there",
+      },
+    ],
+    variables: {
+      recipientName: params.displayName.trim() || "there",
+      organizationName: BRAND.name,
+      publicRef: params.userId,
+    },
+    idempotencyKey: `auth.welcome:${params.userId}`,
+    channels: params.channels ?? ["email", "sms", "in_app"],
+    dispatchNow: params.dispatchNow ?? false,
+    span: "auth.provision",
+  });
+}
 
 async function uniqueHandle(base: string): Promise<string> {
   let candidate = slugifyHandle(base);
@@ -74,10 +113,13 @@ export async function provisionAuthenticatedUser(
     input.displayName || input.email.split("@")[0] || "user",
   );
 
-  const workerRole = await prisma.role.findUnique({ where: { key: "worker" } });
-  const clientRole = await prisma.role.findUnique({ where: { key: "client" } });
-
-  if (!workerRole || !clientRole) {
+  const requestedRoleKeys = input.roleKeys?.length
+    ? input.roleKeys
+    : ["worker", "client"];
+  const roles = await prisma.role.findMany({
+    where: { key: { in: requestedRoleKeys } },
+  });
+  if (roles.length !== requestedRoleKeys.length) {
     throw new AppError(
       "ROLES_NOT_SEEDED",
       "Platform roles are not seeded. Run npm run db:seed",
@@ -93,15 +135,18 @@ export async function provisionAuthenticatedUser(
         allocateOrganizationPublicId(tx),
       ]);
 
+    const userId = input.useAuthSubjectAsId ? input.authSubject : undefined;
     const user = await tx.user.create({
       data: {
+        ...(userId ? { id: userId } : {}),
         authSubject: input.authSubject,
         email: input.email.toLowerCase(),
         emailVerifiedAt: input.emailVerified ? new Date() : null,
         accountType: "individual",
-        participation: "both",
+        participation: input.participation ?? "both",
         profile: {
           create: {
+            ...(userId ? { id: userId } : {}),
             displayName: input.displayName.trim(),
             handle,
             workerPublicId,
@@ -109,10 +154,7 @@ export async function provisionAuthenticatedUser(
           },
         },
         roles: {
-          create: [
-            { roleId: workerRole.id },
-            { roleId: clientRole.id },
-          ],
+          create: roles.map((role) => ({ roleId: role.id })),
         },
       },
     });
@@ -154,27 +196,14 @@ export async function provisionAuthenticatedUser(
     metadata: { authSubject: input.authSubject },
   });
 
-  await safeEmitDomainNotification({
-    event: "auth.welcome",
-    organizationId: result.organizationId,
-    actorUserId: result.userId,
-    recipients: [
-      {
-        role: "client",
-        userId: result.userId,
-        email: input.email.toLowerCase(),
-        displayName: input.displayName.trim(),
-      },
-    ],
-    variables: {
-      recipientName: input.displayName.trim() || "there",
-      organizationName: "Zolanzo",
-      publicRef: result.userId,
-    },
-    idempotencyKey: `auth.welcome:${result.userId}`,
-    channels: ["email", "sms", "in_app"],
-    span: "auth.provision",
-  });
+  if (!input.skipWelcome) {
+    await emitAuthWelcome({
+      userId: result.userId,
+      organizationId: result.organizationId,
+      email: input.email,
+      displayName: input.displayName,
+    });
+  }
 
   if (isServiceRoleConfigured()) {
     try {
@@ -182,7 +211,7 @@ export async function provisionAuthenticatedUser(
       await admin.auth.admin.updateUserById(input.authSubject, {
         app_metadata: {
           platform_user_id: result.userId,
-          roles: ["worker", "client"],
+          roles: requestedRoleKeys,
           active_organization_id: result.organizationId,
         },
       });

@@ -1,4 +1,4 @@
-import { randomInt, createHash } from "crypto";
+import { randomInt, createHash, timingSafeEqual } from "crypto";
 
 /**
  * Generate a cryptographically secure 6-digit numeric OTP.
@@ -20,6 +20,12 @@ export function hashOtpCode(code: string): string {
  * Verify plaintext OTP code against stored hash.
  */
 export function verifyOtpCode(inputCode: string, storedHash: string): boolean {
-  const inputHash = hashOtpCode(inputCode);
-  return inputHash === storedHash;
+  const normalized = String(inputCode ?? "").replace(/\D/g, "");
+  const inputHash = hashOtpCode(normalized);
+  const input = Buffer.from(inputHash, "hex");
+  const stored = Buffer.from(storedHash, "hex");
+  if (input.length === 0 || input.length !== stored.length) {
+    return false;
+  }
+  return timingSafeEqual(input, stored);
 }

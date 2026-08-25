@@ -12,6 +12,7 @@ interface AppShellProps {
   avatarUrl?: string | null;
   availableBalance?: string;
   maxWidth?: "default" | "full" | "narrow";
+  userRole?: string | null;
 }
 
 export function AppShell({
@@ -20,23 +21,25 @@ export function AppShell({
   avatarUrl = null,
   availableBalance,
   maxWidth = "default",
+  userRole = null,
 }: AppShellProps) {
   return (
     <div className="surface-shell flex min-h-screen font-sans selection:bg-primary selection:text-primary-foreground">
-      <Sidebar />
+      <Sidebar userRole={userRole} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <TopHeader
           userName={userName}
           avatarUrl={avatarUrl}
           availableBalance={availableBalance}
+          userRole={userRole}
         />
 
         <main className="flex-1 overflow-y-auto">
           <PageContainer maxWidth={maxWidth}>{children}</PageContainer>
         </main>
 
-        <BottomNav />
+        <BottomNav userRole={userRole} />
       </div>
     </div>
   );

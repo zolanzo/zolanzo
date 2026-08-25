@@ -16,9 +16,13 @@ import {
 } from "@/lib/auth/impersonation";
 
 export function ImpersonationBanner() {
-  const [session, setSession] = useState<ImpersonationSession | null>(getImpersonationSession);
+  const [session, setSession] = useState<ImpersonationSession | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    setSession(getImpersonationSession());
+  }, []);
 
   useEffect(() => {
     const active = getImpersonationSession();

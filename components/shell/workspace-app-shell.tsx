@@ -20,10 +20,12 @@ export function WorkspaceAppShell({
   workspace,
   children,
   maxWidth = "default",
+  userRole = null,
 }: {
   workspace: WorkspaceShellSource;
   children: React.ReactNode;
   maxWidth?: "default" | "full" | "narrow";
+  userRole?: string | null;
 }) {
   return (
     <AppShell
@@ -34,6 +36,7 @@ export function WorkspaceAppShell({
         workspace.wallet.availableLabel,
       )}
       maxWidth={maxWidth}
+      userRole={userRole}
     >
       <div className="px-4 sm:px-0">
         <DataBoundaryBanner boundary={workspace.loadState} className="mb-2" />

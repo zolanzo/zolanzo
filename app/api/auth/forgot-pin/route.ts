@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthService } from "@/lib/auth/service";
 import { checkRateLimit } from "@/lib/security/rate-limit";
+import { normalizeEmail } from "@/lib/auth/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
     }
 
-    const rateLimit = checkRateLimit(`forgot_pin_${email}_${ip}`, 3, 600);
+    const rateLimit = checkRateLimit(`forgot_pin_${normalizeEmail(String(email))}_${ip}`, 3, 600);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: `Too many PIN reset requests. Please try again in ${rateLimit.resetSeconds} seconds.` },

@@ -60,11 +60,11 @@ export default function SignInClient() {
           Sign in
         </Button>
         <p className="text-sm text-muted-foreground">
-          <Link href="/auth/forgot-password" className="text-primary underline">
-            Forgot password?
+          <Link href="/forgot-pin" className="text-primary underline">
+            Forgot PIN?
           </Link>
           {" · "}
-          <Link href="/auth/sign-up" className="text-primary underline">
+          <Link href="/signup" className="text-primary underline">
             Create account
           </Link>
         </p>

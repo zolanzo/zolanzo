@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ThemeLogo } from "@/components/brand/theme-logo";
+import { resolveShellChrome, type ShellChrome } from "@/lib/workspace/shell-nav";
 import {
   DashboardCircleIcon,
   CursorPointer01Icon,
@@ -22,13 +23,13 @@ import {
   Briefcase01Icon,
 } from "@hugeicons/core-free-icons";
 
-export function Sidebar() {
+export function Sidebar({ userRole = null }: { userRole?: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
-
-  const isSuperAdmin = pathname.startsWith("/lex/auth");
-  const isStaff = pathname.startsWith("/lex/staff") || pathname.startsWith("/admin");
-  const isHirer = pathname.startsWith("/hirer");
+  const chrome: ShellChrome = resolveShellChrome(pathname, userRole);
+  const isSuperAdmin = chrome === "super_admin";
+  const isStaff = chrome === "staff";
+  const isHirer = chrome === "hirer";
 
   const earnerItems = [
     { label: "Dashboard", href: "/earner/dashboard", icon: DashboardCircleIcon },

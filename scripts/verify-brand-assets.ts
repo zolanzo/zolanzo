@@ -8,6 +8,7 @@ import path from "node:path";
 
 const REQUIRED = [
   "light-theme-logo.webp",
+  "light-theme-logo.png",
   "icon.webp",
   "lady1-640.avif",
   "lady1-640.webp",

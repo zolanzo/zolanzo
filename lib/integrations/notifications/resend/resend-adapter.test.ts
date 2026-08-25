@@ -45,8 +45,16 @@ describe("resend templates", () => {
       },
     });
     expect(rendered.subject).toContain("Welcome");
+    expect(rendered.subject).toContain("ZOLANZO");
     expect(rendered.bodyHtml).toContain("Ada");
+    expect(rendered.bodyHtml).toContain("https://zolanzo.com/brand/light-theme-logo.png");
+    expect(rendered.bodyHtml).toContain("ZOLANZO LTD");
+    expect(rendered.bodyHtml).toContain("Africa's Digital Workforce Marketplace");
+    expect(rendered.bodyHtml).toContain("stankings.com");
+    expect(rendered.bodyHtml).not.toContain("font-family:system-ui");
     expect(rendered.bodyText).toContain("Zolanzo");
+    expect(rendered.bodyText).toContain("Africa's Digital Workforce Marketplace");
+    expect(rendered.bodyText).toContain("© 2026 ZOLANZO LTD • A Stankings Company • stankings.com");
   });
 
   it("renders verification email with actionUrl", () => {
@@ -64,6 +72,10 @@ describe("resend templates", () => {
       },
     });
     expect(rendered.bodyText).toContain("https://app.example/verify?t=abc");
+    expect(rendered.bodyHtml).toContain("https://zolanzo.com/brand/light-theme-logo.png");
+    expect(rendered.bodyHtml).toContain("https://app.example/verify?t=abc");
+    expect(rendered.bodyHtml).toContain("Verify email");
+    expect(rendered.bodyHtml).not.toContain("letter-spacing:8px");
   });
 
   it("renders payment receipt", () => {
@@ -82,6 +94,51 @@ describe("resend templates", () => {
     });
     expect(rendered.subject).toContain("PAY-ABC123");
     expect(rendered.bodyText).toContain("50.00 NGN");
+    expect(rendered.bodyHtml).toContain("font-family:system-ui");
+  });
+
+  it("renders organization invite on the light ZOLANZO shell with a live accept link", () => {
+    const template = findBuiltinTemplate({
+      event: "org.invite_member",
+      channel: "email",
+    })!;
+    const rendered = renderNotificationTemplate({
+      template,
+      variables: {
+        recipientName: "Ada",
+        organizationName: "Acme Org",
+        publicRef: "ORG-1",
+        actionUrl: "https://zolanzo.com/auth/accept-invite?token=abc",
+      },
+    });
+    expect(rendered.subject).toContain("Acme Org");
+    expect(rendered.bodyHtml).toContain("https://zolanzo.com/brand/light-theme-logo.png");
+    expect(rendered.bodyHtml).toContain("https://zolanzo.com/auth/accept-invite?token=abc");
+    expect(rendered.bodyHtml).toContain("Accept invitation");
+    expect(rendered.bodyHtml).toContain("ZOLANZO LTD");
+    expect(rendered.bodyHtml).not.toContain("font-family:system-ui");
+    expect(rendered.bodyText).toContain("https://zolanzo.com/auth/accept-invite?token=abc");
+  });
+
+  it("renders password reset as a branded link email, not an OTP", () => {
+    const template = findBuiltinTemplate({
+      event: "auth.password_reset",
+      channel: "email",
+    })!;
+    const rendered = renderNotificationTemplate({
+      template,
+      variables: {
+        recipientName: "Ada",
+        organizationName: "Zolanzo",
+        publicRef: "USR-1",
+        actionUrl: "https://app.example/reset?t=abc",
+      },
+    });
+    expect(rendered.subject).toContain("Reset your password");
+    expect(rendered.bodyHtml).toContain("Reset password");
+    expect(rendered.bodyHtml).toContain("https://app.example/reset?t=abc");
+    expect(rendered.bodyHtml).toContain("https://zolanzo.com/brand/light-theme-logo.png");
+    expect(rendered.bodyHtml).not.toContain("letter-spacing:8px");
   });
 });
 
@@ -147,6 +204,7 @@ describe("resend normalize", () => {
 describe("resend deliver", () => {
   afterEach(() => {
     delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM_EMAIL;
     vi.unstubAllGlobals();
   });
 
@@ -165,14 +223,17 @@ describe("resend deliver", () => {
 
   it("sends via Resend API when live", async () => {
     process.env.RESEND_API_KEY = "re_live_test";
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => ({
+    process.env.RESEND_FROM_EMAIL = "info@zolanzo.com";
+    let capturedBody = "";
+    const fetchMock = vi.fn(async (_url: unknown, init?: { body?: string }) => {
+      capturedBody = String(init?.body ?? "");
+      return {
         ok: true,
         status: 200,
         json: async () => ({ id: "email_live_1" }),
-      })),
-    );
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
     const result = await resendNotificationAdapter.deliver({
       channel: "email",
       to: "a@example.com",
@@ -184,6 +245,9 @@ describe("resend deliver", () => {
     });
     expect(result.status).toBe("delivered");
     expect(result.providerRef).toBe("email_live_1");
+    const payload = JSON.parse(capturedBody) as { from: string; reply_to: string };
+    expect(payload.from).toBe("ZOLANZO <info@zolanzo.com>");
+    expect(payload.reply_to).toBe("support@zolanzo.com");
   });
 
   it("fails delivery on provider error", async () => {

@@ -52,3 +52,6 @@ next-env.d.ts
 .claude/
 .windsurf/
 skills-lock.json
+
+# supabase CLI local cache
+supabase/.temp/

@@ -754,10 +754,10 @@ export function AdminCareersManager() {
             <div className="p-3 rounded-xl bg-primary-subtle border border-primary/20 text-[11px] text-muted-foreground space-y-1">
               <div className="font-bold text-primary flex items-center gap-1.5">
                 <HugeiconsIcon icon={Mail01Icon} size={14} />
-                <span>Automated Welcome Email Dispatched</span>
+                <span>Share this PIN directly</span>
               </div>
               <p>
-                A welcome onboarding email with login instructions and temporary PIN ({showHireSuccessModal.staffPin}) has been sent to {showHireSuccessModal.applicant.email}.
+                No email was sent. Share this temporary PIN with the new staff member so they can sign in at /lex/staff.
               </p>
             </div>
 

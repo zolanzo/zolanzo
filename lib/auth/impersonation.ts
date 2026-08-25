@@ -30,7 +30,7 @@ export interface ImpersonationSession {
 }
 
 const STORAGE_KEY_SESSION = "zolanzo_impersonation_session";
-const STORAGE_KEY_AUDIT_LOGS = "zolanzo_impersonation_audit_logs";
+const STORAGE_KEY_AUDIT_LOGS = "zolanzo_impersonation_audit_logs_v2";
 
 export function getImpersonationSession(): ImpersonationSession | null {
   if (typeof window === "undefined") return null;
@@ -47,11 +47,11 @@ export function getAllAuditLogs(): ImpersonationAuditLog[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_AUDIT_LOGS);
-    if (!raw) return DEFAULT_AUDIT_LOGS;
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return parsed.length > 0 ? parsed : DEFAULT_AUDIT_LOGS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return DEFAULT_AUDIT_LOGS;
+    return [];
   }
 }
 
@@ -179,44 +179,3 @@ export function exitImpersonation(): ImpersonationAuditLog | null {
 
   return updatedRecord;
 }
-
-const DEFAULT_AUDIT_LOGS: ImpersonationAuditLog[] = [
-  {
-    id: "audit_init_1",
-    adminId: "admin_super",
-    adminEmail: "ops@zolanzo.com",
-    targetId: "stf_1",
-    targetEmail: "samuel.kalu@zolanzo.com",
-    targetName: "Samuel Kalu",
-    targetRole: "Operations Manager",
-    reason: "Audit support ticket escalation queue and payout release log",
-    startTime: "2026-08-01T08:15:00.000Z",
-    endTime: "2026-08-01T08:32:00.000Z",
-    actions: [
-      {
-        timestamp: "2026-08-01T08:15:00.000Z",
-        type: "IMPERSONATION_START",
-        path: "/lex/auth",
-        details: "Impersonation session initiated by Super Admin ops@zolanzo.com",
-      },
-      {
-        timestamp: "2026-08-01T08:18:22.000Z",
-        type: "PAGE_VIEW",
-        path: "/lex/staff",
-        details: "Viewed Staff Support Tickets Queue",
-      },
-      {
-        timestamp: "2026-08-01T08:25:40.000Z",
-        type: "ACTION",
-        path: "/lex/staff",
-        details: "Approved NIN Identity Document for Alex Johnson",
-      },
-      {
-        timestamp: "2026-08-01T08:32:00.000Z",
-        type: "IMPERSONATION_EXIT",
-        path: "/lex/staff",
-        details: "Super Admin exited impersonation mode.",
-      },
-    ],
-  },
-];

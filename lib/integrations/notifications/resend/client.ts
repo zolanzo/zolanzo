@@ -2,6 +2,11 @@
  * Resend HTTP client — adapter-only. Domain must never import this.
  */
 
+import {
+  canUseLiveSenderIdentity,
+  getTransactionalEmailSender,
+} from "@/lib/email/sender";
+
 export const RESEND_API_BASE = "https://api.resend.com";
 
 export type ResendApiResult<T> =
@@ -14,10 +19,15 @@ export function getResendApiKey(): string | null {
 }
 
 export function getResendFromAddress(): string {
-  return (
-    process.env.RESEND_FROM_EMAIL?.trim() ||
-    "Zolanzo <onboarding@resend.dev>"
-  );
+  return getTransactionalEmailSender().from;
+}
+
+export function getResendReplyToAddress(): string {
+  return getTransactionalEmailSender().replyTo;
+}
+
+export function isResendFromIdentityReady(): boolean {
+  return canUseLiveSenderIdentity(getTransactionalEmailSender());
 }
 
 export function getResendWebhookSecret(): string | null {

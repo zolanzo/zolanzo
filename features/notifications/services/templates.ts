@@ -5,6 +5,10 @@
 import type { NotificationChannel } from "@/constants/notification";
 import type { NotificationHubEvent } from "@/constants/notification";
 import { APP_CONFIG } from "@/config/app";
+import {
+  formatTransactionalPlainText,
+  getBrandedAuthMessageTemplate,
+} from "@/lib/email/templates";
 
 export type NotificationTemplateDefinition = {
   key: string;
@@ -39,6 +43,49 @@ function emailTemplate(
     subject,
     bodyText,
     bodyHtml: `<!DOCTYPE html><html lang="en"><body style="font-family:system-ui,sans-serif;line-height:1.5;color:#111;">${paragraphs}</body></html>`,
+    requiredVariables: [...COMMON_VARS, ...extraVars],
+  };
+}
+
+/** Auth / security emails use the ZOLANZO light-mode shell. Campaign mail stays generic. */
+function brandedAuthEmailTemplate(
+  event: NotificationHubEvent,
+  subject: string,
+  bodyText: string,
+  visual: {
+    kicker: string;
+    heading: string;
+    body: string;
+    actionLabel?: string;
+    actionUrl?: string;
+    code?: string;
+    note?: string;
+  },
+  extraVars: readonly string[] = [],
+): NotificationTemplateDefinition {
+  return {
+    key: event.replace(/\./g, "_"),
+    event,
+    channel: "email",
+    locale: "en",
+    subject,
+    bodyText: formatTransactionalPlainText({
+      heading: visual.heading,
+      body: bodyText,
+      code: visual.code,
+      note: visual.note,
+    }),
+    bodyHtml: getBrandedAuthMessageTemplate({
+      title: subject,
+      kicker: visual.kicker,
+      heading: visual.heading,
+      recipientName: "{{recipientName}}",
+      body: visual.body,
+      actionLabel: visual.actionLabel,
+      actionUrl: visual.actionUrl,
+      code: visual.code,
+      note: visual.note,
+    }),
     requiredVariables: [...COMMON_VARS, ...extraVars],
   };
 }
@@ -322,10 +369,16 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
     webhookTemplate("submission.received"),
 
     // ── Auth ──────────────────────────────────────────
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.welcome",
-      "Welcome to Zolanzo",
+      "Welcome to ZOLANZO",
       "Hi {{recipientName}}, welcome to {{organizationName}}. Your account is ready.",
+      {
+        kicker: "Welcome",
+        heading: "Your account is ready",
+        body: "Welcome to {{organizationName}}. Your account is ready to use.",
+        note: "If you did not create this account, contact support.",
+      },
     ),
     inAppTemplate(
       "auth.welcome",
@@ -333,10 +386,18 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       "Welcome to {{organizationName}}.",
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.email_verification",
       "Verify your email",
       "Hi {{recipientName}}, verify your email for {{organizationName}} using this link: {{actionUrl}}",
+      {
+        kicker: "Email Verification",
+        heading: "Confirm your email address",
+        body: "Verify your email for {{organizationName}} by opening the link below.",
+        actionLabel: "Verify email",
+        actionUrl: "{{actionUrl}}",
+        note: "If you did not create this account, ignore this email.",
+      },
       ["actionUrl"],
     ),
     inAppTemplate(
@@ -346,10 +407,18 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["actionUrl"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.password_reset",
       "Reset your password",
       "Hi {{recipientName}}, reset your {{organizationName}} password: {{actionUrl}}",
+      {
+        kicker: "Account Recovery",
+        heading: "Reset your password",
+        body: "A password reset was requested for your {{organizationName}} account.",
+        actionLabel: "Reset password",
+        actionUrl: "{{actionUrl}}",
+        note: "If you did not request a password reset, ignore this email.",
+      },
       ["actionUrl"],
     ),
     inAppTemplate(
@@ -359,10 +428,18 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["actionUrl"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.magic_link",
       "Your sign-in link",
       "Hi {{recipientName}}, use this magic link to sign in to {{organizationName}}: {{actionUrl}}",
+      {
+        kicker: "Sign-in",
+        heading: "Your sign-in link",
+        body: "Use this link to sign in to {{organizationName}}. It is single-use and expires soon.",
+        actionLabel: "Sign in",
+        actionUrl: "{{actionUrl}}",
+        note: "If you did not request this sign-in link, ignore this email.",
+      },
       ["actionUrl"],
     ),
     inAppTemplate(
@@ -373,10 +450,18 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
     ),
 
     // ── Organizations ─────────────────────────────────
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "org.invite_member",
       "You're invited to {{organizationName}}",
       "Hi {{recipientName}}, you've been invited to join {{organizationName}}. Accept: {{actionUrl}}",
+      {
+        kicker: "Invitation",
+        heading: "You're invited to {{organizationName}}",
+        body: "You've been invited to join {{organizationName}}.",
+        actionLabel: "Accept invitation",
+        actionUrl: "{{actionUrl}}",
+        note: "Open this link while signed in with the invited email. If you were not expecting this invitation, you can ignore this email.",
+      },
       ["actionUrl"],
     ),
     inAppTemplate(
@@ -571,10 +656,16 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["summaryText"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "security.alert",
       "Security alert — {{organizationName}}",
       "Hi {{recipientName}}, security alert for {{organizationName}}: {{alertText}} Ref: {{publicRef}}.",
+      {
+        kicker: "Security Alert",
+        heading: "Security alert",
+        body: "{{alertText}} Reference: {{publicRef}}.",
+        note: "If you do not recognize this activity, contact support immediately.",
+      },
       ["alertText"],
     ),
     inAppTemplate(
@@ -595,10 +686,16 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
     ),
 
     // ── Auth SMS / WhatsApp ───────────────────────────
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.otp",
       "Your verification code",
       "Hi {{recipientName}}, your {{organizationName}} code is {{otpCode}}. It expires soon.",
+      {
+        kicker: "Verification Code",
+        heading: "Your verification code",
+        body: "Use this {{organizationName}} code to continue. It expires soon. Do not share it.",
+        code: "{{otpCode}}",
+      },
       ["otpCode"],
     ),
     inAppTemplate(
@@ -618,10 +715,18 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["otpCode"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "auth.login_verification",
       "Confirm your login",
       "Hi {{recipientName}}, confirm login to {{organizationName}}: {{actionUrl}}",
+      {
+        kicker: "Login Confirmation",
+        heading: "Confirm your login",
+        body: "A sign-in to {{organizationName}} needs confirmation.",
+        actionLabel: "Confirm login",
+        actionUrl: "{{actionUrl}}",
+        note: "If this was not you, ignore this email and contact support.",
+      },
       ["actionUrl"],
     ),
     inAppTemplate(
@@ -641,10 +746,16 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["actionUrl"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "security.new_device",
       "New device sign-in",
       "Hi {{recipientName}}, a new device signed in to {{organizationName}}. {{deviceLabel}}",
+      {
+        kicker: "Security Alert",
+        heading: "New device sign-in",
+        body: "A new device signed in to your {{organizationName}} account. {{deviceLabel}}",
+        note: "If this was not you, reset your PIN and contact support.",
+      },
       ["deviceLabel"],
     ),
     inAppTemplate(
@@ -664,10 +775,15 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       ["deviceLabel"],
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "security.password_changed",
       "Password changed",
       "Hi {{recipientName}}, your {{organizationName}} password was changed. If this wasn't you, reset it immediately.",
+      {
+        kicker: "Security Alert",
+        heading: "Your password was changed",
+        body: "The password on your {{organizationName}} account was changed. If this was not you, reset it immediately.",
+      },
     ),
     inAppTemplate(
       "security.password_changed",
@@ -683,10 +799,16 @@ export const BUILTIN_NOTIFICATION_TEMPLATES: readonly NotificationTemplateDefini
       `Your Zolanzo password was changed. WhatsApp ${APP_CONFIG.supportWhatsApp.display} if unexpected.`,
     ),
 
-    emailTemplate(
+    brandedAuthEmailTemplate(
       "security.suspicious_activity",
       "Suspicious activity detected",
       "Hi {{recipientName}}, suspicious activity on {{organizationName}}: {{alertText}} Ref: {{publicRef}}.",
+      {
+        kicker: "Security Alert",
+        heading: "Suspicious activity detected",
+        body: "{{alertText}} Reference: {{publicRef}}.",
+        note: "If this was not you, reset your PIN and contact support immediately.",
+      },
       ["alertText"],
     ),
     inAppTemplate(

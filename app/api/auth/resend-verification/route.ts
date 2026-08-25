@@ -14,38 +14,30 @@ export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
     const userAgent = request.headers.get("user-agent") || "";
-
     const body = await request.json();
-    const { email, code, purpose: rawPurpose } = body;
+    const { email, purpose: rawPurpose } = body;
     const purpose = parsePurpose(rawPurpose);
 
-    if (!email || !code) {
-      return NextResponse.json(
-        { error: "Email and 6-digit verification code are required." },
-        { status: 400 },
-      );
+    if (!email) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
     }
 
-    const rateLimit = checkRateLimit(`verify_email_${normalizeEmail(String(email))}_${ip}`, 8, 300);
+    const rateLimit = checkRateLimit(`resend_otp_${normalizeEmail(String(email))}_${ip}`, 3, 600);
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: `Too many verification attempts. Please try again in ${rateLimit.resetSeconds} seconds.` },
+        { error: `Too many resend requests. Please try again in ${rateLimit.resetSeconds} seconds.` },
         { status: 429 },
       );
     }
 
-    const result = await AuthService.verifyEmail(email, code, ip, userAgent, purpose);
-
+    const result = await AuthService.resendEmailVerification(email, ip, userAgent, purpose);
     return NextResponse.json({
       success: true,
-      message:
-        purpose === EMAIL_OTP_PURPOSE.pinReset
-          ? "Reset code confirmed. You can now set a new PIN."
-          : "Email address verified successfully.",
+      message: "A new verification code has been sent.",
       data: result,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Verification failed.";
+    const message = err instanceof Error ? err.message : "Could not resend the verification code.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

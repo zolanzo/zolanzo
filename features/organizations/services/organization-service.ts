@@ -178,11 +178,21 @@ export async function createInvitation(params: {
     const token = generateOpaqueToken(32);
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+    const inviteEmail = params.email.toLowerCase();
+
+    await prisma.organizationInvitation.updateMany({
+      where: {
+        organizationId: params.organizationId,
+        email: inviteEmail,
+        status: "pending",
+      },
+      data: { status: "revoked", revokedAt: new Date() },
+    });
 
     const invitation = await prisma.organizationInvitation.create({
       data: {
         organizationId: params.organizationId,
-        email: params.email.toLowerCase(),
+        email: inviteEmail,
         orgRole: params.orgRole,
         tokenHash,
         invitedByUserId: params.actorUserId,
@@ -213,7 +223,7 @@ export async function createInvitation(params: {
       recipients: [
         {
           role: "organization_member",
-          email: params.email.toLowerCase(),
+          email: inviteEmail,
           displayName: params.email.split("@")[0] ?? "member",
         },
       ],
@@ -225,6 +235,7 @@ export async function createInvitation(params: {
       },
       idempotencyKey: `org.invite_member:${invitation.id}`,
       channels: ["email"],
+      dispatchNow: true,
       span: "org.invite",
     });
 

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { resolveShellChrome } from "@/lib/workspace/shell-nav";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   DashboardCircleIcon,
@@ -16,11 +17,11 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
 
-export function BottomNav() {
+export function BottomNav({ userRole = null }: { userRole?: string | null }) {
   const pathname = usePathname();
-  const isHireWorkspace = pathname.startsWith("/hirer");
-  const isAdminWorkspace =
-    pathname.startsWith("/admin") || pathname.startsWith("/lex");
+  const chrome = resolveShellChrome(pathname, userRole);
+  const isHireWorkspace = chrome === "hirer";
+  const isAdminWorkspace = chrome === "super_admin" || chrome === "staff";
 
   const earnerTabs = [
     { label: "Home", href: "/earner/dashboard", icon: DashboardCircleIcon },

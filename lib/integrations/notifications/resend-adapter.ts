@@ -12,6 +12,8 @@ import type {
 import { createStubChannelAdapter } from "@/lib/integrations/notifications/stub-factory";
 import {
   getResendFromAddress,
+  getResendReplyToAddress,
+  isResendFromIdentityReady,
   isResendLiveMode,
   resendRequest,
   type ResendSendEmailData,
@@ -57,6 +59,16 @@ async function deliverLive(
     };
   }
 
+  if (!isResendFromIdentityReady()) {
+    return {
+      provider: "resend",
+      providerRef: "resend_sender_unconfigured",
+      status: "failed",
+      failureReason:
+        "Production mail cannot use the Resend sandbox sender. Verify zolanzo.com in Resend for info@zolanzo.com.",
+    };
+  }
+
   const tags = [
     { name: "idempotency_key", value: input.idempotencyKey.slice(0, 40) },
   ];
@@ -70,7 +82,8 @@ async function deliverLive(
     body: {
       from: getResendFromAddress(),
       to: [input.to],
-      subject: input.subject ?? "Zolanzo notification",
+      reply_to: getResendReplyToAddress(),
+      subject: input.subject ?? "ZOLANZO notification",
       text: input.bodyText,
       html: withOpenTrackingHook(input.bodyHtml, input.idempotencyKey),
       headers: {

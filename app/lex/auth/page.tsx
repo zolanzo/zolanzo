@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ShieldKeyIcon,
@@ -31,13 +31,18 @@ interface StaffTarget {
 const SAMPLE_STAFF_TARGETS: StaffTarget[] = [];
 
 export default function SuperAdminAuthPage() {
-  const [activeSession, setActiveSession] = useState<ImpersonationSession | null>(getImpersonationSession);
-  const [auditLogs, setAuditLogs] = useState<ImpersonationAuditLog[]>(getAllAuditLogs);
+  const [activeSession, setActiveSession] = useState<ImpersonationSession | null>(null);
+  const [auditLogs, setAuditLogs] = useState<ImpersonationAuditLog[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<StaffTarget | null>(null);
   const [impersonateReason, setImpersonateReason] = useState("");
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveSession(getImpersonationSession());
+    setAuditLogs(getAllAuditLogs());
+  }, []);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);

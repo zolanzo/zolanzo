@@ -17,15 +17,17 @@ interface TopHeaderProps {
   userName?: string;
   avatarUrl?: string | null;
   availableBalance?: string;
+  userRole?: string | null;
 }
 
 export function TopHeader({
   userName = "Account",
   avatarUrl = null,
   availableBalance,
+  userRole = null,
 }: TopHeaderProps) {
   const pathname = usePathname();
-  const walletHref = headerWalletHref(pathname);
+  const walletHref = headerWalletHref(pathname, userRole);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [balanceLabel, setBalanceLabel] = useState(availableBalance);

@@ -42,7 +42,9 @@ export default function ForgotPinPage() {
         return;
       }
 
-      router.push(`/verify-email?email=${encodeURIComponent(email)}&flow=reset-pin`);
+      router.push(
+        `/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}&flow=reset-pin`,
+      );
     } catch {
       setLoading(false);
       setError("An unexpected network error occurred. Please try again.");

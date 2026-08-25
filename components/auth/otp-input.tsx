@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 interface OTPInputProps {
   length?: number;
   onComplete: (code: string) => void;
-  onResend?: () => void;
+  onResend?: () => void | Promise<void>;
   countdownSeconds?: number;
 }
 
@@ -17,6 +17,8 @@ export function OTPInput({
 }: OTPInputProps) {
   const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
+  const [resending, setResending] = useState(false);
+  const [resendError, setResendError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -72,12 +74,20 @@ export function OTPInput({
     }
   };
 
-  const handleResendClick = () => {
-    if (timeLeft > 0) return;
-    setTimeLeft(countdownSeconds);
-    setOtp(Array(length).fill(""));
-    inputRefs.current[0]?.focus();
-    if (onResend) onResend();
+  const handleResendClick = async () => {
+    if (timeLeft > 0 || resending) return;
+    setResendError("");
+    setResending(true);
+    try {
+      if (onResend) await onResend();
+      setTimeLeft(countdownSeconds);
+      setOtp(Array(length).fill(""));
+      inputRefs.current[0]?.focus();
+    } catch (err) {
+      setResendError(err instanceof Error ? err.message : "Could not resend the code.");
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -116,17 +126,20 @@ export function OTPInput({
 
         <button
           type="button"
-          disabled={timeLeft > 0}
-          onClick={handleResendClick}
+          disabled={timeLeft > 0 || resending}
+          onClick={() => {
+            void handleResendClick();
+          }}
           className={`font-semibold transition-colors ${
-            timeLeft > 0
+            timeLeft > 0 || resending
               ? "cursor-not-allowed text-disabled"
               : "cursor-pointer text-primary underline underline-offset-4 hover:text-primary-hover"
           }`}
         >
-          Resend Code
+          {resending ? "Sending…" : "Resend Code"}
         </button>
       </div>
+      {resendError ? <p className="text-xs font-medium text-danger">{resendError}</p> : null}
     </div>
   );
 }

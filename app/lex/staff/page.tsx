@@ -681,7 +681,7 @@ export default function StaffPage() {
                   <span>Security & Credentials Notice</span>
                 </div>
                 <p>
-                  A temporary 6-digit PIN will be auto-generated and emailed directly to the staff member. They will be forced to update their security PIN on first login.
+                  No PIN email is sent from this form. Staff accounts must exist in live RBAC.
                 </p>
               </div>
 
@@ -697,7 +697,7 @@ export default function StaffPage() {
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs transition-colors cursor-pointer shadow-lg"
                 >
-                  Create & Email PIN
+                  Create staff record
                 </button>
               </div>
             </form>

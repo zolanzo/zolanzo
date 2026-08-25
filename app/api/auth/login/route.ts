@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AuthService } from "@/lib/auth/service";
 import { checkRateLimit } from "@/lib/security/rate-limit";
+import { normalizeEmail } from "@/lib/auth/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate Limiting: Max 5 failed login attempts per email per 15 minutes
-    const rateLimit = checkRateLimit(`login_${email}_${ip}`, 5, 900);
+    const rateLimit = checkRateLimit(`login_${normalizeEmail(String(email))}_${ip}`, 5, 900);
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { error: `Too many login attempts. Please try again in ${rateLimit.resetSeconds} seconds.` },

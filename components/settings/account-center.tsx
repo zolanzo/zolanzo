@@ -51,7 +51,13 @@ type SectionId =
   | "danger"
   | null;
 
-export function AccountCenter({ workspace }: { workspace: EarnerWorkspace }) {
+export function AccountCenter({
+  workspace,
+  userRole = null,
+}: {
+  workspace: EarnerWorkspace;
+  userRole?: string | null;
+}) {
   const { toast } = useToast();
   const { platforms, getTaskAccess } = useCapabilities();
   const live = isLiveBoundary(workspace.loadState);
@@ -121,7 +127,7 @@ export function AccountCenter({ workspace }: { workspace: EarnerWorkspace }) {
   const connectReadiness = connectPlatform ? getTaskAccess(connectPlatform) : null;
 
   return (
-    <WorkspaceAppShell workspace={workspace}>
+    <WorkspaceAppShell workspace={workspace} userRole={userRole}>
       <div className="max-w-3xl mx-auto space-y-3 px-4 sm:px-0 pb-4">
         <h1 className="text-lg font-black text-foreground tracking-tight">Account Center</h1>
 

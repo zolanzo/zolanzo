@@ -14,7 +14,7 @@ import {
 import { provisionAuthenticatedUser } from "@/features/authentication/services/provisioning";
 import { writeAuditLog } from "@/lib/audit/write";
 import { rateLimit, RATE_LIMIT_PRESETS } from "@/lib/security/rate-limit";
-import { getEnv, isSupabaseConfigured } from "@/lib/validation/env";
+import { isSupabaseConfigured } from "@/lib/validation/env";
 import {
   deviceFingerprint,
   generateOpaqueToken,
@@ -24,6 +24,7 @@ import { prisma } from "@/lib/prisma/client";
 import { REMEMBER_ME_COOKIE, ACTIVE_ORG_COOKIE } from "@/lib/auth/route-policy";
 import { SECURITY_CONFIG } from "@/config/security";
 import { isDatabaseConfigured } from "@/lib/validation/env";
+import { AuthService } from "@/lib/auth/service";
 
 function requireSupabaseConfigured(): void {
   if (!isSupabaseConfigured()) {
@@ -121,70 +122,13 @@ export async function signUpWithEmail(
   meta: { ip?: string | null; userAgent?: string | null },
 ): Promise<ApiResponse<{ needsEmailVerification: boolean }>> {
   try {
-    requireSupabaseConfigured();
     const input = signUpSchema.parse(raw);
     await enforceAuthRateLimit(`signup:${meta.ip ?? input.email}`);
-
-    const supabase = await createSupabaseServerActionClient();
-    const env = getEnv();
-
-    const { data, error } = await supabase.auth.signUp({
-      email: input.email,
-      password: input.password,
-      options: {
-        emailRedirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-        data: {
-          display_name: input.displayName,
-        },
-      },
-    });
-
-    if (error) {
-      await writeAuditLog({
-        action: "login.failed",
-        resourceType: "auth",
-        ip: meta.ip,
-        metadata: { email: input.email, reason: error.message, flow: "signup" },
-      });
-      throw new AppError("SIGNUP_FAILED", error.message, 400);
-    }
-
-    if (!data.user) {
-      throw new AppError("SIGNUP_FAILED", "No user returned from signup", 500);
-    }
-
-    const needsEmailVerification = !data.session;
-
-    if (data.session) {
-      const provisioned = await provisionAuthenticatedUser({
-        authSubject: data.user.id,
-        email: input.email,
-        displayName: input.displayName,
-        emailVerified: Boolean(data.user.email_confirmed_at),
-        ip: meta.ip,
-      });
-
-      await trackSession({
-        userId: provisioned.userId,
-        accessToken: data.session.access_token,
-        ip: meta.ip,
-        userAgent: meta.userAgent,
-        rememberMe: input.rememberMe,
-      });
-
-      await setRememberCookie(Boolean(input.rememberMe));
-
-      const cookieStore = await cookies();
-      cookieStore.set(ACTIVE_ORG_COOKIE, provisioned.organizationId, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365,
-      });
-    }
-
-    return apiSuccess({ needsEmailVerification });
+    throw new AppError(
+      "SIGNUP_FAILED",
+      "Create your account with email and PIN at /signup.",
+      400,
+    );
   } catch (error) {
     if (error instanceof AppError) {
       return error.toApiError();
@@ -322,28 +266,22 @@ export async function requestPasswordReset(
   meta: { ip?: string | null },
 ): Promise<ApiResponse<{ sent: true }>> {
   try {
-    requireSupabaseConfigured();
     const input = forgotPasswordSchema.parse(raw);
     await enforceAuthRateLimit(`reset:${meta.ip ?? input.email}`);
 
-    const supabase = await createSupabaseServerActionClient();
-    const env = getEnv();
-    const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
-      redirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/update-password`,
-    });
-
-    if (error) {
-      throw new AppError("RESET_FAILED", error.message, 400);
+    try {
+      await AuthService.requestPinReset(input.email, meta.ip ?? undefined);
+    } catch {
+      // Enumeration-safe: leftover password-reset action must not leak account existence.
     }
 
     await writeAuditLog({
       action: "password.reset_requested",
       resourceType: "auth",
       ip: meta.ip,
-      metadata: { email: input.email },
+      metadata: { email: input.email, recovery: "pin_reset" },
     });
 
-    // Always success to avoid email enumeration
     return apiSuccess({ sent: true });
   } catch (error) {
     if (error instanceof AppError) return error.toApiError();
@@ -396,18 +334,10 @@ export async function resendVerificationEmail(
     }
 
     await enforceAuthRateLimit(`verify:${meta.ip ?? data.user.email}`);
-    const env = getEnv();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: data.user.email,
-      options: {
-        emailRedirectTo: `${env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      throw new AppError("VERIFY_RESEND_FAILED", error.message, 400);
-    }
+    await AuthService.resendEmailVerification(
+      data.user.email,
+      meta.ip ?? undefined,
+    );
 
     return apiSuccess({ sent: true });
   } catch (error) {
