@@ -21,7 +21,7 @@ async function postResendEmail(params: {
 
   if (!canUseLiveSenderIdentity(sender)) {
     console.error(
-      "Production mail cannot use the Resend sandbox sender. Verify zolanzo.com in Resend and send as ZOLANZO <info@zolanzo.com>.",
+      "Production mail cannot use the Resend sandbox sender. Verify zolanzo.com in Resend and send as Zolanzo <info@zolanzo.com>.",
     );
     return { success: false };
   }

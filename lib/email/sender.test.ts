@@ -18,9 +18,9 @@ describe("transactional email sender identity", () => {
 
   it("uses the official ZOLANZO info mailbox when env is unset", () => {
     const sender = getTransactionalEmailSender({ NODE_ENV: "development" });
-    expect(sender.displayName).toBe("ZOLANZO");
+    expect(sender.displayName).toBe("Zolanzo");
     expect(sender.mailbox).toBe("info@zolanzo.com");
-    expect(sender.from).toBe("ZOLANZO <info@zolanzo.com>");
+    expect(sender.from).toBe("Zolanzo <info@zolanzo.com>");
     expect(sender.from).toBe(EMAIL_SENDER_FROM);
     expect(sender.identityMode).toBe("official");
     expect(sender.replyTo).toBe(APP_CONFIG.supportEmail);
