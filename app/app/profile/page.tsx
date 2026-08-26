@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const ctx = await getAuthContext();
-  if (!ctx) redirect("/auth/sign-in?next=/app/profile");
+  if (!ctx) redirect("/login?next=/app/profile");
 
   const [publicProfile, privateProfile] = await Promise.all([
     getPublicProfile(ctx.user.id),
@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   ]);
 
   if (!publicProfile || !privateProfile) {
-    redirect("/auth/sign-in");
+    redirect("/login");
   }
 
   return (

@@ -15,13 +15,13 @@ import {
   ShieldKeyIcon,
   HeadsetIcon,
   Settings01Icon,
+  Briefcase01Icon,
 } from "@hugeicons/core-free-icons";
 
 export function BottomNav({ userRole = null }: { userRole?: string | null }) {
   const pathname = usePathname();
   const chrome = resolveShellChrome(pathname, userRole);
   const isHireWorkspace = chrome === "hirer";
-  const isAdminWorkspace = chrome === "super_admin" || chrome === "staff";
 
   const earnerTabs = [
     { label: "Home", href: "/earner/dashboard", icon: DashboardCircleIcon },
@@ -47,18 +47,32 @@ export function BottomNav({ userRole = null }: { userRole?: string | null }) {
     { label: "Settings", href: "/settings", icon: Settings01Icon },
   ];
 
-  const tabs = isAdminWorkspace
-    ? adminTabs
-    : isHireWorkspace
-      ? hireTabs
-      : earnerTabs;
+  const staffTabs = [
+    { label: "Ops", href: "/lex/staff", icon: DashboardCircleIcon },
+    { label: "Careers", href: "/careers", icon: Briefcase01Icon },
+    { label: "Support", href: "/support", icon: HeadsetIcon },
+    { label: "Settings", href: "/settings", icon: Settings01Icon },
+  ];
+
+  const tabs =
+    chrome === "super_admin"
+      ? adminTabs
+      : chrome === "staff"
+        ? staffTabs
+        : isHireWorkspace
+          ? hireTabs
+          : earnerTabs;
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 select-none border-t border-border bg-topbar px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 lg:hidden"
       aria-label="Primary"
     >
-      <div className="grid grid-cols-5 gap-0.5 max-w-md mx-auto">
+      <div
+        className={`mx-auto grid max-w-md gap-0.5 ${
+          tabs.length === 4 ? "grid-cols-4" : "grid-cols-5"
+        }`}
+      >
         {tabs.map((tab) => {
           const isActive =
             pathname === tab.href ||

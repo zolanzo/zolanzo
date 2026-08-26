@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface OnboardingProfileData {
-  role: "worker" | "employer";
+  role?: "worker" | "employer";
   country?: string;
   state?: string;
   city?: string;
@@ -29,32 +29,45 @@ export function calculateProfileCompletion(data: Partial<OnboardingProfileData>)
 export class OnboardingService {
   static async completeOnboarding(userId: string, data: OnboardingProfileData) {
     const supabase = await createSupabaseServerClient();
-    const completion = calculateProfileCompletion(data);
-
-    if (supabase) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from("profiles") as any)
-        .update({
-          role: data.role,
-          country: data.country || "Nigeria",
-          state: data.state || "",
-          city: data.city || "",
-          language: data.language || "English",
-          company_name: data.companyName || null,
-          industry: data.industry || null,
-          website: data.website || null,
-          profile_completion: completion,
-          onboarding_completed: true,
-          first_login_completed: true,
-        })
-        .eq("id", userId);
-
-      if (error) {
-        throw new Error(error.message);
-      }
+    if (!supabase) {
+      throw new Error("Authentication service is unreachable. Please try again shortly.");
     }
 
-    return { success: true, profileCompletion: completion };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profiles = supabase.from("profiles") as any;
+    const { data: existing, error: readError } = await profiles
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (readError || !existing?.role) {
+      throw new Error("Onboarding submission failed.");
+    }
+
+    const role: "worker" | "employer" =
+      existing.role === "employer" ? "employer" : "worker";
+    const completion = calculateProfileCompletion({ ...data, role });
+
+    const { error } = await profiles
+      .update({
+        country: data.country || "Nigeria",
+        state: data.state || "",
+        city: data.city || "",
+        language: data.language || "English",
+        company_name: data.companyName || null,
+        industry: data.industry || null,
+        website: data.website || null,
+        profile_completion: completion,
+        onboarding_completed: true,
+        first_login_completed: true,
+      })
+      .eq("id", userId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return { success: true, profileCompletion: completion, role };
   }
 
   static async updateRole(userId: string, role: "worker" | "employer") {

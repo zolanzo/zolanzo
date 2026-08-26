@@ -46,6 +46,14 @@ export function meetsAccess(
   }
 }
 
+function isHirerRole(role: string): boolean {
+  return role === "employer" || role === "hirer" || role === "client";
+}
+
+function isEarnerRole(role: string): boolean {
+  return role === "worker" || role === "earner";
+}
+
 export function getRoleHomePath(role: string): string {
   if (!role) {
     return "/login?error=RoleUnresolved";
@@ -57,10 +65,10 @@ export function getRoleHomePath(role: string): string {
   if (normalized === "staff") {
     return "/lex/staff";
   }
-  if (normalized === "employer" || normalized === "hirer") {
+  if (isHirerRole(normalized)) {
     return "/hirer/dashboard";
   }
-  if (normalized === "worker" || normalized === "earner") {
+  if (isEarnerRole(normalized)) {
     return "/earner/dashboard";
   }
   return "/login?error=InvalidRole";
@@ -117,15 +125,13 @@ export function decideProxyAccess(input: {
   if (input.authenticated && !isSuperOrAdmin) {
     if (
       input.pathname.startsWith("/earner") &&
-      normRole !== "worker" &&
-      normRole !== "earner"
+      !isEarnerRole(normRole)
     ) {
       return { action: "redirect", pathname: getRoleHomePath(input.userRole) };
     }
     if (
       input.pathname.startsWith("/hirer") &&
-      normRole !== "employer" &&
-      normRole !== "hirer"
+      !isHirerRole(normRole)
     ) {
       return { action: "redirect", pathname: getRoleHomePath(input.userRole) };
     }

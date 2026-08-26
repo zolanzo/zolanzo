@@ -108,7 +108,7 @@ export function SessionsClient(props: {
               setError(result.error.message);
               return;
             }
-            router.push("/auth/sign-in");
+            router.push("/login");
             router.refresh();
           });
         }}

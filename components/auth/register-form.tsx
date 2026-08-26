@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { BrandIcon } from "@/components/ui/brand-icons";
 import { Icons } from "@/lib/icon-registry";
 
 export function RegisterForm({
@@ -172,47 +171,6 @@ export function RegisterForm({
           </button>
 
         </form>
-
-        {/* Divider */}
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-[11px] uppercase">
-            <span className="bg-background px-3 font-semibold tracking-wider text-muted-foreground">
-              OR CONTINUE WITH
-            </span>
-          </div>
-        </div>
-
-        {/* Social Buttons (Bottom) */}
-        <div className="space-y-3">
-          
-          <button
-            type="button"
-            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
-          >
-            <BrandIcon brand="google" size={18} />
-            <span>Continue with Google</span>
-          </button>
-
-          <button
-            type="button"
-            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
-          >
-            <BrandIcon brand="facebook" size={18} />
-            <span>Continue with Facebook</span>
-          </button>
-
-          <button
-            type="button"
-            className="flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-bold text-foreground transition-all hover:bg-hover"
-          >
-            <BrandIcon brand="apple" size={18} />
-            <span>Continue with Apple</span>
-          </button>
-
-        </div>
 
         {/* Footer Link */}
         <div className="pt-2 text-xs text-muted-foreground">

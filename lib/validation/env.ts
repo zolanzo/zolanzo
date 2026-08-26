@@ -372,8 +372,24 @@ export function missingStrictKeysForProbe(env: AppEnv = getEnv()): string[] {
 }
 
 function shouldSkipValidation(raw: NodeJS.ProcessEnv): boolean {
+  if (raw.NODE_ENV === "production" || raw.ZOLANZO_ENV === "production" || raw.ZOLANZO_ENV === "staging") {
+    return false;
+  }
   const skip = raw.SKIP_ENV_VALIDATION;
   return skip === "1" || skip === "true" || skip === "yes";
+}
+
+function resolveAppUrl(raw: NodeJS.ProcessEnv): string | undefined {
+  const configured = raw.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured) return configured;
+  if (
+    raw.NODE_ENV === "production" ||
+    raw.ZOLANZO_ENV === "production" ||
+    raw.ZOLANZO_ENV === "staging"
+  ) {
+    return undefined;
+  }
+  return "http://localhost:3000";
 }
 
 /**
@@ -385,8 +401,7 @@ export function loadEnv(
   if (shouldSkipValidation(raw)) {
     const parsed = envSchema.safeParse({
       ...raw,
-      NEXT_PUBLIC_APP_URL:
-        raw.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      NEXT_PUBLIC_APP_URL: resolveAppUrl(raw) ?? "http://localhost:3000",
     });
     if (parsed.success) return parsed.data;
     // Even when skipping, return a minimal development shape if parse fails hard
@@ -399,10 +414,7 @@ export function loadEnv(
 
   const parsed = envSchema.safeParse({
     ...raw,
-    NEXT_PUBLIC_APP_URL:
-      raw.NEXT_PUBLIC_APP_URL && raw.NEXT_PUBLIC_APP_URL.length > 0
-        ? raw.NEXT_PUBLIC_APP_URL
-        : "http://localhost:3000",
+    NEXT_PUBLIC_APP_URL: resolveAppUrl(raw),
   });
 
   if (!parsed.success) {

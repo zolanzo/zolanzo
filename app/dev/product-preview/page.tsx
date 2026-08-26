@@ -178,19 +178,6 @@ export default function ProductPreviewPage() {
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     Join over 150,000 workers across Africa performing social media, AI data training, transcription, and field operations.
                   </p>
-
-                  {/* Social Auth Logins using BrandIcon */}
-                  <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
-                    <button className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 flex items-center gap-2.5 text-xs font-semibold shadow-xs min-h-[44px]">
-                      <BrandIcon brand="google" size={20} /> Continue with Google
-                    </button>
-                    <button className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 flex items-center gap-2.5 text-xs font-semibold shadow-xs min-h-[44px]">
-                      <BrandIcon brand="facebook" size={20} /> Continue with Facebook
-                    </button>
-                    <button className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 flex items-center gap-2.5 text-xs font-semibold shadow-xs min-h-[44px]">
-                      <BrandIcon brand="apple" size={20} /> Continue with Apple
-                    </button>
-                  </div>
                 </div>
 
                 {/* Popular Job Categories */}

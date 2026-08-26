@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function SessionsPage() {
   const ctx = await getAuthContext();
-  if (!ctx) redirect("/auth/sign-in?next=/app/sessions");
+  if (!ctx) redirect("/login?next=/app/sessions");
 
   const [sessions, devices] = await Promise.all([
     listSessions(ctx.user.id),

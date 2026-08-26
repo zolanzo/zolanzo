@@ -6,16 +6,29 @@ import {
   getTransactionalEmailSender,
 } from "@/lib/email/sender";
 
+export function isLiveEmailRequired(
+  env: { NODE_ENV?: string; ZOLANZO_ENV?: string } = process.env,
+): boolean {
+  return (
+    env.NODE_ENV === "production" ||
+    env.ZOLANZO_ENV === "production" ||
+    env.ZOLANZO_ENV === "staging"
+  );
+}
+
 async function postResendEmail(params: {
   to: string;
   subject: string;
   html: string;
   text: string;
 }): Promise<{ success: boolean; id?: string }> {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   const sender = getTransactionalEmailSender();
 
   if (!apiKey) {
+    if (isLiveEmailRequired()) {
+      return { success: false };
+    }
     return { success: true, id: `dev_${Date.now()}` };
   }
 
@@ -82,11 +95,8 @@ export async function sendEmailOtp(
     text,
   });
 
-  if (!process.env.RESEND_API_KEY) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[DEV MODE] Email OTP issued; code captured locally, not logged.");
-    }
-    return { success: true, id: `dev_otp_${Date.now()}` };
+  if (!process.env.RESEND_API_KEY?.trim() && !isLiveEmailRequired()) {
+    console.warn("[DEV MODE] Email OTP issued; code captured locally, not logged.");
   }
 
   return postResendEmail({
@@ -119,11 +129,8 @@ export async function sendPinResetEmail(
     text,
   });
 
-  if (!process.env.RESEND_API_KEY) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("[DEV MODE] PIN reset email issued; code captured locally, not logged.");
-    }
-    return { success: true, id: `dev_reset_${Date.now()}` };
+  if (!process.env.RESEND_API_KEY?.trim() && !isLiveEmailRequired()) {
+    console.warn("[DEV MODE] PIN reset email issued; code captured locally, not logged.");
   }
 
   return postResendEmail({
@@ -143,8 +150,8 @@ export async function sendSecurityAlert(
   const html = getSecurityAlertTemplate(actionName, ipAddress, device);
   const text = getSecurityAlertText(actionName, ipAddress, device);
 
-  if (!process.env.RESEND_API_KEY) {
-    console.warn(`[DEV MODE] Security Alert to ${email}: ${actionName}`);
+  if (!process.env.RESEND_API_KEY?.trim() && !isLiveEmailRequired()) {
+    console.warn("[DEV MODE] Security alert issued; not sent.");
     return true;
   }
 

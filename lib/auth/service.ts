@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/email-otp";
 import { findAuthUserByEmail, isAlreadyRegisteredError } from "@/lib/auth/auth-users";
 import { withKeyedLock } from "@/lib/auth/keyed-lock";
+import { logger } from "@/lib/observability/logger";
 
 export interface SignupInput {
   role?: "worker" | "employer";
@@ -407,17 +408,23 @@ export class AuthService {
         return { requiresEmailVerification: true, email: normalizeEmail(profile.email || email) };
       }
 
-      if (supabase) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: authPasswordFromPin(input.pin),
-        });
-        if (signInError && /not confirmed|email not confirmed/i.test(signInError.message)) {
-          return { requiresEmailVerification: true, email };
-        }
-        if (signInError && isBackendUnavailableError(signInError)) {
+      if (!supabase) {
+        throw new Error("Authentication service is unreachable. Please try again shortly.");
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: authPasswordFromPin(input.pin),
+      });
+      if (signInError && /not confirmed|email not confirmed/i.test(signInError.message)) {
+        return { requiresEmailVerification: true, email };
+      }
+      if (signInError) {
+        if (isBackendUnavailableError(signInError)) {
           throw new Error("Authentication service is unreachable. Please try again shortly.");
         }
+        await this.logAuditEvent(profile.id, "failed_login", ipAddress, userAgent);
+        throw new Error("Invalid credentials. Please verify your email and PIN.");
       }
 
       const role = profile.role.toLowerCase();
@@ -454,17 +461,27 @@ export class AuthService {
     try {
       const profile = await this.getProfileByEmail(normalized);
       if (profile?.id) {
-        await this.dispatchEmailOtp({
-          userId: profile.id,
-          email: normalized,
-          fullName: profile.full_name || "User",
-          purpose: EMAIL_OTP_PURPOSE.pinReset,
-        });
-        await this.logAuditEvent(profile.id, "pin_reset_requested", ipAddress, userAgent);
+        try {
+          await this.dispatchEmailOtp({
+            userId: profile.id,
+            email: normalized,
+            fullName: profile.full_name || "User",
+            purpose: EMAIL_OTP_PURPOSE.pinReset,
+          });
+          await this.logAuditEvent(profile.id, "pin_reset_requested", ipAddress, userAgent);
+        } catch (sendError) {
+          logger.warn("PIN reset email dispatch failed", {
+            span: "auth.pin_reset",
+            message: sendError instanceof Error ? sendError.message : "send_failed",
+          });
+        }
       }
       return { success: true };
     } catch (err) {
-      throw userFacingError(err, EMAIL_OTP_USER_MESSAGES.sendFailed);
+      if (isBackendUnavailableError(err)) {
+        throw new Error("Authentication service is unreachable. Please try again shortly.");
+      }
+      return { success: true };
     }
   }
 
@@ -640,21 +657,18 @@ export class AuthService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const profiles = admin.from("profiles") as any;
-    const { data: updated, error } = await profiles
-      .update(patch)
-      .eq("id", params.userId)
-      .select("id")
-      .maybeSingle();
+    const { error } = await profiles.upsert(
+      {
+        id: params.userId,
+        user_id: params.userId,
+        ...patch,
+        created_at: now,
+      },
+      { onConflict: "id" },
+    );
 
     if (error) {
       throw new Error("Registration could not be completed. Please try again.");
-    }
-
-    if (!updated) {
-      const { error: byUserIdError } = await profiles.update(patch).eq("user_id", params.userId);
-      if (byUserIdError) {
-        throw new Error("Registration could not be completed. Please try again.");
-      }
     }
   }
 }

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrganizationsPage() {
   const ctx = await getAuthContext();
-  if (!ctx) redirect("/auth/sign-in?next=/app/organizations");
+  if (!ctx) redirect("/login?next=/app/organizations");
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-8 px-6 py-12">

@@ -30,6 +30,26 @@ describe("loadEnv", () => {
     ).toThrow(/Missing required environment variables/);
   });
 
+  it("does not default the app URL to localhost in production", () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: "production",
+        ZOLANZO_ENV: "production",
+      }),
+    ).toThrow(/Invalid environment|NEXT_PUBLIC_APP_URL/);
+  });
+
+  it("refuses SKIP_ENV_VALIDATION in production", () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: "production",
+        ZOLANZO_ENV: "production",
+        SKIP_ENV_VALIDATION: "1",
+        NEXT_PUBLIC_APP_URL: "https://zolanzo.com",
+      }),
+    ).toThrow(/Missing required environment variables/);
+  });
+
   it("accepts optional ecosystem variables without connecting", () => {
     const env = loadEnv({
       NODE_ENV: "development",

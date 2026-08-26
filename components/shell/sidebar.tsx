@@ -57,8 +57,7 @@ export function Sidebar({ userRole = null }: { userRole?: string | null }) {
   ];
 
   const staffItems = [
-    { label: "Operations", href: "/admin", icon: DashboardCircleIcon },
-    { label: "Staff", href: "/lex/staff", icon: UserGroupIcon },
+    { label: "Operations", href: "/lex/staff", icon: DashboardCircleIcon },
     { label: "Careers", href: "/careers", icon: Briefcase01Icon },
     { label: "Support", href: "/support", icon: HeadsetIcon },
     { label: "Settings", href: "/settings", icon: Settings01Icon },

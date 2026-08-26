@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -9,7 +9,6 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthHeader } from "@/components/auth/auth-header";
 import { PINInput } from "@/components/auth/pin-input";
-import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import { ValidationMessage } from "@/components/auth/validation-message";
 
 export default function SignupPage() {
@@ -22,14 +21,18 @@ export default function SignupPage() {
   const [referralCode, setReferralCode] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
-  // Math Challenge State (Random 1-9 using lazy state initializers)
-  const [num1] = useState(() => Math.floor(Math.random() * 8) + 1);
-  const [num2] = useState(() => Math.floor(Math.random() * 8) + 1);
+  const [num1, setNum1] = useState<number | null>(null);
+  const [num2, setNum2] = useState<number | null>(null);
   const [mathAnswer, setMathAnswer] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    setNum1(Math.floor(Math.random() * 8) + 1);
+    setNum2(Math.floor(Math.random() * 8) + 1);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,11 @@ export default function SignupPage() {
     }
 
     // Verify Math Challenge
+    if (num1 === null || num2 === null) {
+      setError("Please wait a moment and try again.");
+      return;
+    }
+
     const expected = num1 + num2;
     if (parseInt(mathAnswer, 10) !== expected) {
       setError("Incorrect math answer. Please try again.");
@@ -225,7 +233,10 @@ export default function SignupPage() {
           {/* 7. Maths: What is: 4 + 7 */}
           <div className="space-y-1.5 text-left pt-1">
             <label htmlFor="mathAnswer" className="block text-xs font-semibold text-foreground">
-              What is: <span className="font-mono font-bold text-primary">{num1} + {num2}</span>
+              What is:{" "}
+              <span className="font-mono font-bold text-primary">
+                {num1 === null || num2 === null ? "…" : `${num1} + ${num2}`}
+              </span>
             </label>
             <div className="relative">
               <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -293,19 +304,6 @@ export default function SignupPage() {
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="relative my-6 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <span className="relative bg-card px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            OR
-          </span>
-        </div>
-
-        {/* Social Registration */}
-        <SocialLoginButtons />
 
         {/* Bottom Switch to Login */}
         <div className="mt-6 border-t border-border pt-4 text-center text-xs text-muted-foreground">

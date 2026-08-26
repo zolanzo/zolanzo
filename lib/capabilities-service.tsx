@@ -142,25 +142,28 @@ function normalizePlatforms(
 const CapabilityContext = createContext<CapabilityContextType | undefined>(undefined);
 
 export function CapabilityProvider({ children }: { children: React.ReactNode }) {
-  const [platforms, setPlatforms] = useState<Record<string, PlatformCapability>>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("zolanzo_capabilities_v2");
-      if (saved) {
-        try {
-          return normalizePlatforms(JSON.parse(saved) as Record<string, PlatformCapability>);
-        } catch {
-          // fallback
-        }
-      }
-    }
-    return DEFAULT_PLATFORMS;
-  });
+  const [platforms, setPlatforms] =
+    useState<Record<string, PlatformCapability>>(DEFAULT_PLATFORMS);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("zolanzo_capabilities_v2", JSON.stringify(platforms));
+    const saved = localStorage.getItem("zolanzo_capabilities_v2");
+    if (saved) {
+      try {
+        setPlatforms(
+          normalizePlatforms(JSON.parse(saved) as Record<string, PlatformCapability>),
+        );
+      } catch {
+        // Keep defaults when stored state is unreadable.
+      }
     }
-  }, [platforms]);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem("zolanzo_capabilities_v2", JSON.stringify(platforms));
+  }, [platforms, hydrated]);
 
   const connectPlatform = (platform: string, handle: string) => {
     setPlatforms((prev) => {

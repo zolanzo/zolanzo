@@ -7,7 +7,6 @@ import {
   signInSchema,
   signUpSchema,
   forgotPasswordSchema,
-  updatePasswordSchema,
   type SignInInput,
   type SignUpInput,
 } from "@/features/authentication/validators/auth";
@@ -290,36 +289,13 @@ export async function requestPasswordReset(
 }
 
 export async function updatePassword(
-  raw: { password: string },
-  meta: { userId?: string | null; ip?: string | null },
+  _raw: { password: string },
+  _meta: { userId?: string | null; ip?: string | null },
 ): Promise<ApiResponse<{ updated: true }>> {
-  try {
-    requireSupabaseConfigured();
-    const input = updatePasswordSchema.parse(raw);
-    const supabase = await createSupabaseServerActionClient();
-    const { error } = await supabase.auth.updateUser({
-      password: input.password,
-    });
-
-    if (error) {
-      throw new AppError("PASSWORD_UPDATE_FAILED", error.message, 400);
-    }
-
-    // Session rotation: refresh session after password change
-    await supabase.auth.refreshSession();
-
-    await writeAuditLog({
-      actorUserId: meta.userId,
-      action: "password.updated",
-      resourceType: "auth",
-      ip: meta.ip,
-    });
-
-    return apiSuccess({ updated: true });
-  } catch (error) {
-    if (error instanceof AppError) return error.toApiError();
-    return apiError("PASSWORD_UPDATE_FAILED", "Could not update password");
-  }
+  return apiError(
+    "PASSWORD_UPDATE_FAILED",
+    "PIN recovery is at /forgot-pin. Password update is not used for Zolanzo accounts.",
+  );
 }
 
 export async function resendVerificationEmail(

@@ -149,5 +149,15 @@ describe("decideProxyAccess", () => {
         nodeEnv: "production",
       }),
     ).toEqual({ action: "next" });
+
+    expect(
+      decideProxyAccess({
+        pathname: "/hirer/dashboard",
+        authenticated: true,
+        roles: ["client"],
+        userRole: "client",
+        nodeEnv: "production",
+      }),
+    ).toEqual({ action: "next" });
   });
 });

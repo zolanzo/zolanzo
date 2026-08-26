@@ -13,6 +13,8 @@ export function getBuildVersion(): string {
 
 export function getGitCommit(): string | null {
   return (
+    process.env.SOURCE_COMMIT ??
+    process.env.COOLIFY_GIT_COMMIT_SHA ??
     process.env.VERCEL_GIT_COMMIT_SHA ??
     process.env.GIT_COMMIT ??
     process.env.COMMIT_SHA ??

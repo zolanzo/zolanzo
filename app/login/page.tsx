@@ -9,7 +9,6 @@ import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthHeader } from "@/components/auth/auth-header";
 import { PINInput } from "@/components/auth/pin-input";
-import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import { ValidationMessage } from "@/components/auth/validation-message";
 
 function LoginForm() {
@@ -175,19 +174,6 @@ function LoginForm() {
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="relative my-6 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <span className="relative bg-card px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            OR
-          </span>
-        </div>
-
-        {/* Social Login Architecture */}
-        <SocialLoginButtons />
 
         {/* Bottom Switch to Sign Up */}
         <div className="mt-6 border-t border-border pt-4 text-center text-xs text-muted-foreground">

@@ -19,16 +19,16 @@ export async function GET(request: Request) {
   const origin = env.NEXT_PUBLIC_APP_URL;
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.redirect(`${origin}/auth/sign-in?error=not_configured`);
+    return NextResponse.redirect(`${origin}/login?error=not_configured`);
   }
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/auth/sign-in?error=missing_code`);
+    return NextResponse.redirect(`${origin}/login?error=missing_code`);
   }
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) {
-    return NextResponse.redirect(`${origin}/auth/sign-in?error=not_configured`);
+    return NextResponse.redirect(`${origin}/login?error=not_configured`);
   }
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       span: "auth.callback",
       err: { message: error?.message ?? "no user" },
     });
-    return NextResponse.redirect(`${origin}/auth/sign-in?error=callback`);
+    return NextResponse.redirect(`${origin}/login?error=callback`);
   }
 
   const displayName =

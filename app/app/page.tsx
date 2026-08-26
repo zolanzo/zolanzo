@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function AppHomePage() {
   const ctx = await getAuthContext();
   if (!ctx) {
-    redirect("/auth/sign-in?next=/app");
+    redirect("/login?next=/app");
   }
 
   const active = ctx.user.memberships.find(

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -21,7 +21,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Profile Form State (Stored role from registration)
-  const [role] = useState<"worker" | "employer">("worker");
+  const [role, setRole] = useState<"worker" | "employer">("worker");
+  const [roleReady, setRoleReady] = useState(false);
   const [country, setCountry] = useState("Nigeria");
   const [stateProv, setStateProv] = useState("Lagos");
   const [city, setCity] = useState("Lagos");
@@ -32,6 +33,27 @@ export default function OnboardingPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/onboarding");
+        const data = await res.json();
+        if (cancelled) return;
+        if (res.ok && (data.data?.role === "employer" || data.data?.role === "worker")) {
+          setRole(data.data.role);
+        }
+      } catch {
+        // Keep the default worker view if the session profile cannot be read.
+      } finally {
+        if (!cancelled) setRoleReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleNextStep = () => {
     setError("");
@@ -62,7 +84,6 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role,
           country,
           state: stateProv,
           city,
@@ -82,7 +103,10 @@ export default function OnboardingPage() {
       }
 
       // Automatic Dashboard Routing based on stored role
-      const destination = role === "worker" ? "/earner/dashboard" : "/hirer/dashboard";
+      const destination =
+        (data.data?.role === "employer" ? "employer" : role) === "employer"
+          ? "/hirer/dashboard"
+          : "/earner/dashboard";
       router.push(destination);
     } catch {
       setLoading(false);
@@ -151,6 +175,10 @@ export default function OnboardingPage() {
           {/* STEP 2: COMPLETE PROFILE (DYNAMIC BASED ON STORED ROLE) */}
           {step === 2 && (
             <div className="space-y-4 py-1 text-left">
+              {!roleReady ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">Loading your account…</p>
+              ) : (
+              <>
               <div className="text-center space-y-1 mb-4">
                 <h2 className="text-2xl font-bold tracking-tight text-foreground">Complete Profile</h2>
                 <p className="text-xs text-muted-foreground">
@@ -321,6 +349,8 @@ export default function OnboardingPage() {
                   <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
                 </button>
               </div>
+              </>
+              )}
             </div>
           )}
 
