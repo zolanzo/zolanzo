@@ -21,7 +21,7 @@ export function BrandLogo({
     return (
       <span className={cn("relative inline-flex items-center", className)}>
         <Image
-          src="/brand/icon.webp"
+          src="/brand/icon-192.webp"
           alt="ZOLANZO Brand Logo"
           width={width}
           height={height}

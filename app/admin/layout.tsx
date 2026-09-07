@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
+import { buildNoIndexMetadata } from "@/components/seo/build-metadata";
 import { WorkspaceProviders } from "@/providers/workspace-providers";
 import { AdminShell } from "@/components/shell/admin-shell";
 import { getAuthContext } from "@/lib/auth/session";
 import { chromeRoleFromPlatformRoles } from "@/lib/workspace/shell-nav";
+
+export const metadata = buildNoIndexMetadata("/admin", "Admin");
 
 export default async function WorkspaceLayout({
   children,

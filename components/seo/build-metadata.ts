@@ -46,7 +46,7 @@ export function buildPageMetadata({
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title: pageTitle,
       description,
       creator: SITE_CONFIG.twitterHandle,
@@ -56,10 +56,22 @@ export function buildPageMetadata({
       ? { index: false, follow: false }
       : { index: true, follow: true },
     icons: {
-      icon: [{ url: "/brand/icon.webp", type: "image/webp" }],
-      shortcut: [{ url: "/brand/icon.webp", type: "image/webp" }],
-      apple: [{ url: "/brand/icon.webp", type: "image/webp" }],
+      icon: [
+        { url: "/brand/icon-32.webp", sizes: "32x32", type: "image/webp" },
+        { url: "/brand/icon-192.webp", sizes: "192x192", type: "image/webp" },
+      ],
+      shortcut: [{ url: "/brand/icon-32.webp", type: "image/webp" }],
+      apple: [{ url: "/brand/icon-192.webp", sizes: "192x192", type: "image/webp" }],
     },
     manifest: "/manifest.webmanifest",
   };
+}
+
+/** Auth and authenticated app surfaces — crawlable only where public, never indexed. */
+export function buildNoIndexMetadata(path: string, title: string): Metadata {
+  return buildPageMetadata({
+    path,
+    title,
+    noIndex: true,
+  });
 }

@@ -14,13 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait-primary",
     icons: [
       {
-        src: "/brand/icon.webp",
+        src: "/brand/icon-512.webp",
         sizes: "512x512",
         type: "image/webp",
         purpose: "any",
       },
       {
-        src: "/brand/icon.webp",
+        src: "/brand/icon-192.webp",
         sizes: "192x192",
         type: "image/webp",
         purpose: "maskable",
