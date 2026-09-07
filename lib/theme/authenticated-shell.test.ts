@@ -42,13 +42,14 @@ describe("authenticated theme chrome", () => {
     );
   });
 
-  it("exposes a single Light/Dark switch with no Auto or System option", () => {
+  it("exposes a single theme switch with no Auto or System option", () => {
     const toggle = read("components/theme/theme-toggle.tsx");
     expect(toggle).toContain('role="switch"');
     expect(toggle).toContain("Switch to light");
     expect(toggle).toContain("Switch to dark");
-    expect(toggle).toContain('"Dark"');
-    expect(toggle).toContain('"Light"');
+    expect(toggle).toContain("Dark theme. Switch to light.");
+    expect(toggle).toContain("Light theme. Switch to dark.");
+    expect(toggle).not.toContain("{isDark ? \"Dark\" : \"Light\"}");
     expect(toggle).not.toContain("radiogroup");
     expect(toggle).not.toContain('value: "auto"');
     expect(toggle).not.toContain("Automatic theme");
@@ -57,21 +58,22 @@ describe("authenticated theme chrome", () => {
     expect(toggle).not.toContain("onPointerDown");
   });
 
-  it("puts the menu theme control in public and authenticated mobile navigation", () => {
+  it("shows one compact icon-only theme control in public chrome", () => {
     const navbar = read("components/navigation/navbar.tsx");
-    expect(navbar).toContain('variant="menu"');
     expect(navbar).toContain("ThemeModeControl");
-    expect(navbar).toContain("md:hidden");
+    expect(navbar).toContain('variant="compact"');
+    expect(navbar).not.toContain('variant="menu"');
+    expect((navbar.match(/<ThemeModeControl/g) ?? []).length).toBe(1);
 
     const header = read("components/shell/top-header.tsx");
     expect(header).toContain("ThemeModeControl");
     expect(header).toContain('variant="compact"');
-    expect(header).toContain("hidden md:block");
 
     const profile = read("components/shell/profile-dropdown.tsx");
-    expect(profile).toContain("ThemeModeControl");
-    expect(profile).toContain('variant="menu"');
-    expect(profile).toContain("md:hidden");
+    expect(profile).not.toContain("ThemeModeControl");
+
+    const settings = read("components/settings/account-center.tsx");
+    expect(settings).not.toContain("ThemeModeControl");
   });
 
   it("keeps role workspaces on semantic surfaces instead of hardcoded white/black", () => {
@@ -106,11 +108,9 @@ describe("authenticated theme chrome", () => {
     expect(read("components/shell/top-header.tsx")).toContain("headerWalletHref");
   });
 
-  it("lets /otp inherit global theme tokens without a second theme control", () => {
+  it("lets /otp inherit global theme via redirect without a second theme control", () => {
     const otp = read("app/otp/page.tsx");
-    expect(otp).toContain("bg-background");
-    expect(otp).toContain("text-foreground");
-    expect(otp).toContain("bg-input-background");
+    expect(otp).toContain('redirect("/verify-email")');
     expect(otp).not.toContain("ThemeModeControl");
     expect(otp).not.toContain("localStorage");
     expect(otp).not.toContain("prefers-color-scheme");

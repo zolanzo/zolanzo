@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { ThemeLogo } from "@/components/brand/theme-logo";
 import { ThemeModeControl } from "@/components/theme/theme-toggle";
-import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,10 +32,6 @@ export function Navbar() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 lg:gap-3">
-          <WhatsAppSupportLink
-            variant="link"
-            className="hidden min-h-0 h-9 px-1 md:inline-flex"
-          />
           <ThemeModeControl variant="compact" />
           <Link
             href="/login"
@@ -90,11 +85,6 @@ export function Navbar() {
             >
               How It Works
             </Link>
-            <WhatsAppSupportLink
-              variant="link"
-              className="justify-start px-0"
-              onClick={() => setMobileMenuOpen(false)}
-            />
           </nav>
 
           <div className="flex flex-col gap-2.5">

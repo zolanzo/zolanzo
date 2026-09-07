@@ -18,9 +18,10 @@ describe("homepage available opportunities is a compact social preview", () => {
     const page = homepage();
     const preview = socialOpportunities();
     expect(page).toContain('id="available-tasks"');
-    expect(page).toContain("Available Opportunities");
+    expect(page).toContain("Social Media Tasks");
+    expect(page).toContain("Discover digital work");
+    expect(page).not.toContain("Available Opportunities");
     expect(page).toContain("<HomeSocialOpportunities />");
-    expect(preview).toContain("Social Media Tasks");
     expect(preview).toContain("Browse Social Media Tasks →");
     expect(preview).toContain('href="/tasks"');
     expect(preview.match(/href="\/tasks"/g)?.length).toBe(1);

@@ -1,101 +1,80 @@
 import Link from "next/link";
 import { ThemeLogo } from "@/components/brand/theme-logo";
-import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 
 export function HomeFooter() {
   return (
-    <footer className="w-full border-t border-border bg-footer pb-6 pt-10 text-foreground">
+    <footer className="w-full border-t border-border bg-footer pb-6 pt-12 text-foreground">
       <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
-        <div className="grid grid-cols-1 gap-8 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4">
-          <div className="flex flex-col items-center space-y-3 sm:items-start">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-20">
+          <div className="flex max-w-sm flex-col items-center space-y-3 text-center sm:items-start sm:text-left lg:flex-1">
             <Link href="/">
               <ThemeLogo width={155} height={40} className="h-[36px] w-auto object-contain" />
             </Link>
-            <p className="max-w-xs text-xs leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Africa&apos;s premium workforce marketplace connecting micro-taskers with real digital work.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Work</h3>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li>
-                <Link href="/tasks" className="transition-colors hover:text-foreground">
-                  Find Work
-                </Link>
-              </li>
-              <li>
-                <Link href="/signup" className="transition-colors hover:text-foreground">
-                  Hire Talent
-                </Link>
-              </li>
-              <li>
-                <Link href="/#how-it-works" className="transition-colors hover:text-foreground">
-                  How It Works
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <div className="grid grid-cols-2 gap-8 text-left sm:max-w-md sm:gap-16 lg:max-w-none lg:shrink-0">
+            <nav aria-label="Help" className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground">
+                Help
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/faq" className="transition-colors hover:text-foreground">
+                    FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/support" className="transition-colors hover:text-foreground">
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="transition-colors hover:text-foreground">
+                    Contact
+                  </Link>
+                </li>
+              </ul>
+            </nav>
 
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Help</h3>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li>
-                <WhatsAppSupportLink variant="link" className="min-h-0 px-0 text-xs font-normal" />
-              </li>
-              <li>
-                <Link href="/faq" className="transition-colors hover:text-foreground">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className="transition-colors hover:text-foreground">
-                  Support
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="transition-colors hover:text-foreground">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="transition-colors hover:text-foreground">
-                  Terms
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="transition-colors hover:text-foreground">
-                  Privacy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Account</h3>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li>
-                <Link href="/login" className="transition-colors hover:text-foreground">
-                  Log In
-                </Link>
-              </li>
-              <li>
-                <Link href="/signup" className="transition-colors hover:text-foreground">
-                  Sign Up
-                </Link>
-              </li>
-              <li>
-                <Link href="/careers" className="transition-colors hover:text-foreground">
-                  Careers
-                </Link>
-              </li>
-            </ul>
+            <nav aria-label="Account" className="space-y-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground">
+                Account
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/login" className="transition-colors hover:text-foreground">
+                    Log In
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/signup" className="transition-colors hover:text-foreground">
+                    Sign Up
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/careers" className="transition-colors hover:text-foreground">
+                    Careers
+                  </Link>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
 
-        <div className="mt-8 space-y-1 border-t border-border pt-5 text-center text-xs text-muted-foreground">
+        <div className="mt-10 flex flex-col items-center gap-3 border-t border-border pt-6 text-center text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p>© 2026 ZOLANZO LTD. All rights reserved.</p>
-          <p className="text-[11px] text-muted-foreground">
+          <nav aria-label="Legal" className="flex items-center gap-4">
+            <Link href="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+          </nav>
+          <p className="text-[11px]">
             A Stankings Company •{" "}
             <a
               href="https://stankings.com/"

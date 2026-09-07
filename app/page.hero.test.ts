@@ -6,31 +6,29 @@ function homepage(): string {
   return readFileSync(resolve(process.cwd(), "app/page.tsx"), "utf8");
 }
 
-function productDashboards(): string {
-  const page = homepage();
-  const start = page.indexOf("SECTION 6");
-  const end = page.indexOf("SECTION 7");
-  expect(start).toBeGreaterThan(-1);
-  expect(end).toBeGreaterThan(start);
-  return page.slice(start, end);
-}
-
-describe("homepage hero product preview is not repeated later", () => {
-  it("keeps a single Earner Dashboard preview in the hero", () => {
+describe("homepage hero stays a marketing hero", () => {
+  it("keeps positioning copy and two primary pathways", () => {
     const page = homepage();
-    expect(page.match(/Launch Earner Dashboard/g)?.length).toBe(1);
-    expect(page.match(/Today&apos;s Earnings/g)?.length).toBe(1);
-    expect(page.match(/Wallet Balance/g)?.length).toBe(1);
-    expect(page.match(/Tasks Completed/g)?.length).toBe(1);
-    expect(page).not.toContain("Activity Timeline");
+    expect(page).toContain("Africa&apos;s #1 Digital Workforce Marketplace");
+    expect(page).toContain("Work that");
+    expect(page).toContain("Simple online tasks. Real income.");
+    expect(page).toContain("Find Work");
+    expect(page).toContain("Hire Talent");
+    expect(page).toContain("How It Works");
+    expect(page).toContain('href="/tasks"');
+    expect(page).toContain('href="/signup"');
+    expect(page).toContain('href="/#how-it-works"');
   });
 
-  it("keeps a distinct Hire Dashboard in Product Dashboards", () => {
-    const section = productDashboards();
-    expect(section).toContain("Launch Hire Dashboard");
-    expect(section).toContain("Campaign Budget");
-    expect(section).not.toContain("Launch Earner Dashboard");
-    expect(section).not.toContain("Today&apos;s Earnings");
-    expect(section).not.toContain("Activity Timeline");
+  it("does not put dashboard mock UI on the homepage", () => {
+    const page = homepage();
+    expect(page).not.toContain("Launch Earner Dashboard");
+    expect(page).not.toContain("Earner Product Interface");
+    expect(page).not.toContain("Product Dashboards");
+    expect(page).not.toContain("Launch Hire Dashboard");
+    expect(page).not.toContain("Today&apos;s Earnings");
+    expect(page).not.toContain("Campaign Budget");
+    expect(page).not.toContain("Activity Timeline");
+    expect(page).not.toContain("Success Stories");
   });
 });

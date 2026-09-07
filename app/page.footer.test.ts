@@ -11,7 +11,7 @@ function homepageFooter(): string {
 }
 
 describe("homepage footer is compact and non-repetitive", () => {
-  it("keeps WhatsApp Support and FAQ content off the homepage body", () => {
+  it("keeps WhatsApp and FAQ content off the homepage body and footer help", () => {
     const page = read("app/page.tsx");
     const footer = homepageFooter();
     expect(page).not.toContain("WhatsAppSupportLink");
@@ -20,17 +20,19 @@ describe("homepage footer is compact and non-repetitive", () => {
     expect(page).not.toContain("Who can join ZOLANZO?");
     expect(page).not.toContain("Questions about ZOLANZO?");
     expect(page).not.toContain("Visit our FAQ");
-    expect(footer).toContain("WhatsAppSupportLink");
+    expect(footer).not.toContain("WhatsAppSupportLink");
     expect(footer).not.toContain("Admin WhatsApp");
     expect(footer).not.toContain("704 555 9401");
     expect(footer).not.toContain("+234");
+    expect(footer).not.toContain("support@zolanzo.com");
+    expect(footer).not.toContain("info@zolnzo.com");
   });
 
-  it("keeps core work and help links without dashboard or wallet destinations", () => {
+  it("keeps help, account, and legal links without duplicating header navigation", () => {
     const footer = homepageFooter();
-    expect(footer).toContain("Find Work");
-    expect(footer).toContain("Hire Talent");
-    expect(footer).toContain("How It Works");
+    expect(footer).not.toContain("Find Work");
+    expect(footer).not.toContain("Hire Talent");
+    expect(footer).not.toContain("How It Works");
     expect(footer).toContain("FAQ");
     expect(footer).toContain("Support");
     expect(footer).toContain("Contact");
@@ -51,8 +53,8 @@ describe("homepage footer is compact and non-repetitive", () => {
     expect(footer).not.toContain("/hirer/dashboard");
     expect(footer.match(/href="\/support"/g)?.length).toBe(1);
     expect(footer.match(/href="\/faq"/g)?.length).toBe(1);
-    expect(footer.match(/href="\/tasks"/g)?.length).toBe(1);
-    expect(footer.match(/href="\/signup"/g)?.length).toBe(2);
+    expect(footer.match(/href="\/tasks"/g)?.length ?? 0).toBe(0);
+    expect(footer.match(/href="\/signup"/g)?.length).toBe(1);
   });
 
   it("keeps copyright and a single Stankings link in the bottom bar", () => {
@@ -65,8 +67,9 @@ describe("homepage footer is compact and non-repetitive", () => {
 });
 
 describe("shared chrome does not restyle WhatsApp as Admin WhatsApp", () => {
-  it("labels the public and auth footer contacts WhatsApp Support", () => {
-    expect(read("components/navigation/navbar.tsx")).toContain("WhatsAppSupportLink");
+  it("keeps WhatsApp Support off the public header while labeling remaining contacts", () => {
+    expect(read("components/navigation/navbar.tsx")).not.toContain("WhatsAppSupportLink");
+    expect(read("components/home/home-footer.tsx")).not.toContain("WhatsAppSupportLink");
     expect(read("components/navigation/navbar.tsx")).not.toContain(
       "WhatsApp {APP_CONFIG.supportWhatsApp.display}",
     );

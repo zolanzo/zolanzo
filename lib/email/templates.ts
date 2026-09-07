@@ -292,3 +292,35 @@ export function getSecurityAlertText(actionName: string, ipAddress: string, devi
     note: `IP address: ${ipAddress}\nDevice: ${device}\nTime: ${new Date().toUTCString()}`,
   });
 }
+
+export function getContactInboxTemplate(params: {
+  name: string;
+  email: string;
+  subjectLabel: string;
+  message: string;
+}): string {
+  const messageHtml = escapeHtml(params.message).replace(/\n/g, "<br>");
+  return lightEmailShell(
+    `Contact: ${params.subjectLabel}`,
+    `
+              ${kicker("Contact")}
+              ${heading(params.subjectLabel)}
+              ${paragraph(`<strong style="color:${TEXT};">From:</strong> ${escapeHtml(params.name)}`)}
+              ${paragraph(`<strong style="color:${TEXT};">Email:</strong> ${escapeHtml(params.email)}`)}
+              ${paragraph(messageHtml)}
+    `,
+    `New contact message: ${params.subjectLabel}`,
+  );
+}
+
+export function getContactInboxText(params: {
+  name: string;
+  email: string;
+  subjectLabel: string;
+  message: string;
+}): string {
+  return formatTransactionalPlainText({
+    heading: params.subjectLabel,
+    body: `From: ${params.name}\nEmail: ${params.email}\n\n${params.message}`,
+  });
+}

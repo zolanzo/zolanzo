@@ -16,14 +16,16 @@ export function isLiveEmailRequired(
   );
 }
 
-async function postResendEmail(params: {
+export async function postResendEmail(params: {
   to: string;
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 }): Promise<{ success: boolean; id?: string }> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const sender = getTransactionalEmailSender();
+  const replyTo = params.replyTo?.trim() || sender.replyTo;
 
   if (!apiKey) {
     if (isLiveEmailRequired()) {
@@ -34,7 +36,7 @@ async function postResendEmail(params: {
 
   if (!canUseLiveSenderIdentity(sender)) {
     console.error(
-      "Production mail cannot use the Resend sandbox sender. Verify zolanzo.com in Resend and send as Zolanzo <info@zolanzo.com>.",
+      "Production mail cannot use the Resend sandbox sender. Verify zolanzo.com in Resend and send as ZOLANZO <info@zolanzo.com>.",
     );
     return { success: false };
   }
@@ -49,7 +51,7 @@ async function postResendEmail(params: {
       body: JSON.stringify({
         from: sender.from,
         to: [params.to],
-        reply_to: sender.replyTo,
+        reply_to: replyTo,
         subject: params.subject,
         html: params.html,
         text: params.text,
