@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 import { cn } from "@/utils";
 
 export type ErrorLayoutProps = {
@@ -43,6 +44,7 @@ export function ErrorLayout({
         >
           Back home
         </Link>
+        <WhatsAppSupportLink />
         {children}
       </div>
     </div>

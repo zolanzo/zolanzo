@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ThemeLogo } from "@/components/brand/theme-logo";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 
 export function HomeFooter() {
   return (
     <footer className="w-full border-t border-border bg-footer pb-6 pt-10 text-foreground">
       <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
-        <div className="grid grid-cols-1 gap-8 text-center md:grid-cols-3 md:text-left lg:grid-cols-5">
-          <div className="flex flex-col items-center space-y-3 md:items-start lg:col-span-1">
+        <div className="grid grid-cols-1 gap-8 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4">
+          <div className="flex flex-col items-center space-y-3 sm:items-start">
             <Link href="/">
               <ThemeLogo width={155} height={40} className="h-[36px] w-auto object-contain" />
             </Link>
@@ -16,33 +17,7 @@ export function HomeFooter() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Products</h3>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li>
-                <Link href="/tasks" className="transition-colors hover:text-foreground">
-                  Marketplace
-                </Link>
-              </li>
-              <li>
-                <Link href="/earner/dashboard" className="transition-colors hover:text-foreground">
-                  Earn Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="/hirer/dashboard" className="transition-colors hover:text-foreground">
-                  Hire Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="/wallet" className="transition-colors hover:text-foreground">
-                  Wallet
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Earners</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Work</h3>
             <ul className="space-y-1.5 text-xs text-muted-foreground">
               <li>
                 <Link href="/tasks" className="transition-colors hover:text-foreground">
@@ -50,9 +25,23 @@ export function HomeFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/signup" className="transition-colors hover:text-foreground">
+                  Hire Talent
+                </Link>
+              </li>
+              <li>
                 <Link href="/#how-it-works" className="transition-colors hover:text-foreground">
                   How It Works
                 </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Help</h3>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <li>
+                <WhatsAppSupportLink variant="link" className="min-h-0 px-0 text-xs font-normal" />
               </li>
               <li>
                 <Link href="/faq" className="transition-colors hover:text-foreground">
@@ -64,15 +53,19 @@ export function HomeFooter() {
                   Support
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Businesses</h3>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
               <li>
-                <Link href="/signup" className="transition-colors hover:text-foreground">
-                  Hire Talent
+                <Link href="/contact" className="transition-colors hover:text-foreground">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="transition-colors hover:text-foreground">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="transition-colors hover:text-foreground">
+                  Privacy
                 </Link>
               </li>
             </ul>
@@ -81,16 +74,6 @@ export function HomeFooter() {
           <div className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Account</h3>
             <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li>
-                <Link href="/contact" className="transition-colors hover:text-foreground">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/careers" className="transition-colors hover:text-foreground">
-                  Careers
-                </Link>
-              </li>
               <li>
                 <Link href="/login" className="transition-colors hover:text-foreground">
                   Log In
@@ -102,8 +85,8 @@ export function HomeFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/forgot-pin" className="transition-colors hover:text-foreground">
-                  Reset PIN
+                <Link href="/careers" className="transition-colors hover:text-foreground">
+                  Careers
                 </Link>
               </li>
             </ul>

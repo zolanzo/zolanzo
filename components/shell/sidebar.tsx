@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ThemeLogo } from "@/components/brand/theme-logo";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 import { resolveShellChrome, type ShellChrome } from "@/lib/workspace/shell-nav";
 import {
   DashboardCircleIcon,
@@ -23,10 +24,17 @@ import {
   Briefcase01Icon,
 } from "@hugeicons/core-free-icons";
 
+const subscribeToNothing = () => () => undefined;
+
 export function Sidebar({ userRole = null }: { userRole?: string | null }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const router = useRouter();
-  const chrome: ShellChrome = resolveShellChrome(pathname, userRole);
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const chrome: ShellChrome = resolveShellChrome(pathname, mounted ? userRole : null);
   const isSuperAdmin = chrome === "super_admin";
   const isStaff = chrome === "staff";
   const isHirer = chrome === "hirer";
@@ -142,7 +150,8 @@ export function Sidebar({ userRole = null }: { userRole?: string | null }) {
         })}
       </nav>
 
-      <div className="shrink-0 border-t border-border p-3">
+      <div className="shrink-0 space-y-1 border-t border-border p-3">
+        <WhatsAppSupportLink variant="card" className="min-h-10 py-2 text-xs" />
         <button
           type="button"
           onClick={() => void handleLogout()}

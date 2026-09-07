@@ -18,13 +18,13 @@ describe("transactional email sender identity", () => {
 
   it("uses the official ZOLANZO info mailbox when env is unset", () => {
     const sender = getTransactionalEmailSender({ NODE_ENV: "development" });
-    expect(sender.displayName).toBe("Zolanzo");
+    expect(sender.displayName).toBe("ZOLANZO");
     expect(sender.mailbox).toBe("info@zolanzo.com");
-    expect(sender.from).toBe("Zolanzo <info@zolanzo.com>");
+    expect(sender.from).toBe("ZOLANZO <info@zolanzo.com>");
     expect(sender.from).toBe(EMAIL_SENDER_FROM);
     expect(sender.identityMode).toBe("official");
     expect(sender.replyTo).toBe(APP_CONFIG.supportEmail);
-    expect(sender.replyTo).toBe("support@zolanzo.com");
+    expect(sender.replyTo).toBe("info@zolanzo.com");
     expect(sender.from.toLowerCase()).not.toContain("noreply@");
     expect(sender.from.toLowerCase()).not.toContain("onboarding@resend.dev");
     expect(sender.from.toLowerCase()).not.toContain("supabase");
@@ -47,7 +47,7 @@ describe("transactional email sender identity", () => {
   it("keeps the official identity when env repeats info@zolanzo.com", () => {
     const sender = getTransactionalEmailSender({
       NODE_ENV: "production",
-      RESEND_FROM_EMAIL: "Zolanzo <info@zolanzo.com>",
+      RESEND_FROM_EMAIL: "ZOLANZO <info@zolanzo.com>",
     });
     expect(sender.from).toBe(`${EMAIL_SENDER_DISPLAY_NAME} <${EMAIL_SENDER_MAILBOX}>`);
     expect(canUseLiveSenderIdentity(sender, { NODE_ENV: "production" })).toBe(true);

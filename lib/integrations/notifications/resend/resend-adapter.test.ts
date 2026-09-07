@@ -246,8 +246,8 @@ describe("resend deliver", () => {
     expect(result.status).toBe("delivered");
     expect(result.providerRef).toBe("email_live_1");
     const payload = JSON.parse(capturedBody) as { from: string; reply_to: string };
-    expect(payload.from).toBe("Zolanzo <info@zolanzo.com>");
-    expect(payload.reply_to).toBe("support@zolanzo.com");
+    expect(payload.from).toBe("ZOLANZO <info@zolanzo.com>");
+    expect(payload.reply_to).toBe("info@zolanzo.com");
   });
 
   it("fails delivery on provider error", async () => {

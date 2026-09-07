@@ -2,10 +2,10 @@ import { APP_CONFIG } from "@/config/app";
 import { isValidEmail } from "@/lib/auth/email";
 
 /** Visible From display name for every ZOLANZO transactional email. */
-export const EMAIL_SENDER_DISPLAY_NAME = "Zolanzo";
+export const EMAIL_SENDER_DISPLAY_NAME = "ZOLANZO";
 
 /** Official mailbox for every ZOLANZO transactional email. */
-export const EMAIL_SENDER_MAILBOX = "info@zolanzo.com";
+export const EMAIL_SENDER_MAILBOX = APP_CONFIG.supportEmail;
 
 /** Official From header. Users must see this, not a provider or local-part name. */
 export const EMAIL_SENDER_FROM = `${EMAIL_SENDER_DISPLAY_NAME} <${EMAIL_SENDER_MAILBOX}>`;
@@ -60,7 +60,7 @@ export function officialTransactionalSender(replyTo: string): TransactionalEmail
 
 /**
  * Parse a configured From value.
- * Display name is always Zolanzo — never the local-part (noreply, info, …)
+ * Display name is always ZOLANZO — never the local-part (noreply, info, …)
  * and never a provider name.
  */
 export function senderFromConfiguredValue(
@@ -93,7 +93,7 @@ export function getTransactionalReplyTo(): string {
  * Canonical sender for every ZOLANZO transactional Resend send
  * (verification OTP, resend, PIN reset, welcome, security, notification hub).
  *
- * Live identity is always Zolanzo <info@zolanzo.com>.
+ * Live identity is always ZOLANZO <info@zolanzo.com>.
  * RESEND_FROM_EMAIL may repeat that mailbox; leftover noreply/info/provider
  * names are ignored. Sandbox is only used when explicitly set.
  */

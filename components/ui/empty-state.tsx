@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { CustomBrandIllustration } from "@/components/brand/custom-brand-illustration";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 
 interface EmptyStateProps {
   type?: "tasks" | "wallet" | "profile" | "referral" | "support" | "success";
@@ -51,6 +52,7 @@ export function EmptyState({
           {actionLabel}
         </button>
       ) : null}
+      <WhatsAppSupportLink variant="link" className="min-h-0 text-xs" />
     </div>
   );
 }

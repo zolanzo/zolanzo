@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { ThemeModeControl } from "@/components/theme/theme-toggle";
-import { APP_CONFIG } from "@/config/app";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 import { cn } from "@/utils";
 
 export type AuthLayoutProps = {
@@ -59,14 +59,7 @@ export function AuthLayout({
         </div>
       </main>
       <footer className="relative z-10 px-4 py-5 text-center text-xs text-muted-foreground">
-        <a
-          href={APP_CONFIG.supportWhatsApp.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-primary hover:text-primary-hover hover:underline"
-        >
-          WhatsApp Support
-        </a>
+        <WhatsAppSupportLink variant="link" />
       </footer>
     </div>
   );

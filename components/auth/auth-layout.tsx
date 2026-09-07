@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Shield01Icon, ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { ThemeLogo } from "@/components/brand/theme-logo";
 import { ThemeModeControl } from "@/components/theme/theme-toggle";
-import { APP_CONFIG } from "@/config/app";
+import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -73,14 +73,7 @@ export function AuthLayout({
             <span>Bank-Grade Escrow Security & Encryption</span>
           </div>
           <p>© 2026 ZOLANZO LTD • A Stankings Company</p>
-          <a
-            href={APP_CONFIG.supportWhatsApp.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-primary hover:text-primary-hover hover:underline"
-          >
-            WhatsApp Support
-          </a>
+          <WhatsAppSupportLink variant="link" className="min-h-0 text-xs" />
         </div>
       </footer>
     </div>

@@ -38,7 +38,7 @@ export function SupportView() {
     },
     {
       question: "How do I contact ZOLANZO support?",
-      answer: `Message WhatsApp Support at ${APP_CONFIG.supportWhatsApp.display}, or email ${APP_CONFIG.supportEmail}.`,
+      answer: `Email ${APP_CONFIG.supportEmail} or message WhatsApp.`,
     },
   ];
 

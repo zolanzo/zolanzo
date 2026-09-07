@@ -9,12 +9,14 @@ type WhatsAppSupportLinkProps = {
   variant?: "button" | "card" | "link";
   /** Override visible label. Defaults to WhatsApp Support. */
   label?: string;
+  onClick?: () => void;
 };
 
 export function WhatsAppSupportLink({
   className = "",
   variant = "button",
   label,
+  onClick,
 }: WhatsAppSupportLinkProps) {
   const { display, href } = APP_CONFIG.supportWhatsApp;
   const text = label ?? "WhatsApp Support";
@@ -25,6 +27,7 @@ export function WhatsAppSupportLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Message ZOLANZO admin on WhatsApp at ${display}`}
+      onClick={onClick}
       className={cn(
         "focus-ring inline-flex items-center justify-center gap-2 font-bold transition-colors",
         variant === "button" &&
@@ -36,9 +39,7 @@ export function WhatsAppSupportLink({
         className,
       )}
     >
-      {variant !== "link" ? (
-        <SocialBrandIcon platform="WhatsApp" size={18} />
-      ) : null}
+      <SocialBrandIcon platform="WhatsApp" size={variant === "link" ? 16 : 18} />
       <span>{text}</span>
     </a>
   );

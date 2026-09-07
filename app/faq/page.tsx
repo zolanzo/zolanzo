@@ -1,11 +1,8 @@
-import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Navbar } from "@/components/navigation/navbar";
 import { HomeFooter } from "@/components/home/home-footer";
 import { FaqAccordion } from "@/components/faq/faq-accordion";
 import { FAQ_GROUPS } from "@/components/faq/faq-content";
-import { WhatsAppSupportLink } from "@/components/support/whatsapp-support-link";
+import { ContactChannels } from "@/components/support/contact-channels";
 import { buildPageMetadata } from "@/components/seo/build-metadata";
 
 export const metadata = buildPageMetadata({
@@ -37,14 +34,7 @@ export default function FAQPage() {
 
             <div className="mx-auto mt-10 flex max-w-[800px] flex-col items-center gap-3 border-t border-border pt-8">
               <p className="text-sm font-medium text-muted-foreground">Still need help?</p>
-              <WhatsAppSupportLink />
-              <Link
-                href="/contact"
-                className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover"
-              >
-                Contact ZOLANZO
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-              </Link>
+              <ContactChannels className="items-center" />
             </div>
           </div>
         </section>

@@ -148,7 +148,7 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
       },
       {
         question: "What should I do if I experience a problem?",
-        answer: `Message WhatsApp Support, or email ${APP_CONFIG.supportEmail}. Signed-in users can also open Help & Support in the app.`,
+        answer: `Email ${APP_CONFIG.supportEmail} or message WhatsApp. Signed-in users can also open Help & Support in the app.`,
       },
     ],
   },
@@ -168,7 +168,7 @@ export const FAQ_GROUPS: readonly FaqGroup[] = [
       },
       {
         question: "How do I contact ZOLANZO support?",
-        answer: `Message WhatsApp Support, or email ${APP_CONFIG.supportEmail}. Signed-in users can also open Help & Support in the app.`,
+        answer: `Email ${APP_CONFIG.supportEmail} or message WhatsApp. Signed-in users can also open Help & Support in the app.`,
       },
     ],
   },

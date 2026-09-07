@@ -7,20 +7,19 @@ function read(rel: string): string {
 }
 
 describe("Phase 12A public route remediations", () => {
-  it("resolves /terms without invented contractual language", () => {
+  it("resolves /terms with published platform terms", () => {
     const page = read("app/terms/page.tsx");
-    const legal = read("components/legal/legal-support-page.tsx");
     expect(page).toContain('path: "/terms"');
     expect(page).toContain("Terms & Conditions");
-    expect(legal).toContain("LEGAL_DOCUMENT_UNAVAILABLE_NOTICE");
-    expect(legal).not.toContain("governing law");
-    expect(legal).not.toContain("limitation of liability");
+    expect(page).toContain("TERMS_SECTIONS");
+    expect(page).not.toContain("LEGAL_DOCUMENT_UNAVAILABLE_NOTICE");
   });
 
   it("resolves /privacy without invented contractual language", () => {
     const page = read("app/privacy/page.tsx");
     expect(page).toContain('path: "/privacy"');
     expect(page).toContain("Privacy Policy");
+    expect(page).toContain("PRIVACY_SECTIONS");
   });
 
   it("keeps signup linked to /terms and /privacy", () => {

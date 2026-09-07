@@ -82,6 +82,9 @@ describe("route policy", () => {
     expect(isPublicMarketingPath("/faq")).toBe(true);
     expect(isPublicMarketingPath("/terms")).toBe(true);
     expect(isPublicMarketingPath("/privacy")).toBe(true);
+    expect(isPublicMarketingPath("/about")).toBe(true);
+    expect(isPublicMarketingPath("/pricing")).toBe(true);
+    expect(isPublicMarketingPath("/contact")).toBe(true);
     expect(isPublicMarketingPath("/login")).toBe(false);
     expect(shouldRefreshAuthSession("/")).toBe(false);
     expect(shouldRefreshAuthSession("/login")).toBe(true);
