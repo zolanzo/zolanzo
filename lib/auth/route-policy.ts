@@ -53,6 +53,8 @@ export const ROUTE_RULES: readonly RouteRule[] = [
   { prefix: "/signup", access: "public" },
   { prefix: "/careers", access: "public" },
   { prefix: "/faq", access: "public" },
+  { prefix: "/terms", access: "public" },
+  { prefix: "/privacy", access: "public" },
   { prefix: "/forgot-password", access: "public" },
   { prefix: "/forgot-pin", access: "public" },
   { prefix: "/reset-pin", access: "public" },
@@ -92,6 +94,8 @@ const PUBLIC_MARKETING_PATHS = [
   "/faq",
   "/pricing",
   "/contact",
+  "/terms",
+  "/privacy",
 ] as const;
 
 export function isPublicMarketingPath(pathname: string): boolean {

@@ -72,12 +72,16 @@ describe("route policy", () => {
     expect(resolveRouteAccess("/app/profile")).toBe("authenticated");
     expect(resolveRouteAccess("/admin")).toBe("admin");
     expect(resolveRouteAccess("/auth/sign-in")).toBe("public");
+    expect(resolveRouteAccess("/terms")).toBe("public");
+    expect(resolveRouteAccess("/privacy")).toBe("public");
   });
 
   it("skips session refresh only on public marketing pages", () => {
     expect(isPublicMarketingPath("/")).toBe(true);
     expect(isPublicMarketingPath("/careers")).toBe(true);
     expect(isPublicMarketingPath("/faq")).toBe(true);
+    expect(isPublicMarketingPath("/terms")).toBe(true);
+    expect(isPublicMarketingPath("/privacy")).toBe(true);
     expect(isPublicMarketingPath("/login")).toBe(false);
     expect(shouldRefreshAuthSession("/")).toBe(false);
     expect(shouldRefreshAuthSession("/login")).toBe(true);

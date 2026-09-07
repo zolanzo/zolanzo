@@ -10,11 +10,13 @@ import { ValidationMessage } from "@/components/auth/validation-message";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { EMAIL_OTP_PURPOSE } from "@/lib/auth/email-otp-constants";
+import { hasEmailVerificationContext } from "@/lib/auth/otp-resend";
 
 function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userEmail = (searchParams.get("email") || "").trim();
+  const hasEmail = hasEmailVerificationContext(userEmail);
   const flow = searchParams.get("flow");
   const isPinReset = flow === "reset-pin";
   const purpose = isPinReset
@@ -117,8 +119,9 @@ function VerifyEmailForm() {
               setOtpCode(code);
               void handleVerify(code);
             }}
-            onResend={handleResend}
+            onResend={hasEmail ? handleResend : undefined}
             countdownSeconds={60}
+            enableResend={hasEmail}
           />
 
           <button

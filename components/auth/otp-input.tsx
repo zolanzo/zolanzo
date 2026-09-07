@@ -7,6 +7,8 @@ interface OTPInputProps {
   onComplete: (code: string) => void;
   onResend?: () => void | Promise<void>;
   countdownSeconds?: number;
+  /** When false, hide the resend countdown and keep resend disabled. */
+  enableResend?: boolean;
 }
 
 export function OTPInput({
@@ -14,9 +16,10 @@ export function OTPInput({
   onComplete,
   onResend,
   countdownSeconds = 60,
+  enableResend = true,
 }: OTPInputProps) {
   const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
-  const [timeLeft, setTimeLeft] = useState(countdownSeconds);
+  const [timeLeft, setTimeLeft] = useState(enableResend ? countdownSeconds : 0);
   const [resending, setResending] = useState(false);
   const [resendError, setResendError] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -26,12 +29,12 @@ export function OTPInput({
   }, []);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (!enableResend || timeLeft <= 0) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [enableResend, timeLeft]);
 
   const handleChange = (index: number, value: string) => {
     const digit = value.replace(/\D/g, "").slice(-1);
@@ -75,7 +78,7 @@ export function OTPInput({
   };
 
   const handleResendClick = async () => {
-    if (timeLeft > 0 || resending) return;
+    if (!enableResend || timeLeft > 0 || resending) return;
     setResendError("");
     setResending(true);
     try {
@@ -115,23 +118,25 @@ export function OTPInput({
 
       <div className="flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
         <span>
-          {timeLeft > 0 ? (
+          {enableResend && timeLeft > 0 ? (
             <span>
               Resend code in <strong className="font-mono text-primary">{timeLeft}s</strong>
             </span>
-          ) : (
+          ) : enableResend ? (
             <span className="text-muted-foreground">Didn&apos;t receive code?</span>
+          ) : (
+            <span className="text-muted-foreground">Open this page from signup or your email link.</span>
           )}
         </span>
 
         <button
           type="button"
-          disabled={timeLeft > 0 || resending}
+          disabled={!enableResend || timeLeft > 0 || resending}
           onClick={() => {
             void handleResendClick();
           }}
           className={`font-semibold transition-colors ${
-            timeLeft > 0 || resending
+            !enableResend || timeLeft > 0 || resending
               ? "cursor-not-allowed text-disabled"
               : "cursor-pointer text-primary underline underline-offset-4 hover:text-primary-hover"
           }`}
