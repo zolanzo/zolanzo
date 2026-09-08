@@ -6,10 +6,10 @@ import type {
   ScheduleMode,
 } from "../../lib/generated/prisma/client";
 import {
-  allocateClientPublicId,
-  allocateOrganizationPublicId,
-  generatePublicId,
-} from "../../lib/public-id/generator";
+  seedAllocateClientPublicId,
+  seedAllocateOrganizationPublicId,
+  seedGeneratePublicId,
+} from "./allocate-public-id";
 import { SEED_CAMPAIGNS } from "../../features/campaigns/seed/definitions";
 import { createCampaignSchema } from "../../features/campaigns/validators";
 import { calculateCampaignBudget } from "../../features/campaigns/services/budget-engine";
@@ -37,7 +37,7 @@ async function ensureSeedClientOrg(prisma: PrismaClient): Promise<{
           create: {
             displayName: "Seed Campaign Client",
             handle: "seed-campaign-client",
-            clientPublicId: await allocateClientPublicId(prisma),
+            clientPublicId: await seedAllocateClientPublicId(prisma),
           },
         },
       },
@@ -51,7 +51,7 @@ async function ensureSeedClientOrg(prisma: PrismaClient): Promise<{
   if (!org) {
     org = await prisma.organization.create({
       data: {
-        publicId: await allocateOrganizationPublicId(prisma),
+        publicId: await seedAllocateOrganizationPublicId(prisma),
         name: "ZOLANZO Seed Workspace",
         slug: SEED_ORG_SLUG,
         kind: "business",
@@ -114,7 +114,7 @@ export async function seedCampaigns(prisma: PrismaClient): Promise<void> {
       rewardPerUnitMinor: parsed.rewardPerUnitMinor,
     });
 
-    const publicId = await generatePublicId("campaign", { db: prisma });
+    const publicId = await seedGeneratePublicId("campaign", prisma);
     const status = seedStatus ?? "draft";
 
     await prisma.campaign.create({

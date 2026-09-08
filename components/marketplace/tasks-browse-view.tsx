@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { OpportunityCard } from "@/components/marketplace/opportunity-card";
 import { SocialBrandIcon } from "@/components/brand/social-brand-icon";
 import { inferSocialPlatform } from "@/lib/platforms/infer";
-import { isLiveBoundary } from "@/lib/workspace/data-boundary";
+import { marketplaceEmptyCopy } from "@/lib/workspace/data-boundary";
 import type { EarnerWorkspace } from "@/lib/workspace/earner-types";
 import type { WorkOpportunity } from "@/features/task-marketplace/types";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -31,7 +31,7 @@ export function TasksBrowseView({ workspace }: { workspace: EarnerWorkspace }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<(typeof PLATFORM_FILTERS)[number]>("All");
-  const live = isLiveBoundary(workspace.loadState);
+  const empty = marketplaceEmptyCopy(workspace.loadState);
 
   const filtered = useMemo(() => {
     return workspace.opportunities.filter((item) => {
@@ -111,11 +111,21 @@ export function TasksBrowseView({ workspace }: { workspace: EarnerWorkspace }) {
         {filtered.length === 0 ? (
           <EmptyState
             type="tasks"
-            title={live ? "No tasks yet" : "No tasks available"}
+            title={
+              workspace.opportunities.length === 0
+                ? empty.title
+                : "No matching tasks"
+            }
             description={
-              live
-                ? "When campaigns go live they will appear here."
-                : "Task listings load when the marketplace is reachable."
+              workspace.opportunities.length === 0
+                ? empty.description
+                : "Try another platform or clear search. This list is live inventory, not a sample."
+            }
+            actionLabel={
+              workspace.opportunities.length === 0 ? empty.actionLabel : undefined
+            }
+            actionHref={
+              workspace.opportunities.length === 0 ? empty.actionHref : undefined
             }
           />
         ) : (

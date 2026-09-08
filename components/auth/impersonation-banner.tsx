@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -12,17 +12,20 @@ import {
   getImpersonationSession,
   exitImpersonation,
   logImpersonatedAction,
-  type ImpersonationSession,
 } from "@/lib/auth/impersonation";
 
+const subscribeToNothing = () => () => undefined;
+
 export function ImpersonationBanner() {
-  const [session, setSession] = useState<ImpersonationSession | null>(null);
   const pathname = usePathname();
   const router = useRouter();
-
-  useEffect(() => {
-    setSession(getImpersonationSession());
-  }, []);
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const [revision, setRevision] = useState(0);
+  const session = mounted && revision >= 0 ? getImpersonationSession() : null;
 
   useEffect(() => {
     const active = getImpersonationSession();
@@ -39,7 +42,7 @@ export function ImpersonationBanner() {
 
   const handleExit = () => {
     exitImpersonation();
-    setSession(null);
+    setRevision((value) => value + 1);
     router.push("/lex/auth");
   };
 

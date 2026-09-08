@@ -65,6 +65,7 @@ export function createPreviewEarnerWorkspace(
     referralUrl: "/signup",
     workItems: [],
     loadState,
+    shellRole: "worker",
   };
 }
 
@@ -104,5 +105,6 @@ export function createPreviewHirerWorkspace(
     templates: [],
     platformWorkerCount: 0,
     loadState,
+    shellRole: "employer",
   };
 }

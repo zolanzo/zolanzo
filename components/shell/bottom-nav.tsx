@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { resolveShellChrome } from "@/lib/workspace/shell-nav";
@@ -18,9 +18,16 @@ import {
   Briefcase01Icon,
 } from "@hugeicons/core-free-icons";
 
+const subscribeToNothing = () => () => undefined;
+
 export function BottomNav({ userRole = null }: { userRole?: string | null }) {
-  const pathname = usePathname();
-  const chrome = resolveShellChrome(pathname, userRole);
+  const pathname = usePathname() ?? "";
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const chrome = resolveShellChrome(pathname, mounted ? userRole : null);
   const isHireWorkspace = chrome === "hirer";
 
   const earnerTabs = [
@@ -63,6 +70,8 @@ export function BottomNav({ userRole = null }: { userRole?: string | null }) {
           ? hireTabs
           : earnerTabs;
 
+  const tabItems = pathname ? tabs : [];
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 select-none border-t border-border bg-topbar px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1 lg:hidden"
@@ -70,10 +79,14 @@ export function BottomNav({ userRole = null }: { userRole?: string | null }) {
     >
       <div
         className={`mx-auto grid max-w-md gap-0.5 ${
-          tabs.length === 4 ? "grid-cols-4" : "grid-cols-5"
+          (tabItems.length || 5) === 4 ? "grid-cols-4" : "grid-cols-5"
         }`}
       >
-        {tabs.map((tab) => {
+        {tabItems.length === 0
+          ? Array.from({ length: 5 }, (_, index) => (
+              <span key={index} className="min-h-11" aria-hidden />
+            ))
+          : tabItems.map((tab) => {
           const isActive =
             pathname === tab.href ||
             (tab.href !== "/earner/dashboard" &&

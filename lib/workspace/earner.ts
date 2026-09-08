@@ -352,5 +352,6 @@ export async function loadEarnerWorkspace(): Promise<EarnerWorkspace | null> {
     referralUrl: `${appUrl}/signup?ref=${encodeURIComponent(handle)}`,
     workItems,
     loadState: { kind: "live" },
+    shellRole: "worker",
   };
 }

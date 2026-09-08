@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ShieldKeyIcon,
@@ -16,8 +16,6 @@ import {
   exitImpersonation,
   getImpersonationSession,
   getAllAuditLogs,
-  type ImpersonationAuditLog,
-  type ImpersonationSession,
 } from "@/lib/auth/impersonation";
 
 interface StaffTarget {
@@ -30,19 +28,24 @@ interface StaffTarget {
 
 const SAMPLE_STAFF_TARGETS: StaffTarget[] = [];
 
+const subscribeToNothing = () => () => undefined;
+
 export default function SuperAdminAuthPage() {
-  const [activeSession, setActiveSession] = useState<ImpersonationSession | null>(null);
-  const [auditLogs, setAuditLogs] = useState<ImpersonationAuditLog[]>([]);
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const [revision, setRevision] = useState(0);
   const [selectedStaff, setSelectedStaff] = useState<StaffTarget | null>(null);
   const [impersonateReason, setImpersonateReason] = useState("");
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    setActiveSession(getImpersonationSession());
-    setAuditLogs(getAllAuditLogs());
-  }, []);
+  const activeSession = mounted && revision >= 0 ? getImpersonationSession() : null;
+  const auditLogs = mounted && revision >= 0 ? getAllAuditLogs() : [];
+  const refreshLocalSession = () => setRevision((value) => value + 1);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -56,7 +59,7 @@ export default function SuperAdminAuthPage() {
       return;
     }
 
-    const session = startImpersonation(
+    startImpersonation(
       "ops@zolanzo.com",
       selectedStaff.id,
       selectedStaff.name,
@@ -65,17 +68,15 @@ export default function SuperAdminAuthPage() {
       impersonateReason.trim()
     );
 
-    setActiveSession(session);
-    setAuditLogs(getAllAuditLogs());
     setShowImpersonateModal(false);
     setImpersonateReason("");
+    refreshLocalSession();
     triggerToast(`✓ Impersonation active for ${selectedStaff.name}. All actions will be logged.`);
   };
 
   const handleExitImpersonation = () => {
     exitImpersonation();
-    setActiveSession(null);
-    setAuditLogs(getAllAuditLogs());
+    refreshLocalSession();
     triggerToast("Impersonation session terminated.");
   };
 

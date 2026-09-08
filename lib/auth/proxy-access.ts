@@ -9,6 +9,24 @@ export type ProxyAccessDecision =
   | { action: "next" }
   | { action: "redirect"; pathname: string; next?: string };
 
+/**
+ * Edge role proxy: JWT app_metadata.roles only.
+ * user_metadata.role and profiles.role are ignored even if present.
+ */
+export function jwtRolesFromAuthUser(user: {
+  app_metadata?: Record<string, unknown> | null;
+  user_metadata?: Record<string, unknown> | null;
+} | null | undefined): { roles: string[]; userRole: string } {
+  const raw = user?.app_metadata?.roles;
+  const roles = Array.isArray(raw)
+    ? raw.filter(
+        (role): role is string =>
+          typeof role === "string" && role.trim().length > 0,
+      )
+    : [];
+  return { roles, userRole: roles[0] ?? "" };
+}
+
 function hasRole(roles: unknown, required: string | string[]): boolean {
   if (!Array.isArray(roles)) return false;
   const needed = Array.isArray(required) ? required : [required];
@@ -56,7 +74,7 @@ function isEarnerRole(role: string): boolean {
 
 export function getRoleHomePath(role: string): string {
   if (!role) {
-    return "/login?error=RoleUnresolved";
+    return "/login";
   }
   const normalized = role.toLowerCase();
   if (normalized === "admin" || normalized === "super_admin") {
@@ -71,7 +89,7 @@ export function getRoleHomePath(role: string): string {
   if (isEarnerRole(normalized)) {
     return "/earner/dashboard";
   }
-  return "/login?error=InvalidRole";
+  return "/login";
 }
 
 /**

@@ -6,7 +6,7 @@ import type {
   TaskInstancePriority,
   TaskInstanceStatus,
 } from "../../lib/generated/prisma/client";
-import { generatePublicId } from "../../lib/public-id/generator";
+import { seedGeneratePublicId } from "./allocate-public-id";
 
 /** Seed inventory sizes — keep small for local/dev. */
 const SEED_LIMITS: Record<string, number> = {
@@ -39,7 +39,13 @@ export async function seedTaskInstances(prisma: PrismaClient): Promise<void> {
     const rows: Prisma.TaskInstanceCreateManyInput[] = [];
 
     for (let i = 0; i < quantity; i += 1) {
-      const publicId = await generatePublicId("task", { db: prisma });
+      const publicId = await seedGeneratePublicId("task", prisma, async (id) => {
+        const row = await prisma.taskInstance.findUnique({
+          where: { publicId: id },
+          select: { id: true },
+        });
+        return Boolean(row);
+      });
       rows.push({
         publicId,
         campaignId: campaign.id,

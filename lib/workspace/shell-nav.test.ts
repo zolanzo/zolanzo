@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountMenuHrefs,
   chromeRoleFromPlatformRoles,
   headerWalletHref,
   isAdminWorkspacePath,
@@ -62,6 +63,23 @@ describe("resolveShellChrome", () => {
     expect(resolveShellChrome("/admin")).toBe("staff");
     expect(resolveShellChrome("/lex/auth")).toBe("super_admin");
     expect(resolveShellChrome("/hirer/settings")).toBe("hirer");
+  });
+});
+
+describe("accountMenuHrefs", () => {
+  it("keeps hirer account links on hirer routes", () => {
+    expect(accountMenuHrefs("/support", "employer")).toEqual({
+      profile: "/hirer/company",
+      settings: "/hirer/settings",
+    });
+    expect(accountMenuHrefs("/settings", "worker")).toEqual({
+      profile: "/profile",
+      settings: "/settings",
+    });
+    expect(accountMenuHrefs("/admin", "admin")).toEqual({
+      profile: "/settings",
+      settings: "/settings",
+    });
   });
 });
 

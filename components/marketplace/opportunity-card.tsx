@@ -35,7 +35,7 @@ export function OpportunityCard({ opportunity }: { opportunity: WorkOpportunity 
           {formatNgnFromMinor(opportunity.rewardPerUnitMinor)}
         </span>
         <span className="flex h-8 items-center rounded-xl bg-primary px-2.5 text-[11px] font-bold text-primary-foreground sm:px-3">
-          Start
+          {opportunity.viewerCanContinue ? "Continue" : "Start"}
         </span>
       </div>
     </Link>

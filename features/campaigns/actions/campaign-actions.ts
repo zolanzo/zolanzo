@@ -1,9 +1,14 @@
 "use server";
 
 import type { ApiResponse } from "@/lib/api/response";
-import { AppError } from "@/lib/api/response";
+import { AppError, apiError } from "@/lib/api/response";
 import { requireAuthContext } from "@/lib/auth/session";
-import { assertCampaignAccess, isOrgMember } from "@/lib/auth/resource-guards";
+import {
+  assertCampaignAccess,
+  assertOrgMember,
+  isOrgMember,
+} from "@/lib/auth/resource-guards";
+import { createCampaignSchema } from "@/features/campaigns/validators";
 import type { CampaignStatus } from "@/constants/work-states";
 import type { CampaignRecord } from "@/features/campaigns/types";
 import type { OrgEligibilityPolicy } from "@/features/campaigns/types";
@@ -27,7 +32,11 @@ import {
 } from "@/features/campaigns/services/campaign-service";
 import { campaignRepository } from "@/features/campaigns/repositories";
 import { requirePlatformRoles } from "@/lib/rbac/guards";
-import { canModerateMarketplaceCampaign } from "@/features/campaigns/services/moderation";
+import {
+  canModerateMarketplaceCampaign,
+  resolveCampaignClientUserId,
+} from "@/features/campaigns/services/moderation";
+import { ZodError } from "zod";
 
 async function requireCampaignAccess(campaignId: string) {
   const ctx = await requireAuthContext();
@@ -47,10 +56,35 @@ export async function createCampaignAction(
   input: unknown,
 ): Promise<ApiResponse<CampaignRecord>> {
   const ctx = await requireAuthContext();
-  return createDraftCampaign({
-    input,
-    createdByUserId: ctx.user.id,
-  });
+  try {
+    const parsed = createCampaignSchema.parse(input);
+    const isStaff = ctx.user.platformRoles.some((r) =>
+      ["admin", "super_admin", "operations"].includes(r),
+    );
+    if (!isStaff) {
+      assertOrgMember(ctx.user, parsed.organizationId);
+    }
+    return createDraftCampaign({
+      input: {
+        ...parsed,
+        clientUserId: resolveCampaignClientUserId({
+          actorUserId: ctx.user.id,
+          platformRoles: ctx.user.platformRoles,
+          requestedClientUserId: parsed.clientUserId,
+        }),
+      },
+      createdByUserId: ctx.user.id,
+    });
+  } catch (error) {
+    if (error instanceof AppError) return error.toApiError();
+    if (error instanceof ZodError) {
+      return apiError(
+        "INVALID_CAMPAIGN",
+        error.issues[0]?.message ?? "Invalid campaign",
+      );
+    }
+    throw error;
+  }
 }
 
 export async function updateCampaignAction(params: {

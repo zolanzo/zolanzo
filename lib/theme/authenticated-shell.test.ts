@@ -7,13 +7,14 @@ function read(rel: string): string {
 }
 
 describe("authenticated theme chrome", () => {
-  it("keeps the compact theme control on the desktop authenticated header", () => {
+  it("keeps the compact theme control visible on small screens", () => {
     const header = read("components/shell/top-header.tsx");
     expect(header).toContain("ThemeModeControl");
     expect(header).toContain('variant="compact"');
-    expect(header).toContain("hidden md:block");
+    expect(header).not.toContain('className="hidden md:block"');
     expect(header).toContain("bg-topbar");
     expect(header).toContain("text-foreground");
+    expect(header).toContain("md:inline-block");
   });
 
   it("uses semantic surfaces in AppShell", () => {
@@ -106,6 +107,31 @@ describe("authenticated theme chrome", () => {
     expect(read("components/shell/bottom-nav.tsx")).toContain("/admin");
     expect(read("components/shell/sidebar.tsx")).toContain("bg-sidebar");
     expect(read("components/shell/top-header.tsx")).toContain("headerWalletHref");
+    expect(read("components/shell/profile-dropdown.tsx")).toContain("accountMenuHrefs");
+  });
+
+  it("does not hide the dashboard theme control on mobile", () => {
+    const dash = read("components/layout/dashboard-shell.tsx");
+    expect(dash).toContain("ThemeModeControl");
+    expect(dash).toContain('variant="compact"');
+    expect(dash).toContain('themeToggle={<ThemeModeControl variant="compact" />}');
+    expect(dash).not.toContain('variant="menu"');
+    expect((dash.match(/<ThemeModeControl/g) ?? []).length).toBe(1);
+  });
+
+  it("points dashboard-shell defaults at live role routes", () => {
+    const dash = read("components/layout/dashboard-shell.tsx");
+    expect(dash).toContain('href: "/earner/dashboard"');
+    expect(dash).toContain('href: "/tasks"');
+    expect(dash).toContain('href: "/wallet"');
+    expect(dash).toContain('href: "/hirer/dashboard"');
+    expect(dash).toContain('href: "/hirer/opportunities"');
+    expect(dash).toContain('href: "/hirer/applications"');
+    expect(dash).toContain('href: "/hirer/wallet"');
+    expect(dash).toContain('href: "/admin"');
+    expect(dash).toContain('href: "/lex/staff"');
+    expect(dash).not.toContain("/worker/dashboard");
+    expect(dash).not.toContain("/organization/dashboard");
   });
 
   it("lets /otp inherit global theme via redirect without a second theme control", () => {

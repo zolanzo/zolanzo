@@ -21,6 +21,18 @@ export function canModerateMarketplaceCampaign(
   return hasPlatformRole(platformRoles, [...CAMPAIGN_MODERATION_ROLES]);
 }
 
+/** Staff may create on behalf of a client; hirers cannot spoof another user. */
+export function resolveCampaignClientUserId(params: {
+  actorUserId: string;
+  platformRoles: readonly string[];
+  requestedClientUserId: string;
+}): string {
+  const isStaff = params.platformRoles.some((r) =>
+    ["admin", "super_admin", "operations"].includes(r),
+  );
+  return isStaff ? params.requestedClientUserId : params.actorUserId;
+}
+
 /**
  * Publish / go-live is only valid after review (or from a scheduled hold).
  * Draft must not skip moderation.

@@ -1,7 +1,17 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma/client";
+import { writeAuditLog } from "@/lib/audit/write";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { applySignupProductRole } from "@/lib/auth/apply-product-role";
+import {
+  buildOnboardingAddressJson,
+  isOnboardingComplete,
+  productRoleFromRbac,
+  signupRoleFromProductRole,
+  type SignupProductRole,
+} from "@/lib/auth/product-identity";
 
 export interface OnboardingProfileData {
-  role?: "worker" | "employer";
+  role?: SignupProductRole;
   country?: string;
   state?: string;
   city?: string;
@@ -11,8 +21,10 @@ export interface OnboardingProfileData {
   website?: string;
 }
 
-export function calculateProfileCompletion(data: Partial<OnboardingProfileData>): number {
-  let score = 40; // Base score for verified account creation
+export function calculateProfileCompletion(
+  data: Partial<OnboardingProfileData>,
+): number {
+  let score = 40;
 
   if (data.role) score += 20;
   if (data.country && data.city) score += 20;
@@ -26,58 +38,100 @@ export function calculateProfileCompletion(data: Partial<OnboardingProfileData>)
   return Math.min(score, 100);
 }
 
+function calculateOnboardingRoleFromUser(user: {
+  participation: "worker" | "client" | "both" | null;
+  roles: { role: { key: string } }[];
+}): SignupProductRole {
+  const productRole = productRoleFromRbac({
+    participation: user.participation,
+    roleKeys: user.roles.map((row) => row.role.key),
+  });
+  return signupRoleFromProductRole(productRole);
+}
+
 export class OnboardingService {
-  static async completeOnboarding(userId: string, data: OnboardingProfileData) {
-    const supabase = await createSupabaseServerClient();
-    if (!supabase) {
-      throw new Error("Authentication service is unreachable. Please try again shortly.");
+  static async getSessionRole(authSubject: string): Promise<SignupProductRole> {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ authSubject }, { id: authSubject }] },
+      select: {
+        participation: true,
+        roles: { include: { role: { select: { key: true } } } },
+      },
+    });
+    if (!user) {
+      throw new Error("Profile could not be loaded.");
     }
+    return calculateOnboardingRoleFromUser(user);
+  }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const profiles = supabase.from("profiles") as any;
-    const { data: existing, error: readError } = await profiles
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (readError || !existing?.role) {
+  static async completeOnboarding(
+    authSubject: string,
+    data: OnboardingProfileData,
+  ) {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ authSubject }, { id: authSubject }] },
+      include: {
+        profile: true,
+        roles: { include: { role: { select: { key: true } } } },
+      },
+    });
+    if (!user?.profile) {
       throw new Error("Onboarding submission failed.");
     }
 
-    const role: "worker" | "employer" =
-      existing.role === "employer" ? "employer" : "worker";
+    const role = calculateOnboardingRoleFromUser(user);
+    const countryCode = (data.country || "Nigeria").trim();
+    const addressJson = buildOnboardingAddressJson({
+      state: data.state,
+      city: data.city,
+      language: data.language,
+      companyName: data.companyName,
+      industry: data.industry,
+      website: data.website,
+    });
+
+    await prisma.profile.update({
+      where: { userId: user.id },
+      data: {
+        countryCode,
+        addressJson: addressJson as Prisma.InputJsonValue,
+      },
+    });
+
     const completion = calculateProfileCompletion({ ...data, role });
-
-    const { error } = await profiles
-      .update({
-        country: data.country || "Nigeria",
-        state: data.state || "",
-        city: data.city || "",
-        language: data.language || "English",
-        company_name: data.companyName || null,
-        industry: data.industry || null,
-        website: data.website || null,
-        profile_completion: completion,
-        onboarding_completed: true,
-        first_login_completed: true,
+    if (
+      !isOnboardingComplete({
+        countryCode,
+        addressJson,
       })
-      .eq("id", userId);
-
-    if (error) {
-      throw new Error(error.message);
+    ) {
+      throw new Error("Onboarding submission failed.");
     }
+
+    await writeAuditLog({
+      actorUserId: user.id,
+      action: "auth.onboarding_completed",
+      resourceType: "profile",
+      resourceId: user.profile.id,
+      organizationId: user.activeOrganizationId,
+    });
 
     return { success: true, profileCompletion: completion, role };
   }
 
-  static async updateRole(userId: string, role: "worker" | "employer") {
-    const supabase = await createSupabaseServerClient();
-    if (supabase) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from("profiles") as any)
-        .update({ role })
-        .eq("id", userId);
+  static async updateRole(authSubject: string, role: SignupProductRole) {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ authSubject }, { id: authSubject }] },
+      select: { id: true, authSubject: true },
+    });
+    if (!user) {
+      throw new Error("Profile could not be loaded.");
     }
-    return { success: true };
+    const synced = await applySignupProductRole({
+      userId: user.id,
+      authSubject: user.authSubject ?? authSubject,
+      role,
+    });
+    return { success: true, role, ...synced };
   }
 }

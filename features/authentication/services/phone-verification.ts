@@ -126,26 +126,6 @@ async function persistLegacyChallenge(params: {
   }
 }
 
-async function markLegacyProfileVerified(params: {
-  authSubject: string;
-  phone: string;
-}): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
-  try {
-    const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
-    const admin = createSupabaseAdminClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (admin.from("profiles") as any)
-      .update({
-        phone: params.phone,
-        phone_verified: true,
-      })
-      .eq("id", params.authSubject);
-  } catch {
-    // Prisma User.phoneVerifiedAt is the product source of truth.
-  }
-}
-
 export function isValidPhoneInput(phone: string): boolean {
   return isNormalizedMsisdn(phone);
 }
@@ -324,10 +304,6 @@ export async function confirmPhoneOtp(params: {
   }
 
   await clearChallengeCookie();
-  await markLegacyProfileVerified({
-    authSubject: params.ctx.supabaseUserId,
-    phone,
-  });
   await writeAuditLog({
     actorUserId: params.ctx.user.id,
     action: "phone.verified",

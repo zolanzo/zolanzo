@@ -6,6 +6,8 @@
 import dotenv from "dotenv";
 import { existsSync, readFileSync } from "fs";
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
+import { Client } from "pg";
 import {
   EMAIL_OTP_MAX_ATTEMPTS,
   EMAIL_OTP_PURPOSE,
@@ -28,7 +30,7 @@ const LEGACY_NO_ACTIVE = /No active verification code found for this email/i;
 type CapturedEmail = {
   email: string;
   purpose: string;
-  kind: string;
+  kind: "email_otp" | "pin_reset" | string;
   code: string;
   from: string;
   replyTo: string;
@@ -71,13 +73,21 @@ async function waitForCapturedEmail(
   email: string,
   expectedCount = 1,
   timeoutMs = 12_000,
+  kind = "email_otp",
 ): Promise<CapturedEmail> {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     try {
-      if (countOutboundFor(email) >= expectedCount && existsSync(getDevEmailDebugPath())) {
+      if (
+        countOutboundFor(email, kind) >= expectedCount &&
+        existsSync(getDevEmailDebugPath())
+      ) {
         const parsed = JSON.parse(readFileSync(getDevEmailDebugPath(), "utf8")) as CapturedEmail;
-        if (parsed.email === email && /^\d{6}$/.test(parsed.code || "")) {
+        if (
+          parsed.email === email &&
+          parsed.kind === kind &&
+          /^\d{6}$/.test(parsed.code || "")
+        ) {
           return parsed;
         }
       }
@@ -86,7 +96,7 @@ async function waitForCapturedEmail(
     }
     await sleep(100);
   }
-  throw new Error(`Timed out waiting for captured verification email for ${email}.`);
+  throw new Error(`Timed out waiting for captured ${kind} email for ${email}.`);
 }
 
 function assertGeneratedEmail(captured: CapturedEmail, email: string) {
@@ -161,6 +171,25 @@ function adminClient() {
   return createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
+function hashOtp(code: string) {
+  return createHash("sha256").update(String(code).replace(/\D/g, "")).digest("hex");
+}
+
+async function withDevDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
+  const url = process.env.DATABASE_URL ?? "";
+  if (!url) throw new Error("DATABASE_URL missing");
+  if (url.includes("ffvwviabpyhjeoxjxunb")) {
+    throw new Error("Refusing to run Phase 5 QA against production.");
+  }
+  const client = new Client({ connectionString: url });
+  await client.connect();
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+}
+
 async function main() {
   const stamp = Date.now();
   const pin = "212523";
@@ -188,6 +217,27 @@ async function main() {
   results.push("4-sender-identity: ok");
   results.push("5-branding: ok");
   results.push("6-six-digit-code: ok");
+
+  await withDevDb(async (db) => {
+    const stored = await db.query(
+      `SELECT code_hash, purpose, consumed_at, email
+       FROM public.email_verifications
+       WHERE email = $1 AND purpose = $2 AND consumed_at IS NULL
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [happyEmail, EMAIL_OTP_PURPOSE.emailVerification],
+    );
+    const row = stored.rows[0] as
+      | { code_hash: string; purpose: string; consumed_at: string | null; email: string }
+      | undefined;
+    if (!row) {
+      throw new Error("No active email_verifications row after signup.");
+    }
+    if (row.code_hash !== hashOtp(captured.code)) {
+      throw new Error("Emailed OTP does not match the stored email_verifications hash.");
+    }
+  });
+  results.push("same-otp-sent-and-stored: ok");
 
   const invalid = await post("/api/auth/verify-email", { email: happyEmail, code: "000000" });
   assertError(invalid.json.error, EMAIL_OTP_USER_MESSAGES.invalid, "A-invalid");
@@ -217,15 +267,26 @@ async function main() {
   results.push("K-rapid-submissions: ok");
 
   const userId = String(signupHappy.json.data?.userId ?? "");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: profile, error: profileError } = await (admin.from("profiles") as any)
-    .select("email_verified, email")
-    .eq("email", happyEmail)
-    .maybeSingle();
-  if (profileError) throw new Error(profileError.message);
-  if (!profile?.email_verified) {
-    throw new Error("Profile email_verified did not update after the emailed code was accepted.");
-  }
+  await withDevDb(async (db) => {
+    const verified = await db.query(
+      `SELECT email_verified_at, auth_subject
+       FROM public.users
+       WHERE email = $1`,
+      [happyEmail],
+    );
+    if (!verified.rows[0]?.email_verified_at) {
+      throw new Error("users.email_verified_at did not update after the emailed code was accepted.");
+    }
+    const consumed = await db.query(
+      `SELECT consumed_at FROM public.email_verifications
+       WHERE email = $1 AND purpose = $2
+       ORDER BY created_at DESC LIMIT 1`,
+      [happyEmail, EMAIL_OTP_PURPOSE.emailVerification],
+    );
+    if (!consumed.rows[0]?.consumed_at) {
+      throw new Error("Verification row was not consumed after success.");
+    }
+  });
   const { data: authUser, error: authError } = await admin.auth.admin.getUserById(userId);
   if (authError) throw new Error(authError.message);
   if (!authUser.user?.email_confirmed_at) {
@@ -301,13 +362,14 @@ async function main() {
   await signup(expiredEmail, "Phase5 Expired", "worker", pin);
   const expiredCapture = await waitForCapturedEmail(expiredEmail, 1);
   const past = new Date(Date.now() - 20 * 60 * 1000).toISOString();
-  const { error: expireError } = await admin
-    .from("email_verifications")
-    .update({ expires_at: past })
-    .eq("email", expiredEmail)
-    .eq("purpose", EMAIL_OTP_PURPOSE.emailVerification)
-    .is("consumed_at", null);
-  if (expireError) throw new Error(expireError.message);
+  await withDevDb(async (db) => {
+    await db.query(
+      `UPDATE public.email_verifications
+       SET expires_at = $1
+       WHERE email = $2 AND purpose = $3 AND consumed_at IS NULL`,
+      [past, expiredEmail, EMAIL_OTP_PURPOSE.emailVerification],
+    );
+  });
   const expired = await post("/api/auth/verify-email", {
     email: expiredEmail,
     code: expiredCapture.code,
@@ -331,6 +393,43 @@ async function main() {
   const needNew = await post("/api/auth/verify-email", { email: lockoutEmail, code: "222222" });
   assertError(needNew.json.error, EMAIL_OTP_USER_MESSAGES.needNewCode, "need-new-code");
   results.push("please-request-a-new-code: ok");
+
+  const pinResetEmail = happyEmail;
+  const newPin = "654321";
+  const forgot = await post("/api/auth/forgot-pin", { email: pinResetEmail });
+  if (forgot.status >= 400) throw new Error(`forgot-pin failed: ${forgot.json.error}`);
+  const pinMail = await waitForCapturedEmail(pinResetEmail, 1, 12_000, "pin_reset");
+  if (pinMail.purpose !== EMAIL_OTP_PURPOSE.pinReset) {
+    throw new Error("PIN reset email used the wrong purpose.");
+  }
+  if (pinMail.from !== EMAIL_SENDER_FROM) {
+    throw new Error(`PIN reset sender mismatch: ${pinMail.from}`);
+  }
+  const pinCodeAsEmailVerify = await post("/api/auth/verify-email", {
+    email: pinResetEmail,
+    code: pinMail.code,
+    purpose: EMAIL_OTP_PURPOSE.emailVerification,
+  });
+  assertError(
+    pinCodeAsEmailVerify.json.error,
+    EMAIL_OTP_USER_MESSAGES.alreadyVerified,
+    "pin-code-cannot-verify-email",
+  );
+  const pinVerify = await post("/api/auth/verify-email", {
+    email: pinResetEmail,
+    code: pinMail.code,
+    purpose: EMAIL_OTP_PURPOSE.pinReset,
+  });
+  if (pinVerify.status >= 400) throw new Error(`pin reset verify failed: ${pinVerify.json.error}`);
+  const reset = await post("/api/auth/reset-pin", { email: pinResetEmail, newPin });
+  if (reset.status >= 400) throw new Error(`reset-pin failed: ${reset.json.error}`);
+  const oldPinLogin = await post("/api/auth/login", { email: pinResetEmail, pin });
+  if (oldPinLogin.status < 400) {
+    throw new Error("Old PIN still worked after reset.");
+  }
+  const newPinLogin = await post("/api/auth/login", { email: pinResetEmail, pin: newPin });
+  if (newPinLogin.status >= 400) throw new Error(`new PIN login failed: ${newPinLogin.json.error}`);
+  results.push("pin-reset-end-to-end: ok");
 
   console.log(
     JSON.stringify(

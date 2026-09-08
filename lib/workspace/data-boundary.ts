@@ -78,3 +78,29 @@ export function dataBoundaryDescription(boundary: DataBoundary): string {
       return "Loading…";
   }
 }
+
+export function marketplaceEmptyCopy(boundary: DataBoundary): {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  actionHref?: string;
+} {
+  if (boundary.kind === "live") {
+    return {
+      title: "No tasks yet",
+      description: "When campaigns go live they will appear here.",
+    };
+  }
+  if (boundary.kind === "unauthenticated") {
+    return {
+      title: "Sign in to find work",
+      description: "Live tasks appear after you sign in.",
+      actionLabel: "Log in",
+      actionHref: "/login?next=/tasks",
+    };
+  }
+  return {
+    title: "No tasks available",
+    description: dataBoundaryDescription(boundary) || "Task listings load when the marketplace is reachable.",
+  };
+}

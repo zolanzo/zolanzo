@@ -14,6 +14,7 @@ type WorkspaceShellSource = {
   avatarUrl: string | null;
   wallet: { availableLabel: string };
   loadState: DataBoundary;
+  shellRole?: string | null;
 };
 
 export function WorkspaceAppShell({
@@ -36,7 +37,7 @@ export function WorkspaceAppShell({
         workspace.wallet.availableLabel,
       )}
       maxWidth={maxWidth}
-      userRole={userRole}
+      userRole={userRole ?? workspace.shellRole ?? null}
     >
       <div className="px-4 sm:px-0">
         <DataBoundaryBanner boundary={workspace.loadState} className="mb-2" />

@@ -1,3 +1,8 @@
+/**
+ * DEV-only leftover overlay checker. Not the live identity architecture.
+ * Live auth uses JWT app_metadata.roles and Prisma user_roles.
+ * Prefer `npm run verify:dev-marketplace` for current marketplace/auth fixtures.
+ */
 /* eslint-disable */
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";

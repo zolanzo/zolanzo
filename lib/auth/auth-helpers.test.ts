@@ -71,6 +71,10 @@ describe("route policy", () => {
   it("protects app and admin routes", () => {
     expect(resolveRouteAccess("/app/profile")).toBe("authenticated");
     expect(resolveRouteAccess("/admin")).toBe("admin");
+    expect(resolveRouteAccess("/lex")).toBe("staff");
+    expect(resolveRouteAccess("/lex/auth")).toBe("super_admin");
+    expect(resolveRouteAccess("/submissions")).toBe("authenticated");
+    expect(resolveRouteAccess("/welcome")).toBe("authenticated");
     expect(resolveRouteAccess("/auth/sign-in")).toBe("public");
     expect(resolveRouteAccess("/terms")).toBe("public");
     expect(resolveRouteAccess("/privacy")).toBe("public");
@@ -85,6 +89,7 @@ describe("route policy", () => {
     expect(isPublicMarketingPath("/about")).toBe(true);
     expect(isPublicMarketingPath("/pricing")).toBe(true);
     expect(isPublicMarketingPath("/contact")).toBe(true);
+    expect(resolveRouteAccess("/api/contact")).toBe("public");
     expect(isPublicMarketingPath("/login")).toBe(false);
     expect(shouldRefreshAuthSession("/")).toBe(false);
     expect(shouldRefreshAuthSession("/login")).toBe(true);

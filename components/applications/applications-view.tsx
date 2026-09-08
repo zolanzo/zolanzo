@@ -52,7 +52,7 @@ export function ApplicationsView({ workspace }: { workspace: EarnerWorkspace }) 
       workspace.workItems.map((item) => ({
         id: item.id,
         title: item.title,
-        employer: "Hirer",
+        employer: "Campaign",
         reward: formatNgnFromMinor(item.rewardMinor),
         status: workStatus(item),
         submittedDate: item.submittedAt || item.createdAt,
@@ -133,30 +133,49 @@ export function ApplicationsView({ workspace }: { workspace: EarnerWorkspace }) 
             />
         ) : (
           <div className="space-y-3">
-            {filteredApps.map((app) => (
-              <div
-                key={app.id}
-                onClick={() => setSelectedApp(app)}
-                className="bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
-              >
-                <div className="space-y-1 min-w-0">
-                  <span className="text-xs font-bold text-foreground">{app.title}</span>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <HugeiconsIcon icon={Clock01Icon} size={14} /> {app.submittedDate}
+            {filteredApps.map((app) => {
+              const href =
+                app.status === "In Progress"
+                  ? `/tasks/${app.taskId}/work`
+                  : undefined;
+              const body = (
+                <>
+                  <div className="space-y-1 min-w-0">
+                    <span className="text-xs font-bold text-foreground">{app.title}</span>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <HugeiconsIcon icon={Clock01Icon} size={14} /> {app.submittedDate}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <span className="text-sm font-black text-primary">{app.reward}</span>
+                    <span className="px-3 py-1 rounded-xl bg-muted border border-border text-xs font-bold text-foreground">
+                      {app.status}
                     </span>
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-4">
-                  <span className="text-sm font-black text-primary">{app.reward}</span>
-
-                  <span className="px-3 py-1 rounded-xl bg-muted border border-border text-xs font-bold text-foreground">
-                    {app.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+                </>
+              );
+              const className =
+                "bg-card border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full text-left";
+              if (href) {
+                return (
+                  <Link key={app.id} href={href} className={className}>
+                    {body}
+                  </Link>
+                );
+              }
+              return (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => setSelectedApp(app)}
+                  className={className}
+                >
+                  {body}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

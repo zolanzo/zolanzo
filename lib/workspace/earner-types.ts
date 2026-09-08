@@ -81,6 +81,8 @@ export type EarnerWorkspace = {
   referralUrl: string;
   workItems: EarnerWorkItem[];
   loadState: DataBoundary;
+  /** Session chrome for sidebar/bottom-nav on shared routes. */
+  shellRole?: string | null;
 };
 
 export type EarnerWorkItem = {

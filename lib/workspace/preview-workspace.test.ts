@@ -23,6 +23,8 @@ describe("preview workspaces", () => {
     expect(earner.wallet.availableLabel).toBe("");
     expect(hirer.campaigns).toEqual([]);
     expect(earner.opportunities).toEqual([]);
+    expect(earner.shellRole).toBe("worker");
+    expect(hirer.shellRole).toBe("employer");
     expect(earner.transactions).toEqual([]);
     expect(walletHeaderLabel(earner.loadState, "₦12,350.00")).toBeUndefined();
     expect(dataBoundaryDescription(earner.loadState)).toMatch(/unavailable/i);

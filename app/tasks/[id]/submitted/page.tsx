@@ -42,6 +42,14 @@ export default async function WorkSubmittedPage({
         <Link href="/tasks" className="inline-flex h-10 px-4 rounded-xl bg-foreground text-background text-xs font-bold items-center">
           Back to tasks
         </Link>
+        <div className="flex justify-center gap-4 text-xs font-bold">
+          <Link href="/applications" className="text-primary">
+            Applications
+          </Link>
+          <Link href="/wallet" className="text-primary">
+            Wallet
+          </Link>
+        </div>
       </div>
     </AppShell>
   );

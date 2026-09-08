@@ -96,8 +96,20 @@ export async function prepareOpportunityWorkAction(
     });
   }
 
+  const campaignMetadata =
+    (instance.campaign.metadata as Record<string, unknown> | null) ?? {};
   const draft = await createDraftSubmission({
-    input: { assignmentPublicId },
+    input: {
+      assignmentPublicId,
+      metadata: {
+        ...(typeof campaignMetadata.reviewPolicyKey === "string"
+          ? { reviewPolicyKey: campaignMetadata.reviewPolicyKey }
+          : {}),
+        ...(typeof campaignMetadata.settlementPolicyKey === "string"
+          ? { settlementPolicyKey: campaignMetadata.settlementPolicyKey }
+          : {}),
+      },
+    },
     workerUserId: ctx.user.id,
   });
   if (!draft.ok) return draft;

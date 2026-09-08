@@ -119,6 +119,24 @@ model User {
   @@map("users")
 }
 
+/// Sidecar OTP challenges (existing public.email_verifications). Auth subject UUID, not a Prisma User FK.
+model EmailVerification {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  email      String
+  codeHash   String    @map("code_hash")
+  expiresAt  DateTime  @map("expires_at")
+  attempts   Int       @default(0)
+  verifiedAt DateTime? @map("verified_at")
+  consumedAt DateTime? @map("consumed_at")
+  purpose    String    @default("email_verification")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([email, purpose], map: "email_verifications_email_purpose_idx")
+  @@index([email, purpose, consumedAt], map: "email_verifications_active_idx")
+  @@map("email_verifications")
+}
+
 model Profile {
   id             String   @id @default(cuid())
   userId         String   @unique @map("user_id")

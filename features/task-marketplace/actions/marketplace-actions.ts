@@ -19,33 +19,63 @@ import {
 } from "@/features/task-marketplace/services";
 import { expireReservations } from "@/features/task-marketplace/services/reservation-engine";
 import { loadWorkerEligibilityContext } from "@/features/task-marketplace/services/worker-context";
+import { canViewWorkOpportunity } from "@/features/task-marketplace/services/marketplace-visibility";
 import { prisma } from "@/lib/prisma/client";
 import { assignmentRepository, reservationRepository } from "@/features/assignments/repositories";
-import { apiSuccess } from "@/lib/api/response";
+import { apiSuccess, apiError } from "@/lib/api/response";
 import {
-  claimOpportunitySchema,
-  reserveOpportunitySchema,
+  browseMarketplaceActionSchema,
+  marketplaceInstanceActionSchema,
 } from "@/features/task-marketplace/validators";
 
 export async function browseMarketplaceAction(
   input: unknown,
 ): Promise<ApiResponse<MarketplacePage>> {
-  await requireAuthContext();
-  return browseWorkOpportunities({ input });
+  const ctx = await requireAuthContext();
+  const parsed = browseMarketplaceActionSchema.parse(input ?? {});
+  const worker = await loadWorkerEligibilityContext({
+    userId: ctx.user.id,
+    organizationIds: ctx.user.activeOrganizationId
+      ? [ctx.user.activeOrganizationId]
+      : ctx.user.memberships
+          .filter((m) => m.status === "active")
+          .map((m) => m.organizationId),
+  });
+  return browseWorkOpportunities({
+    input: {
+      ...parsed,
+      worker,
+    },
+  });
 }
 
 export async function getOpportunityAction(
   publicId: string,
 ): Promise<ApiResponse<WorkOpportunity>> {
-  await requireAuthContext();
-  return getWorkOpportunityByPublicId(publicId);
+  const ctx = await requireAuthContext();
+  const result = await getWorkOpportunityByPublicId(publicId);
+  if (!result.ok) return result;
+  const assignment = await assignmentRepository.findByTaskInstanceId(
+    result.data.instanceId,
+  );
+  const viewerCanContinue = assignment?.workerUserId === ctx.user.id;
+  if (
+    !canViewWorkOpportunity({
+      campaignStatus: result.data.campaignStatus,
+      campaignVisibility: result.data.campaignVisibility,
+      viewerCanContinue,
+    })
+  ) {
+    return apiError("OPPORTUNITY_NOT_FOUND", "Opportunity not found");
+  }
+  return apiSuccess({ ...result.data, viewerCanContinue });
 }
 
 export async function reserveWorkAction(
   input: unknown,
 ): Promise<ApiResponse<ReservationRecord>> {
   const ctx = await requireAuthContext();
-  const parsed = reserveOpportunitySchema.parse(input);
+  const parsed = marketplaceInstanceActionSchema.parse(input);
   const worker = await loadWorkerEligibilityContext({
     userId: ctx.user.id,
     organizationIds: ctx.user.activeOrganizationId
@@ -77,7 +107,7 @@ export async function claimWorkAction(
   ApiResponse<{ reservation: ReservationRecord; assignment: AssignmentRecord }>
 > {
   const ctx = await requireAuthContext();
-  const parsed = claimOpportunitySchema.parse(input);
+  const parsed = marketplaceInstanceActionSchema.parse(input);
   const worker = await loadWorkerEligibilityContext({
     userId: ctx.user.id,
     organizationIds: ctx.user.activeOrganizationId
@@ -113,6 +143,12 @@ export async function startOpportunityAction(
       if (reservation) {
         return apiSuccess({ reservation, assignment: existing });
       }
+    }
+    if (existing && existing.workerUserId !== ctx.user.id) {
+      return apiError(
+        "INVENTORY_UNAVAILABLE",
+        "Work opportunity is not claimable",
+      );
     }
   }
   const worker = await loadWorkerEligibilityContext({

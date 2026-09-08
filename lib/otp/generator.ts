@@ -13,7 +13,8 @@ export function generateOtpCode(digits: number = 6): string {
  * Hash OTP code for secure database storage.
  */
 export function hashOtpCode(code: string): string {
-  return createHash("sha256").update(code).digest("hex");
+  const normalized = String(code ?? "").replace(/\D/g, "");
+  return createHash("sha256").update(normalized).digest("hex");
 }
 
 /**

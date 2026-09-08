@@ -25,6 +25,10 @@ export type WorkOpportunity = {
   languageScope: string[];
   deviceScope: string[];
   createdAt: string;
+  instanceStatus: string;
+  campaignStatus: string;
+  campaignVisibility: string;
+  viewerCanContinue?: boolean;
 };
 
 export type MarketplaceSort =

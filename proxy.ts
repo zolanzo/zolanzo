@@ -5,7 +5,10 @@ import {
 } from "@/lib/security/headers";
 import { createSupabaseMiddlewareClient } from "@/lib/supabase/middleware";
 import { shouldRefreshAuthSession } from "@/lib/auth/route-policy";
-import { decideProxyAccess } from "@/lib/auth/proxy-access";
+import {
+  decideProxyAccess,
+  jwtRolesFromAuthUser,
+} from "@/lib/auth/proxy-access";
 import { CSRF_CONFIG, generateCsrfToken } from "@/lib/security/csrf";
 import {
   CORRELATION_HEADER,
@@ -61,22 +64,9 @@ export async function proxy(request: NextRequest) {
       const { data } = await supabase.auth.getUser();
       authenticated = Boolean(data.user);
       if (data.user) {
-        const appRoles = data.user.app_metadata?.roles;
-        const userMetaRole = data.user.user_metadata?.role;
-        userRole = (Array.isArray(appRoles) && appRoles[0]) || userMetaRole || "";
-
-        if (!userRole && data.user.id) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: prof } = await (supabase.from("profiles") as any)
-            .select("role")
-            .eq("id", data.user.id)
-            .single();
-          if (prof?.role) {
-            userRole = prof.role;
-          }
-        }
-
-        roles = userRole ? [userRole] : [];
+        const extracted = jwtRolesFromAuthUser(data.user);
+        userRole = extracted.userRole;
+        roles = extracted.roles;
       }
     } catch {
       authenticated = false;

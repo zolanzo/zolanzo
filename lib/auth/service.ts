@@ -1,10 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { formatStoredPin, verifyStoredPin } from "@/lib/security/hash";
 import { sendEmailOtp, sendPinResetEmail } from "@/lib/email/resend";
 import { APP_CONFIG } from "@/config/app";
 import { isBackendUnavailableError } from "@/lib/reliability/backend-unavailable";
-import { provisionAuthenticatedUser, emitAuthWelcome } from "@/features/authentication/services/provisioning";
+import {
+  provisionAuthenticatedUser,
+  emitAuthWelcome,
+} from "@/features/authentication/services/provisioning";
 import { prisma } from "@/lib/prisma/client";
 import { AppError } from "@/lib/api/response";
 import { isValidEmail, normalizeEmail } from "@/lib/auth/email";
@@ -22,9 +24,21 @@ import {
 import { findAuthUserByEmail, isAlreadyRegisteredError } from "@/lib/auth/auth-users";
 import { withKeyedLock } from "@/lib/auth/keyed-lock";
 import { logger } from "@/lib/observability/logger";
+import { writeAuditLog } from "@/lib/audit/write";
+import {
+  isOnboardingComplete,
+  jwtAppMetadataRoles,
+  productRoleFromRbac,
+  signupRoleToParticipation,
+  signupRoleToRoleKeys,
+  type ProductRole,
+  type SignupProductRole,
+} from "@/lib/auth/product-identity";
+import { authPasswordFromPin } from "@/lib/auth/pin-credentials";
+import type { Prisma } from "@/lib/generated/prisma/client";
 
 export interface SignupInput {
-  role?: "worker" | "employer";
+  role?: SignupProductRole;
   fullName: string;
   email: string;
   pin: string;
@@ -48,26 +62,32 @@ export interface PhoneVerificationInput {
   code: string;
 }
 
-type PinProfileRow = {
+export type AuthSessionProfile = {
   id: string;
-  email?: string | null;
-  role?: string | null;
-  pin_hash?: string | null;
-  email_verified?: boolean | null;
-  status?: string | null;
-  onboarding_completed?: boolean | null;
-  full_name?: string | null;
+  email: string | null;
+  role: ProductRole;
+  onboarding_completed: boolean;
+  displayName: string | null;
 };
 
-function authPasswordFromPin(pin: string): string {
-  return `${pin}_ZOLANZO_SECURE_KEY`;
-}
+type ApplicationUser = {
+  id: string;
+  authSubject: string | null;
+  email: string | null;
+  emailVerifiedAt: Date | null;
+  status: string;
+  participation: "worker" | "client" | "both" | null;
+  displayName: string | null;
+  countryCode: string | null;
+  addressJson: unknown;
+  roleKeys: string[];
+  productRole: ProductRole;
+  onboardingCompleted: boolean;
+  activeOrganizationId: string | null;
+};
 
 function userFacingError(err: unknown, fallback: string): Error {
   if (err instanceof AppError) {
-    if (err.status >= 500) {
-      return new Error("Authentication service is unreachable. Please try again shortly.");
-    }
     return new Error(err.message);
   }
   if (err instanceof Error && err.message) {
@@ -76,22 +96,35 @@ function userFacingError(err: unknown, fallback: string): Error {
   return new Error(fallback);
 }
 
+function toSessionProfile(user: ApplicationUser): AuthSessionProfile {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.productRole,
+    onboarding_completed: user.onboardingCompleted,
+    displayName: user.displayName,
+  };
+}
+
+function auditMetadata(
+  value: Record<string, unknown>,
+): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
+
 /**
  * Main ZOLANZO Authentication Backend Service
  */
 export class AuthService {
-  static generateReferralCode(): string {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "ZOL";
-    for (let i = 0; i < 5; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  }
-
-  static async registerUser(input: SignupInput, ipAddress?: string, userAgent?: string) {
+  static async registerUser(
+    input: SignupInput,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     if (!input.role) {
-      throw new Error("Account creation requires an explicit role selection ('worker' or 'employer').");
+      throw new Error(
+        "Account creation requires an explicit role selection ('worker' or 'employer').",
+      );
     }
     if (!isValidEmail(input.email)) {
       throw new Error("Please enter a valid email address.");
@@ -100,62 +133,65 @@ export class AuthService {
     const role = input.role;
     const email = normalizeEmail(input.email);
     const fullName = input.fullName.trim();
-    const pinHash = formatStoredPin(input.pin);
     const password = authPasswordFromPin(input.pin);
 
     return withKeyedLock(`register:${email}`, async () => {
-    try {
-      const admin = createSupabaseAdminClient();
-      let userId: string | null = null;
+      try {
+        const admin = createSupabaseAdminClient();
+        let userId: string | null = null;
 
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: false,
-        user_metadata: {
-          full_name: fullName,
-          role,
-        },
-        app_metadata: {
-          roles: [role],
-        },
-      });
-
-      if (createError || !created.user) {
-        if (isAlreadyRegisteredError(createError?.message)) {
-          const existing = await findAuthUserByEmail(email);
-          if (!existing) {
-            throw new Error("An account with this email already exists. Please log in.");
-          }
-          const existingProfile = await this.getProfileByEmail(email);
-          if (existing.email_confirmed_at || existingProfile?.email_verified) {
-            throw new Error("An account with this email already exists. Please log in.");
-          }
-          userId = existing.id;
-          await admin.auth.admin.updateUserById(userId, {
+        const { data: created, error: createError } =
+          await admin.auth.admin.createUser({
+            email,
             password,
             email_confirm: false,
             user_metadata: {
               full_name: fullName,
-              role,
             },
             app_metadata: {
-              roles: [role],
+              roles: jwtAppMetadataRoles(role),
             },
           });
+
+        if (createError || !created.user) {
+          if (isAlreadyRegisteredError(createError?.message)) {
+            const existing = await findAuthUserByEmail(email);
+            if (!existing) {
+              throw new Error(
+                "An account with this email already exists. Please log in.",
+              );
+            }
+            const existingUser = await this.loadApplicationUserByEmail(email);
+            if (existing.email_confirmed_at || existingUser?.emailVerifiedAt) {
+              throw new Error(
+                "An account with this email already exists. Please log in.",
+              );
+            }
+            userId = existing.id;
+            await admin.auth.admin.updateUserById(userId, {
+              password,
+              email_confirm: false,
+              user_metadata: {
+                full_name: fullName,
+              },
+              app_metadata: {
+                roles: jwtAppMetadataRoles(role),
+              },
+            });
+          } else {
+            throw new Error(
+              "Registration could not be completed. Please try again.",
+            );
+          }
         } else {
-          throw new Error("Registration could not be completed. Please try again.");
+          userId = created.user.id;
         }
-      } else {
-        userId = created.user.id;
-      }
 
-      if (!userId) {
-        throw new Error("Failed to create user account.");
-      }
+        if (!userId) {
+          throw new Error("Failed to create user account.");
+        }
 
-      try {
-        await provisionAuthenticatedUser({
+        const provisioned = await provisionAuthenticatedUser({
           authSubject: userId,
           email,
           displayName: fullName,
@@ -163,84 +199,45 @@ export class AuthService {
           ip: ipAddress,
           useAuthSubjectAsId: true,
           skipWelcome: true,
-          participation: role === "employer" ? "client" : "worker",
-          roleKeys: role === "employer" ? ["client"] : ["worker"],
+          participation: signupRoleToParticipation(role),
+          roleKeys: signupRoleToRoleKeys(role),
         });
-      } catch (provisionError) {
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-          select: { authSubject: true },
+
+        await admin.auth.admin.updateUserById(userId, {
+          app_metadata: {
+            platform_user_id: provisioned.userId,
+            roles: jwtAppMetadataRoles(role),
+            active_organization_id: provisioned.organizationId,
+          },
         });
-        if (!existingUser || existingUser.authSubject !== userId) {
-          throw provisionError;
-        }
-      }
 
-      let referrerId: string | null = null;
-      if (input.referralCode?.trim()) {
-        const referralCode = input.referralCode.trim().toUpperCase();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: refProfile } = await (admin.from("profiles") as any)
-          .select("id")
-          .eq("referral_code", referralCode)
-          .maybeSingle();
-        if (refProfile?.id) {
-          referrerId = refProfile.id;
-        }
-      }
-
-      const userReferralCode = this.generateReferralCode();
-      await this.patchPinProfile(admin, {
-        userId,
-        fullName,
-        email,
-        role,
-        pinHash,
-        emailVerified: false,
-        referralCode: userReferralCode,
-        referrerId,
-      });
-
-      if (referrerId) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: referralError } = await (admin.from("referrals") as any).insert({
-          referrer_id: referrerId,
-          referred_id: userId,
-          referral_code: input.referralCode!.trim().toUpperCase(),
+        await this.dispatchEmailOtp({
+          userId,
+          email,
+          fullName,
+          purpose: EMAIL_OTP_PURPOSE.emailVerification,
         });
-        if (referralError && !/duplicate|unique/i.test(referralError.message ?? "")) {
-          // Non-unique referral failures are non-blocking for account creation.
-        }
+
+        await writeAuditLog({
+          actorUserId: provisioned.userId,
+          action: "auth.signup",
+          resourceType: "user",
+          resourceId: provisioned.userId,
+          organizationId: provisioned.organizationId,
+          ip: ipAddress,
+          metadata: auditMetadata({
+            userAgent: userAgent ?? "",
+            referralAccepted: Boolean(input.referralCode?.trim()),
+          }),
+        });
+        return { userId, email };
+      } catch (err) {
+        throw userFacingError(
+          err,
+          "Registration could not be completed. Please try again.",
+        );
       }
-
-      await this.dispatchEmailOtp({
-        userId,
-        email,
-        fullName,
-        purpose: EMAIL_OTP_PURPOSE.emailVerification,
-      });
-
-      await this.logAuditEvent(userId, "signup", ipAddress, userAgent);
-      return { userId, email };
-    } catch (err) {
-      throw userFacingError(err, "Registration could not be completed. Please try again.");
-    }
     });
-  }
-
-  static async getProfileByEmail(email: string): Promise<PinProfileRow | null> {
-    const admin = createSupabaseAdminClient();
-    const normalized = normalizeEmail(email);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (admin.from("profiles") as any)
-      .select("*")
-      .eq("email", normalized)
-      .limit(1)
-      .maybeSingle();
-    if (error && isBackendUnavailableError(error)) {
-      throw new Error("Authentication service is unreachable. Please try again shortly.");
-    }
-    return (data as PinProfileRow | null) ?? null;
   }
 
   static async verifyEmail(
@@ -251,77 +248,87 @@ export class AuthService {
     purpose: EmailOtpPurpose = EMAIL_OTP_PURPOSE.emailVerification,
   ) {
     const normalized = normalizeEmail(email);
-    if (!isValidEmail(normalized) || String(code ?? "").replace(/\D/g, "").length !== 6) {
+    if (
+      !isValidEmail(normalized) ||
+      String(code ?? "").replace(/\D/g, "").length !== 6
+    ) {
       throw new Error("Email and 6-digit verification code are required.");
     }
 
     try {
-      return await withKeyedLock(`verify:${normalized}:${purpose}`, async () => {
-        if (purpose === EMAIL_OTP_PURPOSE.emailVerification) {
-          const profile = await this.getProfileByEmail(normalized);
-          if (profile?.email_verified) {
-            throw new Error(EMAIL_OTP_USER_MESSAGES.alreadyVerified);
-          }
-        }
-
-        let result = await consumeEmailOtp({
-          email: normalized,
-          code,
-          purpose,
-        });
-
-        if (!result.ok) {
-          if (
-            result.reason === "already_used" &&
-            purpose === EMAIL_OTP_PURPOSE.emailVerification
-          ) {
-            const matched = await findMatchingConsumedEmailOtp({
-              email: normalized,
-              code,
-              purpose,
-            });
-            const profileAfter = await this.getProfileByEmail(normalized);
-            if (matched?.verified_at && !profileAfter?.email_verified) {
-              result = { ok: true, id: matched.id, userId: matched.user_id };
+      return await withKeyedLock(
+        `verify:${normalized}:${purpose}`,
+        async () => {
+          if (purpose === EMAIL_OTP_PURPOSE.emailVerification) {
+            const user = await this.loadApplicationUserByEmail(normalized);
+            if (user?.emailVerifiedAt) {
+              throw new Error(EMAIL_OTP_USER_MESSAGES.alreadyVerified);
             }
           }
+
+          let result = await consumeEmailOtp({
+            email: normalized,
+            code,
+            purpose,
+          });
+
           if (!result.ok) {
-            throw new Error(messageForOtpFailure(result.reason));
+            if (
+              result.reason === "already_used" &&
+              purpose === EMAIL_OTP_PURPOSE.emailVerification
+            ) {
+              const matched = await findMatchingConsumedEmailOtp({
+                email: normalized,
+                code,
+                purpose,
+              });
+              const userAfter =
+                await this.loadApplicationUserByEmail(normalized);
+              if (matched?.verified_at && !userAfter?.emailVerifiedAt) {
+                result = { ok: true, id: matched.id, userId: matched.user_id };
+              }
+            }
+            if (!result.ok) {
+              throw new Error(messageForOtpFailure(result.reason));
+            }
           }
-        }
 
-        if (purpose === EMAIL_OTP_PURPOSE.pinReset) {
+          if (purpose === EMAIL_OTP_PURPOSE.pinReset) {
+            return { success: true, purpose };
+          }
+
+          const admin = createSupabaseAdminClient();
+          const { error: confirmError } = await admin.auth.admin.updateUserById(
+            result.userId,
+            { email_confirm: true },
+          );
+          if (confirmError) {
+            throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
+          }
+
+          await prisma.user.updateMany({
+            where: { authSubject: result.userId },
+            data: { emailVerifiedAt: new Date() },
+          });
+
+          const appUser = await this.loadApplicationUserByAuthSubject(
+            result.userId,
+          );
+          await writeAuditLog({
+            actorUserId: appUser?.id ?? null,
+            action: "auth.email_verified",
+            resourceType: "user",
+            resourceId: appUser?.id ?? result.userId,
+            ip: ipAddress,
+            metadata: auditMetadata({ userAgent: userAgent ?? "" }),
+          });
+          await this.emitWelcomeAfterEmailVerification({
+            userId: result.userId,
+            email: normalized,
+          });
           return { success: true, purpose };
-        }
-
-        const admin = createSupabaseAdminClient();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: profileError } = await (admin.from("profiles") as any)
-          .update({ email_verified: true })
-          .eq("id", result.userId);
-        if (profileError) {
-          throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-        }
-
-        const { error: confirmError } = await admin.auth.admin.updateUserById(result.userId, {
-          email_confirm: true,
-        });
-        if (confirmError) {
-          throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-        }
-
-        await prisma.user.updateMany({
-          where: { authSubject: result.userId },
-          data: { emailVerifiedAt: new Date() },
-        });
-
-        await this.logAuditEvent(result.userId, "email_verification", ipAddress, userAgent);
-        await this.emitWelcomeAfterEmailVerification({
-          userId: result.userId,
-          email: normalized,
-        });
-        return { success: true, purpose };
-      });
+        },
+      );
     } catch (err) {
       throw userFacingError(err, EMAIL_OTP_USER_MESSAGES.generic);
     }
@@ -339,22 +346,34 @@ export class AuthService {
     }
 
     try {
-      const profile = await this.getProfileByEmail(normalized);
-      if (purpose === EMAIL_OTP_PURPOSE.emailVerification && profile?.email_verified) {
+      const user = await this.loadApplicationUserByEmail(normalized);
+      const authUser = await findAuthUserByEmail(normalized);
+      if (purpose === EMAIL_OTP_PURPOSE.emailVerification && user?.emailVerifiedAt) {
         throw new Error(EMAIL_OTP_USER_MESSAGES.alreadyVerified);
       }
-      if (!profile?.id) {
-        throw new Error(EMAIL_OTP_USER_MESSAGES.noActive);
+      if (!authUser) {
+        throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
       }
 
       await this.dispatchEmailOtp({
-        userId: profile.id,
+        userId: authUser.id,
         email: normalized,
-        fullName: profile.full_name || "User",
+        fullName: user?.displayName || "User",
         purpose,
       });
-      await this.logAuditEvent(profile.id, "email_verification_resend", ipAddress, userAgent);
-      return { success: true, email: normalized };
+
+      await writeAuditLog({
+        actorUserId: user?.id ?? null,
+        action: "auth.email_verification_resend",
+        resourceType: "user",
+        resourceId: user?.id ?? authUser.id,
+        ip: ipAddress,
+        metadata: auditMetadata({
+          userAgent: userAgent ?? "",
+          purpose,
+        }),
+      });
+      return { success: true };
     } catch (err) {
       throw userFacingError(err, EMAIL_OTP_USER_MESSAGES.sendFailed);
     }
@@ -362,130 +381,210 @@ export class AuthService {
 
   /**
    * Phone OTP is owned by features/authentication/services/phone-verification.ts
-   * (Sendchamp create/confirm). This method must not silently mark verified.
    */
   static async sendPhoneOtp(_userId: string, _phone: string): Promise<never> {
     throw new Error("Unable to send verification code. Please try again.");
   }
 
-  /**
-   * Authenticate user via Email + 6-digit PIN
-   */
-  static async loginUser(input: LoginInput, ipAddress?: string, userAgent?: string) {
+  static async loginUser(
+    input: LoginInput,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const email = normalizeEmail(input.email);
     const supabase = await createSupabaseServerClient();
     const admin = createSupabaseAdminClient();
 
     try {
-      const profile = await this.getProfileByEmail(email);
-      if (!profile) {
-        await this.logAuditEvent(null, "failed_login", ipAddress, userAgent, { email });
+      if (!supabase) {
+        throw new Error(
+          "Authentication service is unreachable. Please try again shortly.",
+        );
+      }
+
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password: authPasswordFromPin(input.pin),
+        });
+
+      if (signInError && /not confirmed|email not confirmed/i.test(signInError.message)) {
+        return { requiresEmailVerification: true, email };
+      }
+      if (signInError || !signInData.user) {
+        if (isBackendUnavailableError(signInError)) {
+          throw new Error(
+            "Authentication service is unreachable. Please try again shortly.",
+          );
+        }
+        await writeAuditLog({
+          action: "auth.login_failed",
+          resourceType: "auth",
+          ip: ipAddress,
+          metadata: auditMetadata({ email }),
+        });
         throw new Error("Invalid credentials. Please verify your email and PIN.");
       }
 
-      if (!profile.role) {
-        throw new Error("User profile role is missing. Please contact platform support.");
+      let appUser = await this.loadApplicationUserByAuthSubject(
+        signInData.user.id,
+      );
+      if (!appUser) {
+        appUser = await this.loadApplicationUserByEmail(email);
       }
 
-      const isPinValid = verifyStoredPin(input.pin, profile.pin_hash ?? "");
-      if (!isPinValid) {
-        await this.logAuditEvent(profile.id, "failed_login", ipAddress, userAgent);
-        throw new Error("Invalid credentials. Please verify your email and PIN.");
+      if (!appUser) {
+        const displayName =
+          (typeof signInData.user.user_metadata?.full_name === "string" &&
+            signInData.user.user_metadata.full_name) ||
+          email.split("@")[0] ||
+          "User";
+        const jwtRoles = signInData.user.app_metadata?.roles;
+        const signupRole: SignupProductRole =
+          Array.isArray(jwtRoles) && jwtRoles[0] === "employer"
+            ? "employer"
+            : "worker";
+        await provisionAuthenticatedUser({
+          authSubject: signInData.user.id,
+          email,
+          displayName,
+          emailVerified: Boolean(signInData.user.email_confirmed_at),
+          ip: ipAddress,
+          useAuthSubjectAsId: true,
+          skipWelcome: true,
+          participation: signupRoleToParticipation(signupRole),
+          roleKeys: signupRoleToRoleKeys(signupRole),
+        });
+        appUser = await this.loadApplicationUserByAuthSubject(
+          signInData.user.id,
+        );
       }
 
-      await admin.auth.admin.updateUserById(profile.id, {
-        app_metadata: { roles: [profile.role] },
-        user_metadata: { role: profile.role },
-      });
+      if (!appUser) {
+        throw new Error(
+          "Authentication service is unreachable. Please try again shortly.",
+        );
+      }
 
-      if (profile.status && profile.status !== "active") {
+      if (appUser.status !== "active") {
         throw new Error(
           `Your account is currently inactive or suspended. Please contact support on WhatsApp at ${APP_CONFIG.supportWhatsApp.display}.`,
         );
       }
 
-      if (!profile.email_verified) {
-        return { requiresEmailVerification: true, email: normalizeEmail(profile.email || email) };
-      }
-
-      if (!supabase) {
-        throw new Error("Authentication service is unreachable. Please try again shortly.");
-      }
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: authPasswordFromPin(input.pin),
-      });
-      if (signInError && /not confirmed|email not confirmed/i.test(signInError.message)) {
+      if (!appUser.emailVerifiedAt && !signInData.user.email_confirmed_at) {
+        await supabase.auth.signOut();
         return { requiresEmailVerification: true, email };
       }
-      if (signInError) {
-        if (isBackendUnavailableError(signInError)) {
-          throw new Error("Authentication service is unreachable. Please try again shortly.");
-        }
-        await this.logAuditEvent(profile.id, "failed_login", ipAddress, userAgent);
-        throw new Error("Invalid credentials. Please verify your email and PIN.");
-      }
 
-      const role = profile.role.toLowerCase();
+      await admin.auth.admin.updateUserById(signInData.user.id, {
+        app_metadata: {
+          platform_user_id: appUser.id,
+          roles: jwtAppMetadataRoles(appUser.productRole),
+          active_organization_id: appUser.activeOrganizationId,
+        },
+      });
+
+      const role = appUser.productRole;
       let redirectUrl = "";
-
       if (role === "admin" || role === "super_admin") {
         redirectUrl = "/lex/auth";
       } else if (role === "staff") {
         redirectUrl = "/lex/staff";
-      } else if (role === "employer" || role === "hirer") {
-        redirectUrl = profile.onboarding_completed ? "/hirer/dashboard" : "/onboarding";
-      } else if (role === "worker" || role === "earner") {
-        redirectUrl = profile.onboarding_completed ? "/earner/dashboard" : "/onboarding";
+      } else if (role === "employer") {
+        redirectUrl = appUser.onboardingCompleted
+          ? "/hirer/dashboard"
+          : "/onboarding";
+      } else if (role === "worker") {
+        redirectUrl = appUser.onboardingCompleted
+          ? "/earner/dashboard"
+          : "/onboarding";
       } else {
-        throw new Error(`Unrecognized user role '${role}' during login redirect calculation.`);
+        throw new Error(
+          `Unrecognized user role '${role}' during login redirect calculation.`,
+        );
       }
 
-      await this.logAuditEvent(profile.id, "login", ipAddress, userAgent);
-      return { success: true, profile, redirectUrl };
+      await writeAuditLog({
+        actorUserId: appUser.id,
+        action: "auth.login",
+        resourceType: "session",
+        resourceId: appUser.id,
+        ip: ipAddress,
+        metadata: auditMetadata({ userAgent: userAgent ?? "" }),
+      });
+      return {
+        success: true,
+        profile: toSessionProfile(appUser),
+        redirectUrl,
+      };
     } catch (err) {
       if (isBackendUnavailableError(err)) {
-        throw new Error("Authentication service is unreachable. Please try again shortly.");
+        throw new Error(
+          "Authentication service is unreachable. Please try again shortly.",
+        );
       }
-      throw userFacingError(err, "Invalid credentials. Please verify your email and PIN.");
+      throw userFacingError(
+        err,
+        "Invalid credentials. Please verify your email and PIN.",
+      );
     }
   }
 
-  static async requestPinReset(email: string, ipAddress?: string, userAgent?: string) {
+  static async requestPinReset(
+    email: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const normalized = normalizeEmail(email);
     if (!isValidEmail(normalized)) {
       throw new Error("Please enter a valid email address.");
     }
 
     try {
-      const profile = await this.getProfileByEmail(normalized);
-      if (profile?.id) {
+      const authUser = await findAuthUserByEmail(normalized);
+      const appUser = await this.loadApplicationUserByEmail(normalized);
+      if (authUser?.id) {
         try {
           await this.dispatchEmailOtp({
-            userId: profile.id,
+            userId: authUser.id,
             email: normalized,
-            fullName: profile.full_name || "User",
+            fullName: appUser?.displayName || "User",
             purpose: EMAIL_OTP_PURPOSE.pinReset,
           });
-          await this.logAuditEvent(profile.id, "pin_reset_requested", ipAddress, userAgent);
+          await writeAuditLog({
+            actorUserId: appUser?.id ?? null,
+            action: "auth.pin_reset_requested",
+            resourceType: "user",
+            resourceId: appUser?.id ?? authUser.id,
+            ip: ipAddress,
+            metadata: auditMetadata({ userAgent: userAgent ?? "" }),
+          });
         } catch (sendError) {
           logger.warn("PIN reset email dispatch failed", {
             span: "auth.pin_reset",
-            message: sendError instanceof Error ? sendError.message : "send_failed",
+            message:
+              sendError instanceof Error ? sendError.message : "send_failed",
           });
         }
       }
       return { success: true };
     } catch (err) {
       if (isBackendUnavailableError(err)) {
-        throw new Error("Authentication service is unreachable. Please try again shortly.");
+        throw new Error(
+          "Authentication service is unreachable. Please try again shortly.",
+        );
       }
       return { success: true };
     }
   }
 
-  static async resetPin(email: string, newPin: string, ipAddress?: string, userAgent?: string) {
+  static async resetPin(
+    email: string,
+    newPin: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const normalized = normalizeEmail(email);
     if (!/^\d{6}$/.test(newPin)) {
       throw new Error("PIN must consist of exactly 6 numeric digits.");
@@ -494,52 +593,122 @@ export class AuthService {
     try {
       const grant = await findPinResetGrant(normalized);
       if (!grant) {
-        throw new Error("No active PIN reset request found. Please request a new code.");
+        throw new Error(
+          "No active PIN reset request found. Please request a new code.",
+        );
       }
 
       const admin = createSupabaseAdminClient();
-      const newPinHash = formatStoredPin(newPin);
-      const profile = await this.getProfileByEmail(normalized);
-      if (!profile?.id) {
-        throw new Error("No active PIN reset request found. Please request a new code.");
+      const appUser = await this.loadApplicationUserByEmail(normalized);
+      const authUser =
+        (await findAuthUserByEmail(normalized)) ??
+        (appUser?.authSubject
+          ? { id: appUser.authSubject }
+          : null);
+      if (!authUser?.id) {
+        throw new Error(
+          "No active PIN reset request found. Please request a new code.",
+        );
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const profiles = admin.from("profiles") as any;
-      const { data: updated, error: updateError } = await profiles
-        .update({ pin_hash: newPinHash })
-        .eq("id", profile.id)
-        .select("id")
-        .maybeSingle();
-
-      if (updateError) {
-        throw new Error("PIN reset failed.");
-      }
-
-      if (!updated) {
-        const { data: updatedByUserId, error: byUserIdError } = await profiles
-          .update({ pin_hash: newPinHash })
-          .eq("user_id", profile.id)
-          .select("id")
-          .maybeSingle();
-        if (byUserIdError || !updatedByUserId) {
-          throw new Error("PIN reset failed.");
-        }
-      }
-
-      const { error: passwordError } = await admin.auth.admin.updateUserById(profile.id, {
-        password: authPasswordFromPin(newPin),
-      });
+      const { error: passwordError } = await admin.auth.admin.updateUserById(
+        authUser.id,
+        { password: authPasswordFromPin(newPin) },
+      );
       if (passwordError) {
         throw new Error("PIN reset failed.");
       }
 
-      await this.logAuditEvent(profile.id, "pin_reset_completed", ipAddress, userAgent);
+      await writeAuditLog({
+        actorUserId: appUser?.id ?? null,
+        action: "auth.pin_reset_completed",
+        resourceType: "user",
+        resourceId: appUser?.id ?? authUser.id,
+        ip: ipAddress,
+        metadata: auditMetadata({ userAgent: userAgent ?? "" }),
+      });
       await deleteEmailOtp(grant.id);
       return { success: true };
     } catch (err) {
       throw userFacingError(err, "PIN reset failed.");
     }
+  }
+
+  private static async loadApplicationUserByEmail(
+    email: string,
+  ): Promise<ApplicationUser | null> {
+    const user = await prisma.user.findUnique({
+      where: { email: normalizeEmail(email) },
+      include: {
+        profile: {
+          select: {
+            displayName: true,
+            countryCode: true,
+            addressJson: true,
+          },
+        },
+        roles: { include: { role: { select: { key: true } } } },
+      },
+    });
+    return user ? this.toApplicationUser(user) : null;
+  }
+
+  private static async loadApplicationUserByAuthSubject(
+    authSubject: string,
+  ): Promise<ApplicationUser | null> {
+    const user = await prisma.user.findFirst({
+      where: { OR: [{ authSubject }, { id: authSubject }] },
+      include: {
+        profile: {
+          select: {
+            displayName: true,
+            countryCode: true,
+            addressJson: true,
+          },
+        },
+        roles: { include: { role: { select: { key: true } } } },
+      },
+    });
+    return user ? this.toApplicationUser(user) : null;
+  }
+
+  private static toApplicationUser(user: {
+    id: string;
+    authSubject: string | null;
+    email: string | null;
+    emailVerifiedAt: Date | null;
+    status: string;
+    participation: "worker" | "client" | "both" | null;
+    activeOrganizationId: string | null;
+    profile: {
+      displayName: string;
+      countryCode: string | null;
+      addressJson: unknown;
+    } | null;
+    roles: { role: { key: string } }[];
+  }): ApplicationUser {
+    const roleKeys = user.roles.map((row) => row.role.key);
+    return {
+      id: user.id,
+      authSubject: user.authSubject,
+      email: user.email,
+      emailVerifiedAt: user.emailVerifiedAt,
+      status: user.status,
+      participation: user.participation,
+      displayName: user.profile?.displayName ?? null,
+      countryCode: user.profile?.countryCode ?? null,
+      addressJson: user.profile?.addressJson ?? null,
+      roleKeys,
+      productRole: productRoleFromRbac({
+        participation: user.participation,
+        roleKeys,
+      }),
+      onboardingCompleted: isOnboardingComplete({
+        countryCode: user.profile?.countryCode ?? null,
+        addressJson: user.profile?.addressJson ?? null,
+      }),
+      activeOrganizationId: user.activeOrganizationId,
+    };
   }
 
   private static async emitWelcomeAfterEmailVerification(params: {
@@ -563,7 +732,6 @@ export class AuthService {
         )?.organizationId;
       if (!organizationId) return;
 
-      const profile = await this.getProfileByEmail(params.email);
       const prismaProfile = await prisma.profile.findUnique({
         where: { userId: user.id },
         select: { displayName: true },
@@ -572,34 +740,12 @@ export class AuthService {
         userId: user.id,
         organizationId,
         email: params.email,
-        displayName: profile?.full_name || prismaProfile?.displayName || "there",
+        displayName: prismaProfile?.displayName || "there",
         channels: ["email", "in_app"],
         dispatchNow: true,
       });
     } catch {
       // Welcome mail must never fail email verification.
-    }
-  }
-
-  static async logAuditEvent(
-    userId: string | null,
-    action: string,
-    ipAddress?: string,
-    userAgent?: string,
-    metadata?: Record<string, unknown>,
-  ) {
-    try {
-      const supabaseAdmin = createSupabaseAdminClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabaseAdmin.from("audit_logs") as any).insert({
-        user_id: userId,
-        action,
-        ip_address: ipAddress || "127.0.0.1",
-        user_agent: userAgent || "",
-        metadata: metadata || {},
-      });
-    } catch {
-      // Audit must never block auth.
     }
   }
 
@@ -622,53 +768,6 @@ export class AuthService {
 
     if (!sent.success) {
       throw new Error(EMAIL_OTP_USER_MESSAGES.sendFailed);
-    }
-  }
-
-  private static async patchPinProfile(
-    admin: ReturnType<typeof createSupabaseAdminClient>,
-    params: {
-      userId: string;
-      fullName: string;
-      email: string;
-      role: "worker" | "employer";
-      pinHash: string;
-      emailVerified: boolean;
-      referralCode: string;
-      referrerId: string | null;
-    },
-  ) {
-    const now = new Date().toISOString();
-    const patch = {
-      full_name: params.fullName,
-      display_name: params.fullName,
-      email: params.email,
-      role: params.role,
-      pin_hash: params.pinHash,
-      email_verified: params.emailVerified,
-      phone_verified: false,
-      referral_code: params.referralCode,
-      referred_by: params.referrerId,
-      status: "active",
-      onboarding_completed: false,
-      first_login_completed: false,
-      updated_at: now,
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const profiles = admin.from("profiles") as any;
-    const { error } = await profiles.upsert(
-      {
-        id: params.userId,
-        user_id: params.userId,
-        ...patch,
-        created_at: now,
-      },
-      { onConflict: "id" },
-    );
-
-    if (error) {
-      throw new Error("Registration could not be completed. Please try again.");
     }
   }
 }

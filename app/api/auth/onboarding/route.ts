@@ -73,17 +73,7 @@ export async function GET() {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile, error } = await (supabase.from("profiles") as any)
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error || !profile?.role) {
-      return NextResponse.json({ error: "Profile could not be loaded." }, { status: 400 });
-    }
-
-    const role = profile.role === "employer" ? "employer" : "worker";
+    const role = await OnboardingService.getSessionRole(userId);
     return NextResponse.json({ success: true, data: { role } });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Profile could not be loaded.";

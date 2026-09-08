@@ -9,15 +9,8 @@ import {
   pauseCampaignAction,
   resumeCampaignAction,
 } from "@/features/campaigns/actions/campaign-actions";
+import { campaignStatusLabel } from "@/lib/workspace/marketplace-copy";
 import type { HirerCampaignRow, HirerWorkspace } from "@/lib/workspace/hirer-types";
-
-function statusLabel(status: string): string {
-  if (status === "active") return "Live";
-  if (status === "paused") return "Paused";
-  if (status === "completed") return "Completed";
-  if (status === "archived" || status === "cancelled") return "Archived";
-  return "Draft";
-}
 
 export function HirerOpportunitiesView({
   workspace,
@@ -28,9 +21,10 @@ export function HirerOpportunitiesView({
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<HirerCampaignRow[]>(workspace.campaigns);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = rows.filter((item) => {
-    const label = statusLabel(item.status);
+    const label = campaignStatusLabel(item.status);
     const matchesFilter = filter === "All" || label === filter;
     const q = search.toLowerCase();
     const matchesSearch =
@@ -40,12 +34,16 @@ export function HirerOpportunitiesView({
 
   async function toggle(item: HirerCampaignRow) {
     setBusyId(item.id);
+    setError(null);
     const result =
       item.status === "active"
         ? await pauseCampaignAction(item.id)
         : await resumeCampaignAction(item.id);
     setBusyId(null);
-    if (!result.ok) return;
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
     setRows((prev) =>
       prev.map((row) =>
         row.id === item.id ? { ...row, status: result.data.status } : row,
@@ -68,11 +66,12 @@ export function HirerOpportunitiesView({
 
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex gap-1 overflow-x-auto">
-            {["All", "Live", "Paused", "Completed", "Draft", "Archived"].map((tab) => (
+            {["All", "Active", "Pending review", "Paused", "Completed", "Draft", "Archived"].map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setFilter(tab)}
+                aria-pressed={filter === tab}
                 className={`h-9 px-3 rounded-xl text-xs font-bold ${
                   filter === tab
                     ? "border border-primary/25 bg-primary-subtle text-primary"
@@ -87,9 +86,12 @@ export function HirerOpportunitiesView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search campaigns"
+            aria-label="Search campaigns"
             className="h-9 px-3 rounded-xl border border-border text-xs"
           />
         </div>
+
+        {error ? <p className="text-xs text-danger" role="alert">{error}</p> : null}
 
         {filtered.length === 0 ? (
           <EmptyState
@@ -114,7 +116,7 @@ export function HirerOpportunitiesView({
                 </Link>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[10px] font-bold uppercase text-foreground">
-                    {statusLabel(item.status)}
+                    {campaignStatusLabel(item.status)}
                   </span>
                   {(item.status === "active" || item.status === "paused") && (
                     <button

@@ -1,3 +1,7 @@
+/**
+ * DEV-only auth trace helper. Guarded against production targeting.
+ * Not a production verification path.
+ */
 /* eslint-disable */
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";

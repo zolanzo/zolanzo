@@ -219,7 +219,11 @@ export async function loadHirerWorkspace(): Promise<HirerWorkspace | null> {
             assignment: {
               select: {
                 campaign: {
-                  select: { name: true, rewardPerUnitMinor: true },
+                  select: {
+                    publicId: true,
+                    name: true,
+                    rewardPerUnitMinor: true,
+                  },
                 },
               },
             },
@@ -331,6 +335,7 @@ export async function loadHirerWorkspace(): Promise<HirerWorkspace | null> {
     workerName: row.worker.profile?.displayName ?? "Worker",
     workerAvatarUrl: row.worker.profile?.avatarUrl ?? null,
     campaignName: row.assignment.campaign.name,
+    campaignPublicId: row.assignment.campaign.publicId,
     rewardLabel: formatNgnFromMinor(row.assignment.campaign.rewardPerUnitMinor),
   }));
 
@@ -384,5 +389,6 @@ export async function loadHirerWorkspace(): Promise<HirerWorkspace | null> {
     templates: templateRows,
     platformWorkerCount,
     loadState: { kind: "live" },
+    shellRole: "employer",
   };
 }

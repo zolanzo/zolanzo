@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -11,6 +11,8 @@ import { AuthHeader } from "@/components/auth/auth-header";
 import { PINInput } from "@/components/auth/pin-input";
 import { ValidationMessage } from "@/components/auth/validation-message";
 
+const subscribeToNothing = () => () => undefined;
+
 export default function SignupPage() {
   const router = useRouter();
   const [role, setRole] = useState<"worker" | "employer">("worker");
@@ -20,19 +22,22 @@ export default function SignupPage() {
   const [confirmPin, setConfirmPin] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
-
-  const [num1, setNum1] = useState<number | null>(null);
-  const [num2, setNum2] = useState<number | null>(null);
+  const [challenge] = useState(() => ({
+    num1: Math.floor(Math.random() * 8) + 1,
+    num2: Math.floor(Math.random() * 8) + 1,
+  }));
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+  const num1 = mounted ? challenge.num1 : null;
+  const num2 = mounted ? challenge.num2 : null;
   const [mathAnswer, setMathAnswer] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
-
-  useEffect(() => {
-    setNum1(Math.floor(Math.random() * 8) + 1);
-    setNum2(Math.floor(Math.random() * 8) + 1);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

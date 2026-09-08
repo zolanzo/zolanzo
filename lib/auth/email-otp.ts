@@ -1,16 +1,22 @@
 import "server-only";
 
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { generateOtpCode, hashOtpCode, verifyOtpCode } from "@/lib/otp/generator";
-import { normalizeEmail } from "@/lib/auth/email";
-import { withKeyedLock } from "@/lib/auth/keyed-lock";
+import { prisma } from "@/lib/prisma/client";
 import {
-  EMAIL_OTP_MAX_ATTEMPTS,
   EMAIL_OTP_PURPOSE,
-  EMAIL_OTP_TTL_MS,
   EMAIL_OTP_USER_MESSAGES,
   type EmailOtpPurpose,
 } from "@/lib/auth/email-otp-constants";
+import {
+  consumeEmailOtpWithStore,
+  deleteEmailOtpWithStore,
+  findMatchingConsumedEmailOtpWithStore,
+  findPinResetGrantWithStore,
+  issueEmailOtpWithStore,
+  type ConsumeEmailOtpFailure,
+  type ConsumeEmailOtpResult,
+  type EmailOtpStore,
+  type EmailVerificationRow,
+} from "@/lib/auth/email-otp-engine";
 
 export {
   EMAIL_OTP_MAX_ATTEMPTS,
@@ -21,99 +27,156 @@ export {
   type EmailOtpPurpose,
 } from "@/lib/auth/email-otp-constants";
 
-export type EmailVerificationRow = {
-  id: string;
-  user_id: string;
-  email: string;
-  code_hash: string;
-  expires_at: string;
-  attempts: number;
-  verified_at: string | null;
-  consumed_at: string | null;
-  purpose: string | null;
-  created_at: string;
+export type {
+  ConsumeEmailOtpFailure,
+  ConsumeEmailOtpResult,
+  EmailVerificationRow,
 };
 
-export type ConsumeEmailOtpFailure =
-  | "no_active"
-  | "expired"
-  | "invalid"
-  | "already_used"
-  | "already_verified"
-  | "too_many"
-  | "need_new_code";
-
-export type ConsumeEmailOtpResult =
-  | { ok: true; id: string; userId: string }
-  | { ok: false; reason: ConsumeEmailOtpFailure };
-
-function adminTable() {
-  const admin = createSupabaseAdminClient();
-  // Sidecar table — not in generated Database types.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (admin.from("email_verifications") as any);
+function toRow(record: {
+  id: string;
+  userId: string;
+  email: string;
+  codeHash: string;
+  expiresAt: Date;
+  attempts: number;
+  verifiedAt: Date | null;
+  consumedAt: Date | null;
+  purpose: string;
+  createdAt: Date;
+}): EmailVerificationRow {
+  return {
+    id: record.id,
+    user_id: record.userId,
+    email: record.email,
+    code_hash: record.codeHash,
+    expires_at: record.expiresAt.toISOString(),
+    attempts: record.attempts,
+    verified_at: record.verifiedAt?.toISOString() ?? null,
+    consumed_at: record.consumedAt?.toISOString() ?? null,
+    purpose: record.purpose,
+    created_at: record.createdAt.toISOString(),
+  };
 }
 
-function isUniqueViolation(error: { code?: string; message?: string } | null | undefined): boolean {
-  const message = error?.message ?? "";
-  return error?.code === "23505" || /duplicate|unique/i.test(message);
+function isUniqueViolation(error: unknown): boolean {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: string }).code === "P2002",
+  );
 }
+
+const prismaEmailOtpStore: EmailOtpStore = {
+  async invalidateActive(email, purpose) {
+    await prisma.emailVerification.updateMany({
+      where: { email, purpose, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+  },
+
+  async insertChallenge(params) {
+    try {
+      const created = await prisma.emailVerification.create({
+        data: {
+          userId: params.userId,
+          email: params.email,
+          purpose: params.purpose,
+          codeHash: params.codeHash,
+          expiresAt: params.expiresAt,
+          attempts: 0,
+        },
+        select: { id: true },
+      });
+      return created.id;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw Object.assign(new Error(EMAIL_OTP_USER_MESSAGES.generic), {
+          code: "P2002",
+          cause: error,
+        });
+      }
+      throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
+    }
+  },
+
+  async supersedeOtherActive(email, purpose, keepId) {
+    await prisma.emailVerification.updateMany({
+      where: {
+        email,
+        purpose,
+        consumedAt: null,
+        NOT: { id: keepId },
+      },
+      data: { consumedAt: new Date() },
+    });
+  },
+
+  async loadLatest(email, purpose, unconsumedOnly) {
+    const record = await prisma.emailVerification.findFirst({
+      where: unconsumedOnly
+        ? { email, purpose, consumedAt: null }
+        : { email, purpose },
+      orderBy: { createdAt: "desc" },
+    });
+    return record ? toRow(record) : null;
+  },
+
+  async listConsumed(email, purpose) {
+    const rows = await prisma.emailVerification.findMany({
+      where: { email, purpose, consumedAt: { not: null } },
+      orderBy: { consumedAt: "desc" },
+      take: 10,
+    });
+    return rows.map(toRow);
+  },
+
+  async incrementAttempts(id, attempts) {
+    await prisma.emailVerification.update({
+      where: { id },
+      data: { attempts },
+    });
+  },
+
+  async markConsumed(id, at, verified) {
+    const updated = await prisma.emailVerification.updateMany({
+      where: { id, consumedAt: null },
+      data: {
+        consumedAt: at,
+        ...(verified ? { verifiedAt: at } : {}),
+      },
+    });
+    if (updated.count !== 1) return null;
+    const row = await prisma.emailVerification.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    });
+    return row ? { id: row.id, userId: row.userId } : null;
+  },
+
+  async findLatestConsumedPinReset(email) {
+    const record = await prisma.emailVerification.findFirst({
+      where: {
+        email,
+        purpose: EMAIL_OTP_PURPOSE.pinReset,
+        consumedAt: { not: null },
+      },
+      orderBy: { consumedAt: "desc" },
+    });
+    return record ? toRow(record) : null;
+  },
+
+  async deleteById(id) {
+    await prisma.emailVerification.delete({ where: { id } }).catch(() => undefined);
+  },
+};
 
 export async function invalidateActiveEmailOtps(
   email: string,
   purpose: EmailOtpPurpose,
 ): Promise<void> {
-  const normalized = normalizeEmail(email);
-  const { error } = await adminTable()
-    .update({ consumed_at: new Date().toISOString() })
-    .eq("email", normalized)
-    .eq("purpose", purpose)
-    .is("consumed_at", null);
-
-  if (error) {
-    throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-  }
-}
-
-async function insertChallenge(params: {
-  userId: string;
-  email: string;
-  purpose: EmailOtpPurpose;
-  codeHash: string;
-}): Promise<string> {
-  const { data, error } = await adminTable()
-    .insert({
-      user_id: params.userId,
-      email: params.email,
-      code_hash: params.codeHash,
-      expires_at: new Date(Date.now() + EMAIL_OTP_TTL_MS).toISOString(),
-      purpose: params.purpose,
-      attempts: 0,
-    })
-    .select("id")
-    .maybeSingle();
-
-  if (error || !data?.id) {
-    throw Object.assign(new Error(EMAIL_OTP_USER_MESSAGES.generic), { cause: error });
-  }
-  return data.id as string;
-}
-
-async function supersedeOtherActive(
-  email: string,
-  purpose: EmailOtpPurpose,
-  keepId: string,
-): Promise<void> {
-  const { error } = await adminTable()
-    .update({ consumed_at: new Date().toISOString() })
-    .eq("email", email)
-    .eq("purpose", purpose)
-    .is("consumed_at", null)
-    .neq("id", keepId);
-
-  if (error) {
-    throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-  }
+  await prismaEmailOtpStore.invalidateActive(email, purpose);
 }
 
 export async function issueEmailOtp(params: {
@@ -121,62 +184,7 @@ export async function issueEmailOtp(params: {
   email: string;
   purpose: EmailOtpPurpose;
 }): Promise<string> {
-  const email = normalizeEmail(params.email);
-
-  return withKeyedLock(`otp:${email}:${params.purpose}`, async () => {
-    await invalidateActiveEmailOtps(email, params.purpose);
-
-    const otp = generateOtpCode(6);
-    const codeHash = hashOtpCode(otp);
-
-    let challengeId: string;
-    try {
-      challengeId = await insertChallenge({
-        userId: params.userId,
-        email,
-        purpose: params.purpose,
-        codeHash,
-      });
-    } catch (error) {
-      const cause = error instanceof Error ? (error as Error & { cause?: { code?: string; message?: string } }).cause : null;
-      if (!isUniqueViolation(cause)) {
-        throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-      }
-      await invalidateActiveEmailOtps(email, params.purpose);
-      challengeId = await insertChallenge({
-        userId: params.userId,
-        email,
-        purpose: params.purpose,
-        codeHash,
-      });
-    }
-
-    await supersedeOtherActive(email, params.purpose, challengeId);
-    return otp;
-  });
-}
-
-async function loadLatestChallenge(
-  email: string,
-  purpose: EmailOtpPurpose,
-  unconsumedOnly: boolean,
-): Promise<EmailVerificationRow | null> {
-  let query = adminTable()
-    .select("*")
-    .eq("email", email)
-    .eq("purpose", purpose)
-    .order("created_at", { ascending: false })
-    .limit(1);
-
-  if (unconsumedOnly) {
-    query = query.is("consumed_at", null);
-  }
-
-  const { data, error } = await query.maybeSingle();
-  if (error) {
-    throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-  }
-  return (data as EmailVerificationRow | null) ?? null;
+  return issueEmailOtpWithStore(prismaEmailOtpStore, params);
 }
 
 export async function findMatchingConsumedEmailOtp(params: {
@@ -184,33 +192,7 @@ export async function findMatchingConsumedEmailOtp(params: {
   code: string;
   purpose: EmailOtpPurpose;
 }): Promise<EmailVerificationRow | null> {
-  const email = normalizeEmail(params.email);
-  const { data, error } = await adminTable()
-    .select("*")
-    .eq("email", email)
-    .eq("purpose", params.purpose)
-    .not("consumed_at", "is", null)
-    .order("consumed_at", { ascending: false })
-    .limit(10);
-
-  if (error || !Array.isArray(data)) {
-    return null;
-  }
-  const match = data.find(
-    (row: EmailVerificationRow) =>
-      Boolean(row.code_hash) && verifyOtpCode(params.code, row.code_hash),
-  );
-  return (match as EmailVerificationRow | undefined) ?? null;
-}
-
-async function matchesConsumedCode(
-  email: string,
-  purpose: EmailOtpPurpose,
-  code: string,
-): Promise<boolean> {
-  return Boolean(
-    await findMatchingConsumedEmailOtp({ email, code, purpose }),
-  );
+  return findMatchingConsumedEmailOtpWithStore(prismaEmailOtpStore, params);
 }
 
 export async function consumeEmailOtp(params: {
@@ -218,92 +200,15 @@ export async function consumeEmailOtp(params: {
   code: string;
   purpose: EmailOtpPurpose;
 }): Promise<ConsumeEmailOtpResult> {
-  const email = normalizeEmail(params.email);
-  const code = String(params.code ?? "").replace(/\D/g, "").slice(0, 6);
-
-  const active = await loadLatestChallenge(email, params.purpose, true);
-
-  if (!active) {
-    if (await matchesConsumedCode(email, params.purpose, code)) {
-      return { ok: false, reason: "already_used" };
-    }
-    const latest = await loadLatestChallenge(email, params.purpose, false);
-    if (latest) {
-      return { ok: false, reason: "need_new_code" };
-    }
-    return { ok: false, reason: "no_active" };
-  }
-
-  if (new Date(active.expires_at).getTime() <= Date.now()) {
-    return { ok: false, reason: "expired" };
-  }
-
-  if ((active.attempts ?? 0) >= EMAIL_OTP_MAX_ATTEMPTS) {
-    await adminTable()
-      .update({ consumed_at: new Date().toISOString() })
-      .eq("id", active.id)
-      .is("consumed_at", null);
-    return { ok: false, reason: "too_many" };
-  }
-
-  if (!verifyOtpCode(code, active.code_hash)) {
-    if (await matchesConsumedCode(email, params.purpose, code)) {
-      return { ok: false, reason: "already_used" };
-    }
-    await adminTable()
-      .update({ attempts: (active.attempts ?? 0) + 1 })
-      .eq("id", active.id);
-    return { ok: false, reason: "invalid" };
-  }
-
-  const consumedAt = new Date().toISOString();
-  const { data: consumed, error } = await adminTable()
-    .update({
-      consumed_at: consumedAt,
-      verified_at: consumedAt,
-    })
-    .eq("id", active.id)
-    .is("consumed_at", null)
-    .select("id, user_id")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-  }
-
-  if (!consumed) {
-    return { ok: false, reason: "already_used" };
-  }
-
-  return {
-    ok: true,
-    id: consumed.id as string,
-    userId: consumed.user_id as string,
-  };
+  return consumeEmailOtpWithStore(prismaEmailOtpStore, params);
 }
 
-export async function findPinResetGrant(email: string): Promise<EmailVerificationRow | null> {
-  const normalized = normalizeEmail(email);
-  const { data, error } = await adminTable()
-    .select("*")
-    .eq("email", normalized)
-    .eq("purpose", EMAIL_OTP_PURPOSE.pinReset)
-    .not("consumed_at", "is", null)
-    .order("consumed_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(EMAIL_OTP_USER_MESSAGES.generic);
-  }
-
-  const row = (data as EmailVerificationRow | null) ?? null;
-  if (!row?.consumed_at) return null;
-  const consumedAt = new Date(row.consumed_at).getTime();
-  if (Date.now() - consumedAt > EMAIL_OTP_TTL_MS) return null;
-  return row;
+export async function findPinResetGrant(
+  email: string,
+): Promise<EmailVerificationRow | null> {
+  return findPinResetGrantWithStore(prismaEmailOtpStore, email);
 }
 
 export async function deleteEmailOtp(id: string): Promise<void> {
-  await adminTable().delete().eq("id", id);
+  await deleteEmailOtpWithStore(prismaEmailOtpStore, id);
 }

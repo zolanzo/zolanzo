@@ -43,6 +43,7 @@ export type HirerReviewRow = {
   workerName: string;
   workerAvatarUrl: string | null;
   campaignName: string;
+  campaignPublicId: string;
   rewardLabel: string;
 };
 
@@ -102,4 +103,5 @@ export type HirerWorkspace = {
   templates: HirerTemplateOption[];
   platformWorkerCount: number;
   loadState: DataBoundary;
+  shellRole?: string | null;
 };

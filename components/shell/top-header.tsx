@@ -69,7 +69,7 @@ export function TopHeader({
   return (
     <header className="sticky top-0 z-30 flex h-12 select-none items-center justify-end border-b border-border bg-topbar px-2 text-foreground sm:px-6">
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2" ref={menusRef}>
-        <ThemeModeControl variant="compact" className="hidden md:block" />
+        <ThemeModeControl variant="compact" />
         {walletHref ? (
           balanceLabel ? (
             <Link
@@ -133,7 +133,11 @@ export function TopHeader({
             </span>
           </button>
           {profileOpen ? (
-            <ProfileDropdown userName={userName} onClose={() => setProfileOpen(false)} />
+            <ProfileDropdown
+              userName={userName}
+              userRole={userRole}
+              onClose={() => setProfileOpen(false)}
+            />
           ) : null}
         </div>
       </div>

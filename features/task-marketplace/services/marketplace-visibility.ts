@@ -15,3 +15,27 @@ export function isMarketplaceVisibleCampaign(params: {
     params.visibility,
   );
 }
+
+export function isOpportunityStartable(params: {
+  instanceStatus: string;
+  campaignStatus: string;
+  viewerCanContinue?: boolean;
+}): boolean {
+  if (params.viewerCanContinue) return true;
+  return (
+    params.instanceStatus === "available" && params.campaignStatus === "active"
+  );
+}
+
+/** Detail pages may show claimed inventory honestly; unpublished campaigns stay hidden. */
+export function canViewWorkOpportunity(params: {
+  campaignStatus: string;
+  campaignVisibility: string;
+  viewerCanContinue?: boolean;
+}): boolean {
+  if (params.viewerCanContinue) return true;
+  return isMarketplaceVisibleCampaign({
+    status: params.campaignStatus,
+    visibility: params.campaignVisibility,
+  });
+}

@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest";
 import { evaluateWorkerEligibility } from "@/features/task-marketplace/services/eligibility-evaluate";
 import { evaluateClaimPolicies } from "@/features/task-marketplace/services/claim-policies";
 import { opportunityCategoryLabel } from "@/features/task-marketplace/services/opportunity-labels";
-import { isMarketplaceVisibleCampaign } from "@/features/task-marketplace/services/marketplace-visibility";
+import {
+  canViewWorkOpportunity,
+  isMarketplaceVisibleCampaign,
+  isOpportunityStartable,
+} from "@/features/task-marketplace/services/marketplace-visibility";
+import {
+  browseMarketplaceActionSchema,
+  marketplaceInstanceActionSchema,
+} from "@/features/task-marketplace/validators";
 import {
   DEFAULT_RESERVATION_TIMEOUT_SECONDS,
   validateClaimPolicyRules,
@@ -225,6 +233,108 @@ describe("marketplace visibility", () => {
     expect(
       isMarketplaceVisibleCampaign({ status: "draft", visibility: "public" }),
     ).toBe(false);
+    expect(
+      isMarketplaceVisibleCampaign({ status: "paused", visibility: "platform" }),
+    ).toBe(false);
+    expect(
+      isMarketplaceVisibleCampaign({
+        status: "archived",
+        visibility: "platform",
+      }),
+    ).toBe(false);
+  });
+
+  it("does not treat closed inventory as startable unless the viewer already owns it", () => {
+    expect(
+      isOpportunityStartable({
+        instanceStatus: "available",
+        campaignStatus: "active",
+      }),
+    ).toBe(true);
+    expect(
+      isOpportunityStartable({
+        instanceStatus: "claimed",
+        campaignStatus: "active",
+      }),
+    ).toBe(false);
+    expect(
+      isOpportunityStartable({
+        instanceStatus: "available",
+        campaignStatus: "paused",
+      }),
+    ).toBe(false);
+    expect(
+      isOpportunityStartable({
+        instanceStatus: "claimed",
+        campaignStatus: "active",
+        viewerCanContinue: true,
+      }),
+    ).toBe(true);
+    expect(
+      isOpportunityStartable({
+        instanceStatus: "available",
+        campaignStatus: "archived",
+      }),
+    ).toBe(false);
+  });
+
+  it("hides unpublished campaigns from discovery unless the viewer already owns the assignment", () => {
+    expect(
+      canViewWorkOpportunity({
+        campaignStatus: "active",
+        campaignVisibility: "platform",
+      }),
+    ).toBe(true);
+    expect(
+      canViewWorkOpportunity({
+        campaignStatus: "draft",
+        campaignVisibility: "platform",
+      }),
+    ).toBe(false);
+    expect(
+      canViewWorkOpportunity({
+        campaignStatus: "active",
+        campaignVisibility: "organization",
+      }),
+    ).toBe(false);
+    expect(
+      canViewWorkOpportunity({
+        campaignStatus: "paused",
+        campaignVisibility: "platform",
+        viewerCanContinue: true,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("marketplace action identity binding", () => {
+  it("ignores a request-supplied worker context on browse", () => {
+    const parsed = browseMarketplaceActionSchema.parse({
+      query: "follow",
+      worker: {
+        userId: "attacker",
+        countryCode: "US",
+        languages: ["en"],
+        skills: [],
+        platforms: [],
+        devices: [],
+        trustScore: 100,
+        approvalRate: 1,
+        completedTasks: 99,
+        organizationIds: ["org_other"],
+      },
+    });
+    expect(parsed.query).toBe("follow");
+    expect("worker" in parsed).toBe(false);
+  });
+
+  it("does not accept workerUserId on claim/reserve action input", () => {
+    const parsed = marketplaceInstanceActionSchema.parse({
+      instancePublicId: "TSK-1",
+      workerUserId: "attacker",
+      worker: { userId: "attacker" },
+    });
+    expect(parsed).toEqual({ instancePublicId: "TSK-1" });
   });
 });
 

@@ -53,7 +53,9 @@ function LoginForm() {
       }
 
       if (data.data?.requiresEmailVerification) {
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        router.push(
+          `/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`,
+        );
         return;
       }
 

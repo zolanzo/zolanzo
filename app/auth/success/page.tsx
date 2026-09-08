@@ -21,7 +21,9 @@ function AuthSuccessContent() {
     title = "Account Created!";
     message = "Your ZOLANZO account has been created. Please check your email to complete verification.";
     buttonLabel = "Verify Email";
-    buttonHref = "/verify-email";
+    buttonHref = email
+      ? `/verify-email?email=${encodeURIComponent(email)}`
+      : "/verify-email";
   } else if (type === "pin-updated") {
     title = "PIN Updated!";
     message = "Your security PIN has been updated successfully. Use your new 6-digit PIN for future log-ins.";

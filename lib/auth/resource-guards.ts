@@ -5,6 +5,11 @@
 
 import { AppError } from "@/lib/api/response";
 import type { SessionUser } from "@/lib/auth/session";
+import {
+  ORG_ROLES,
+  orgRoleHasPermission,
+  type OrgRole,
+} from "@/constants/org-roles";
 
 export function assertSameUser(
   resourceUserId: string,
@@ -53,6 +58,52 @@ export function assertCampaignAccess(params: {
     return;
   }
   throw new AppError("FORBIDDEN", "Cannot access this campaign", 403);
+}
+
+function isStaffReviewer(
+  user: Pick<SessionUser, "platformRoles">,
+): boolean {
+  return user.platformRoles.some((r) =>
+    ["admin", "super_admin", "operations", "moderator", "reviewer"].includes(r),
+  );
+}
+
+function membershipOrgRole(
+  user: Pick<SessionUser, "memberships">,
+  organizationId: string,
+): OrgRole | null {
+  const membership = user.memberships.find(
+    (m) => m.organizationId === organizationId && m.status === "active",
+  );
+  if (!membership) return null;
+  return (ORG_ROLES as readonly string[]).includes(membership.orgRole)
+    ? (membership.orgRole as OrgRole)
+    : null;
+}
+
+/** Hirer may review only campaigns they own or orgs they can review in. */
+export function assertHirerReviewAccess(params: {
+  user: Pick<SessionUser, "id" | "memberships" | "platformRoles">;
+  organizationId: string;
+  clientUserId: string;
+}): void {
+  const { user, organizationId, clientUserId } = params;
+  assertCampaignAccess({
+    user,
+    organizationId,
+    clientUserId,
+    allowStaff: true,
+  });
+  if (clientUserId === user.id) return;
+  if (isStaffReviewer(user)) return;
+  const orgRole = membershipOrgRole(user, organizationId);
+  if (!orgRole || !orgRoleHasPermission(orgRole, "org.submissions.review")) {
+    throw new AppError(
+      "FORBIDDEN",
+      "You cannot review submissions for this campaign",
+      403,
+    );
+  }
 }
 
 export function assertPaymentIntentAccess(params: {

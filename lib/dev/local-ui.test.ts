@@ -6,6 +6,6 @@ describe("isLocalUiPreview", () => {
     expect(isLocalUiPreview("development")).toBe(true);
     expect(isLocalUiPreview("production")).toBe(false);
     expect(isLocalUiPreview("test")).toBe(false);
-    expect(isLocalUiPreview(undefined)).toBe(false);
+    expect(isLocalUiPreview()).toBe(process.env.NODE_ENV === "development");
   });
 });

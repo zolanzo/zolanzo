@@ -74,6 +74,7 @@ describe("campaign lifecycle", () => {
     expect(canTransitionCampaign("pending_review", "active")).toBe(true);
     expect(canTransitionCampaign("draft", "active")).toBe(true);
     expect(canTransitionCampaign("archived", "active")).toBe(false);
+    expect(canTransitionCampaign("paused", "active")).toBe(true);
     expect(isEditableCampaignStatus("draft")).toBe(true);
     expect(isEditableCampaignStatus("active")).toBe(false);
   });

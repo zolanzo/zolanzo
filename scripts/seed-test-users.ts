@@ -1,10 +1,23 @@
 /* eslint-disable */
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { formatStoredPin, verifyStoredPin } from "../lib/security/hash";
+import { assertDevelopmentSeedTarget } from "../lib/dev/assert-dev-seed-target";
+import { authPasswordFromPin } from "../lib/auth/pin-credentials";
+import { getRoleHomePath } from "../lib/auth/proxy-access";
+import {
+  buildOnboardingAddressJson,
+  jwtAppMetadataRoles,
+  productRoleFromRbac,
+  signupRoleToParticipation,
+  signupRoleToRoleKeys,
+  type ProductRole,
+  type SignupProductRole,
+} from "../lib/auth/product-identity";
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });
+
+assertDevelopmentSeedTarget();
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -239,9 +252,14 @@ async function seedTestUsers() {
   }
 
   for (const account of TEST_ACCOUNTS) {
-    const password = `${account.pin}_ZOLANZO_SECURE_KEY`;
-    const pinHash = formatStoredPin(account.pin);
+    const password = authPasswordFromPin(account.pin);
     const now = new Date().toISOString();
+    const jwtRole: ProductRole =
+      account.role === "admin" ? "super_admin" : account.role;
+    const participation =
+      account.role === "admin"
+        ? "worker"
+        : signupRoleToParticipation(account.role as SignupProductRole);
 
     // 1. Check if user exists in Supabase Auth
     const { data: userList, error: listError } = await supabase.auth.admin.listUsers();
@@ -259,9 +277,9 @@ async function seedTestUsers() {
         phone_confirm: true,
         app_metadata: {
           ...(existingAuthUser.app_metadata ?? {}),
-          roles: [account.role],
+          roles: jwtAppMetadataRoles(jwtRole),
         },
-        user_metadata: { full_name: account.fullName, role: account.role },
+        user_metadata: { full_name: account.fullName },
       });
     } else {
       const { data: newAuthUser, error: createError } = await supabase.auth.admin.createUser({
@@ -269,8 +287,8 @@ async function seedTestUsers() {
         password,
         email_confirm: true,
         phone_confirm: true,
-        app_metadata: { roles: [account.role] },
-        user_metadata: { full_name: account.fullName, role: account.role },
+        app_metadata: { roles: jwtAppMetadataRoles(jwtRole) },
+        user_metadata: { full_name: account.fullName },
       });
 
       if (createError || !newAuthUser.user) {
@@ -289,42 +307,31 @@ async function seedTestUsers() {
       status: "active",
       email_verified_at: now,
       phone_verified_at: now,
+      participation,
       updated_at: now,
     };
-    if (account.role === "employer") userRow.participation = "client";
-    if (account.role === "worker") userRow.participation = "worker";
     await (supabase.from("users") as any).upsert(userRow, { onConflict: "id" });
 
-    // 3. Upsert Postgres `profiles` table record
+    // 3. Upsert Prisma profiles (display name, handle, onboarding address)
+    const addressJson = buildOnboardingAddressJson({
+      state: account.state,
+      city: account.city,
+      companyName: account.companyName,
+      industry: account.industry,
+      website: account.website,
+    });
     const profilePayload: Record<string, unknown> = {
       id: userId,
       user_id: userId,
       display_name: account.fullName,
       handle: account.handle,
-      full_name: account.fullName,
-      email: account.email,
-      role: account.role,
-      pin_hash: pinHash,
-      email_verified: true,
-      phone_verified: true,
-      first_login_completed: true,
-      onboarding_completed: true,
-      profile_completion: 100,
-      status: "active",
-      referral_code: `ZOL${Math.floor(10000 + Math.random() * 90000)}`,
-      created_at: now,
+      country_code: account.country ?? "Nigeria",
+      address_json: addressJson,
       updated_at: now,
     };
 
-    if (account.country) profilePayload.country = account.country;
-    if (account.state) profilePayload.state = account.state;
-    if (account.city) profilePayload.city = account.city;
-    if (account.companyName) profilePayload.company_name = account.companyName;
-    if (account.industry) profilePayload.industry = account.industry;
-    if (account.website) profilePayload.website = account.website;
-
     const { error: profileError } = await (supabase.from("profiles") as any).upsert(profilePayload, {
-      onConflict: "id",
+      onConflict: "user_id",
     });
 
     if (profileError) {
@@ -339,9 +346,7 @@ async function seedTestUsers() {
     const roleKeys =
       account.role === "admin"
         ? ["super_admin", "admin"]
-        : account.role === "employer"
-          ? ["client"]
-          : ["worker"];
+        : signupRoleToRoleKeys(account.role);
 
     for (const key of roleKeys) {
       const { data: roleRows, error: roleLookupError } = await (supabase.from("roles") as any).select("id").eq("key", key).limit(1);
@@ -374,38 +379,70 @@ async function seedTestUsers() {
 
   // 6. Automatic Authentication Verification
   for (const account of TEST_ACCOUNTS) {
-    // Fetch profile from database
-    const { data: profile, error } = await (supabase.from("profiles") as any)
-      .select("*")
+    const { data: user, error } = await (supabase.from("users") as any)
+      .select("id, email, participation, email_verified_at, status")
       .eq("email", account.email)
       .single();
 
-    if (error || !profile) {
-      throw new Error(`Verification failed: Profile not found for ${account.email}`);
+    if (error || !user) {
+      throw new Error(`Verification failed: User not found for ${account.email}`);
     }
 
-    const isPinValid = verifyStoredPin(account.pin, profile.pin_hash);
-    if (!isPinValid) {
-      throw new Error(`Verification failed: Invalid PIN hash for ${account.email}`);
-    }
-
-    if (!profile.email_verified) {
+    if (!user.email_verified_at) {
       throw new Error(`Verification failed: Email not verified for ${account.email}`);
     }
 
-    if (!profile.phone_verified) {
-      throw new Error(`Verification failed: Phone not verified for ${account.email}`);
+    const { data: profile, error: profileError } = await (supabase.from("profiles") as any)
+      .select("user_id, country_code, address_json")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error(`Verification failed: Profile not found for ${account.email}`);
     }
 
-    if (!profile.onboarding_completed) {
+    const city =
+      profile.address_json && typeof profile.address_json === "object"
+        ? String((profile.address_json as { city?: string }).city ?? "")
+        : "";
+    if (!profile.country_code || !city) {
       throw new Error(`Verification failed: Onboarding not completed for ${account.email}`);
     }
 
-    let redirectTarget = "/earner/dashboard";
-    if (profile.role === "admin" || profile.role === "super_admin") {
-      redirectTarget = "/lex/auth";
-    } else if (profile.role === "employer") {
-      redirectTarget = "/hirer/dashboard";
+    const { data: userRoleRows, error: rolesError } = await (supabase.from("user_roles") as any)
+      .select("role_id")
+      .eq("user_id", user.id);
+    if (rolesError) {
+      throw new Error(`Verification failed: Could not load roles for ${account.email}`);
+    }
+    const { data: catalog, error: catalogError } = await (supabase.from("roles") as any)
+      .select("id, key");
+    if (catalogError) {
+      throw new Error(`Verification failed: Could not load role catalog`);
+    }
+    const keyById = new Map(
+      (catalog ?? []).map((row: { id: string; key: string }) => [row.id, row.key]),
+    );
+    const roleKeys = (userRoleRows ?? [])
+      .map((row: { role_id: string }) => keyById.get(row.role_id))
+      .filter((key: string | undefined): key is string => Boolean(key));
+
+    const productRole = productRoleFromRbac({
+      participation: user.participation,
+      roleKeys,
+    });
+    const redirectTarget = getRoleHomePath(productRole);
+
+    const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({
+      email: account.email,
+      password: authPasswordFromPin(account.pin),
+    });
+    if (signInError || !signIn.user) {
+      throw new Error(`Verification failed: Auth PIN sign-in failed for ${account.email}`);
+    }
+    const jwtRoles = signIn.user.app_metadata?.roles;
+    if (!Array.isArray(jwtRoles) || jwtRoles[0] !== productRole) {
+      throw new Error(`Verification failed: JWT app_metadata.roles mismatch for ${account.email}`);
     }
 
     if (redirectTarget !== account.expectedRedirect) {

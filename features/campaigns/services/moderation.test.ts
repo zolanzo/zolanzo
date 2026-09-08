@@ -3,6 +3,7 @@ import {
   canModerateMarketplaceCampaign,
   canPublishAfterModeration,
   canRejectCampaignReview,
+  resolveCampaignClientUserId,
 } from "@/features/campaigns/services/moderation";
 import { can } from "@/lib/rbac/access";
 import type { ActorContext } from "@/types/domain";
@@ -48,6 +49,23 @@ describe("campaign moderation rules", () => {
     expect(canModerateMarketplaceCampaign(["operations"])).toBe(true);
     expect(canModerateMarketplaceCampaign(["moderator"])).toBe(true);
     expect(canModerateMarketplaceCampaign(["super_admin"])).toBe(true);
+  });
+
+  it("binds clientUserId to the authenticated hirer, not request input", () => {
+    expect(
+      resolveCampaignClientUserId({
+        actorUserId: "hirer_a",
+        platformRoles: ["client"],
+        requestedClientUserId: "victim_b",
+      }),
+    ).toBe("hirer_a");
+    expect(
+      resolveCampaignClientUserId({
+        actorUserId: "staff_ops",
+        platformRoles: ["operations"],
+        requestedClientUserId: "client_c",
+      }),
+    ).toBe("client_c");
   });
 });
 

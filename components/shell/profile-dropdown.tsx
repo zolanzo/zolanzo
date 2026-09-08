@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { accountMenuHrefs } from "@/lib/workspace/shell-nav";
+import { usePathname, useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, Settings01Icon, HelpCircleIcon, Logout01Icon } from "@hugeicons/core-free-icons";
 import { SocialBrandIcon } from "@/components/brand/social-brand-icon";
@@ -10,11 +11,18 @@ import { APP_CONFIG } from "@/config/app";
 
 interface ProfileDropdownProps {
   userName?: string;
+  userRole?: string | null;
   onClose: () => void;
 }
 
-export function ProfileDropdown({ userName = "Account", onClose }: ProfileDropdownProps) {
+export function ProfileDropdown({
+  userName = "Account",
+  userRole = null,
+  onClose,
+}: ProfileDropdownProps) {
   const router = useRouter();
+  const pathname = usePathname() ?? "";
+  const account = accountMenuHrefs(pathname, userRole);
 
   const handleLogout = async () => {
     try {
@@ -35,7 +43,7 @@ export function ProfileDropdown({ userName = "Account", onClose }: ProfileDropdo
         {userName}
       </p>
       <Link
-        href="/profile"
+        href={account.profile}
         role="menuitem"
         onClick={onClose}
         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-hover"
@@ -44,7 +52,7 @@ export function ProfileDropdown({ userName = "Account", onClose }: ProfileDropdo
         Profile
       </Link>
       <Link
-        href="/settings"
+        href={account.settings}
         role="menuitem"
         onClick={onClose}
         className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-hover"

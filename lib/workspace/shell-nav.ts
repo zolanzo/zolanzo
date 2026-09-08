@@ -83,3 +83,18 @@ export function headerWalletHref(
   }
   return "/wallet";
 }
+
+/** Account menu destinations for the current workspace chrome. */
+export function accountMenuHrefs(
+  pathname: string,
+  userRole?: string | null,
+): { profile: string; settings: string } {
+  const chrome = resolveShellChrome(pathname, userRole);
+  if (chrome === "hirer") {
+    return { profile: "/hirer/company", settings: "/hirer/settings" };
+  }
+  if (chrome === "super_admin" || chrome === "staff") {
+    return { profile: "/settings", settings: "/settings" };
+  }
+  return { profile: "/profile", settings: "/settings" };
+}

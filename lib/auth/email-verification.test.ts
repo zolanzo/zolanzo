@@ -37,6 +37,7 @@ describe("otp generator", () => {
     const hash = hashOtpCode("866015");
     expect(verifyOtpCode("866015", hash)).toBe(true);
     expect(verifyOtpCode("866-015", hash)).toBe(true);
+    expect(hashOtpCode("866-015")).toBe(hashOtpCode("866015"));
     expect(verifyOtpCode("000000", hash)).toBe(false);
   });
 });

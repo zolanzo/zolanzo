@@ -36,8 +36,7 @@ export function CreateOpportunityView({
       ? nairaToMinor(rewardNum) * slotsNum
       : 0;
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function persist(submitForReview: boolean) {
     setError(null);
     if (!workspace.organization) {
       setError("Join or create an organization before creating a campaign.");
@@ -66,19 +65,33 @@ export function CreateOpportunityView({
       setError(created.error.message);
       return;
     }
-    const submitted = await submitCampaignReviewAction(created.data.id);
-    setBusy(false);
-    if (!submitted.ok) {
-      setError(submitted.error.message);
+    if (submitForReview) {
+      const submitted = await submitCampaignReviewAction(created.data.id);
+      setBusy(false);
+      if (!submitted.ok) {
+        setError(submitted.error.message);
+        router.push(`/hirer/opportunities/${created.data.publicId}`);
+        return;
+      }
       router.push(`/hirer/opportunities/${created.data.publicId}`);
       return;
     }
-    router.push("/hirer/opportunities");
+    setBusy(false);
+    router.push(`/hirer/opportunities/${created.data.publicId}`);
   }
 
   return (
     <WorkspaceAppShell workspace={workspace}>
-      <form onSubmit={onSubmit} className="max-w-xl mx-auto space-y-4 pb-20">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const submitter = (e.nativeEvent as SubmitEvent).submitter;
+          const intent =
+            submitter instanceof HTMLButtonElement ? submitter.value : "draft";
+          void persist(intent === "review");
+        }}
+        className="max-w-xl mx-auto space-y-4 pb-20"
+      >
         <Link href="/hirer/opportunities" className="text-xs font-bold text-muted-foreground">
           ← Campaigns
         </Link>
@@ -167,15 +180,29 @@ export function CreateOpportunityView({
 
         <p className="text-xs text-muted-foreground">
           Estimated worker budget {formatNgnFromMinor(subtotalMinor)}. Funds are not invented or locked until a real payment succeeds.
+          Staff must approve a campaign before it appears as available work. You cannot publish it yourself.
         </p>
-        {error ? <p className="text-xs text-danger">{error}</p> : null}
-        <button
-          type="submit"
-          disabled={busy || !workspace.organization || workspace.templates.length === 0}
-          className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold disabled:opacity-50"
-        >
-          {busy ? "Saving…" : "Save draft for review"}
-        </button>
+        {error ? <p className="text-xs text-danger" role="alert">{error}</p> : null}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="submit"
+            name="intent"
+            value="draft"
+            disabled={busy || !workspace.organization || workspace.templates.length === 0}
+            className="h-11 px-5 rounded-xl border border-border text-xs font-bold disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "Save draft"}
+          </button>
+          <button
+            type="submit"
+            name="intent"
+            value="review"
+            disabled={busy || !workspace.organization || workspace.templates.length === 0}
+            className="h-11 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold disabled:opacity-50"
+          >
+            {busy ? "Saving…" : "Submit for review"}
+          </button>
+        </div>
       </form>
     </WorkspaceAppShell>
   );

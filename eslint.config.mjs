@@ -35,6 +35,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "prisma/migrations/**",
     "lib/generated/**",
+    "scripts/shims/**",
   ]),
 ]);
 

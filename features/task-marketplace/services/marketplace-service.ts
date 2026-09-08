@@ -42,6 +42,7 @@ function toOpportunity(row: {
   id: string;
   publicId: string;
   createdAt: Date;
+  status: string;
   taskTemplateVersion: number;
   templatePublicId: string;
   priority: string;
@@ -54,9 +55,11 @@ function toOpportunity(row: {
     objective: string;
     rewardPerUnitMinor: number;
     currency: string;
+    status: string;
     countryScope: unknown;
     languageScope: unknown;
     deviceScope: unknown;
+    visibility: string;
   };
   taskTemplate: {
     publicId: string;
@@ -84,6 +87,9 @@ function toOpportunity(row: {
     languageScope: row.campaign.languageScope as string[],
     deviceScope: row.campaign.deviceScope as string[],
     createdAt: row.createdAt.toISOString(),
+    instanceStatus: row.status,
+    campaignStatus: row.campaign.status,
+    campaignVisibility: row.campaign.visibility,
   };
 }
 

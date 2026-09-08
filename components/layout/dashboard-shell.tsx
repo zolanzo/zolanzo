@@ -50,24 +50,23 @@ export type DashboardShellProps = {
 };
 
 const DEFAULT_WORKER_NAV: SidebarNavItem[] = [
-  { href: "/worker/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/worker/jobs", label: "Available Tasks", icon: ListTodo },
-  { href: "/worker/wallet", label: "Wallet & Earnings", icon: Wallet },
+  { href: "/earner/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/tasks", label: "Find Work", icon: ListTodo },
+  { href: "/wallet", label: "Wallet", icon: Wallet },
 ];
 
 const DEFAULT_EMPLOYER_NAV: SidebarNavItem[] = [
-  { href: "/organization/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/organization/campaigns", label: "Campaigns", icon: ListTodo },
-  { href: "/organization/escrow", label: "Escrow & Billing", icon: Wallet },
-  { href: "/organization/applicants", label: "Applicants", icon: Users },
+  { href: "/hirer/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/hirer/opportunities", label: "Campaigns", icon: ListTodo },
+  { href: "/hirer/applications", label: "Review", icon: Users },
+  { href: "/hirer/wallet", label: "Wallet", icon: Wallet },
 ];
 
 const DEFAULT_ADMIN_NAV: SidebarNavItem[] = [
-  { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/campaigns", label: "Campaign Approvals", icon: ListTodo },
-  { href: "/admin/payouts", label: "Payout Approvals", icon: Wallet },
-  { href: "/admin/users", label: "Users & Organizations", icon: Users },
-  { href: "/admin/settings", label: "Platform Settings", icon: Settings },
+  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/lex/staff", label: "Staff", icon: ListTodo },
+  { href: "/lex/auth", label: "Admin", icon: Users },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardShell({
@@ -134,7 +133,6 @@ export function DashboardShell({
               collapsed={false}
               className="h-full w-full border-0"
             />
-            <ThemeModeControl variant="menu" />
           </div>
         </Drawer>
 
@@ -143,9 +141,7 @@ export function DashboardShell({
             title={title}
             onSidebarToggle={() => setMobileOpen(true)}
             showSidebarToggle
-            themeToggle={
-              <ThemeModeControl variant="compact" className="hidden md:flex" />
-            }
+            themeToggle={<ThemeModeControl variant="compact" />}
           />
           <main
             id="main-content"

@@ -30,6 +30,15 @@ export const browseMarketplaceSchema = z.object({
   excludeIneligible: z.boolean().default(false),
 });
 
+/** Public action input — worker identity is never accepted from the client. */
+export const browseMarketplaceActionSchema = browseMarketplaceSchema.omit({
+  worker: true,
+});
+
+export const marketplaceInstanceActionSchema = z.object({
+  instancePublicId: z.string().min(1),
+});
+
 export const reserveOpportunitySchema = z.object({
   instancePublicId: z.string().min(1),
   worker: workerContextSchema,

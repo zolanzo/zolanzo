@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { SocialBrandIcon } from "@/components/brand/social-brand-icon";
 import { formatNgnFromMinor } from "@/lib/money/ngn";
@@ -16,6 +17,7 @@ import {
   isInlineProofKind,
   type WorkProofField,
 } from "@/features/task-marketplace/services/evidence-requirements";
+import { workSessionStatusLabel } from "@/lib/workspace/marketplace-copy";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 
@@ -33,6 +35,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function OpportunityWorkView({ opportunity }: { opportunity: WorkOpportunity }) {
+  const router = useRouter();
   const platform = inferSocialPlatform(
     opportunity.category,
     opportunity.title,
@@ -140,6 +143,7 @@ export function OpportunityWorkView({ opportunity }: { opportunity: WorkOpportun
       }
       setSubmitted(true);
       setStatus(result.data.submission.status);
+      router.push(`/tasks/${opportunity.instancePublicId}/submitted`);
     });
   }
 
@@ -164,7 +168,11 @@ export function OpportunityWorkView({ opportunity }: { opportunity: WorkOpportun
             <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">{instructions}</p>
           ) : null}
           {status ? (
-            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{status.replaceAll("_", " ")}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {workSessionStatusLabel(status)}
+            </p>
+          ) : pending && !error ? (
+            <p className="text-xs text-muted-foreground">Preparing your assignment…</p>
           ) : null}
 
           {submitted ? (
@@ -218,10 +226,23 @@ export function OpportunityWorkView({ opportunity }: { opportunity: WorkOpportun
                   This template does not define required proof, so a submission cannot be assembled.
                 </p>
               ) : null}
-              {error ? <p className="text-xs text-danger">{error}</p> : null}
+              {error ? (
+                <p className="text-xs text-danger" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              {error?.toLowerCase().includes("start this task") ? (
+                <Link
+                  href={`/tasks/${opportunity.instancePublicId}`}
+                  className="block text-xs font-bold text-primary"
+                >
+                  Go to task details
+                </Link>
+              ) : null}
               <button
                 type="submit"
                 disabled={pending || !submissionPublicId || proofFields.length === 0}
+                aria-busy={pending}
                 className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-xs font-bold disabled:opacity-50"
               >
                 {pending ? "Submitting…" : "Submit proof"}

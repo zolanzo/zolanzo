@@ -1,6 +1,6 @@
 import type { Prisma } from "../../lib/generated/prisma/client";
 import type { PrismaClient } from "../../lib/generated/prisma/client";
-import { generatePublicId } from "../../lib/public-id/generator";
+import { seedGeneratePublicId } from "./allocate-public-id";
 import { SEED_TASK_TEMPLATES } from "../../features/task-templates/seed/definitions";
 import { createTaskTemplateSchema } from "../../features/task-templates/validators";
 
@@ -12,7 +12,7 @@ export async function seedTaskTemplates(prisma: PrismaClient): Promise<void> {
     });
     if (existing) continue;
 
-    const publicId = await generatePublicId("task_template", { db: prisma });
+    const publicId = await seedGeneratePublicId("task_template", prisma);
     await prisma.taskTemplate.create({
       data: {
         publicId,
