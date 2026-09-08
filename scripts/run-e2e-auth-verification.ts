@@ -3,11 +3,20 @@ import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { verifyStoredPin } from "../lib/security/hash";
 import { resolveRouteAccess } from "../lib/auth/route-policy";
+import { assertDevelopmentSeedTarget } from "../lib/dev/assert-dev-seed-target";
 
 dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local", override: true });
+assertDevelopmentSeedTarget();
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ffvwviabpyhjeoxjxunb.supabase.co";
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  throw new Error(
+    "Abort: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.",
+  );
+}
 
 function getAdminClient() {
   return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {

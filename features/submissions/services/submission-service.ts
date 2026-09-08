@@ -415,6 +415,11 @@ export async function submitPackage(params: {
       throw new AppError("FORBIDDEN", "Submission belongs to another worker", 403);
     }
 
+    const evidencePkg = await submissionRepository.getPackage(submission.id);
+    if (!evidencePkg || evidencePkg.items.length === 0) {
+      throw new AppError("EMPTY_MANIFEST", "Cannot submit empty package", 400);
+    }
+
     // Allow submit from ready, or auto-ready from draft if evidence present
     if (submission.status === "draft") {
       assertSubmissionTransition("draft", "ready");
